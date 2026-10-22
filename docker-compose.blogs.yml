@@ -1,0 +1,8 @@
+# Optional: mount the sibling `blogs/` folder (read-write) for the Epic 5 export.
+# Used by `make up BLOGS=1`.
+services:
+  api:
+    environment:
+      BLOGS_DIR: /app/blogs
+    volumes:
+      - ../blogs:/app/blogs
