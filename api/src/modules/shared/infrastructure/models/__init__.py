@@ -1,6 +1,7 @@
 from .writing_task_model import WritingTaskModel
 from .task_event_model import TaskEventModel
 from .research_models import ResearchSourceModel, ResearchClaimModel, ResearchBriefModel
+from .article_models import ArticleDraftModel, ArticleRevisionModel, EvaluationResultModel, StyleGuideModel
 
 __all__ = [
     "WritingTaskModel",
@@ -8,4 +9,8 @@ __all__ = [
     "ResearchSourceModel",
     "ResearchClaimModel",
     "ResearchBriefModel",
+    "ArticleDraftModel",
+    "ArticleRevisionModel",
+    "EvaluationResultModel",
+    "StyleGuideModel",
 ]

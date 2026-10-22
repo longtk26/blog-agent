@@ -21,6 +21,7 @@ class WritingTaskModel(SQLModel, table=True):
     requirements: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     angle: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     include_diagram: str = Field(default="auto", max_length=16)
+    review_outline: bool = False
     publication_targets: list = Field(default_factory=list, sa_column=jsonb_column())
     budgets: dict = Field(default_factory=dict, sa_column=jsonb_column())
 
@@ -29,6 +30,7 @@ class WritingTaskModel(SQLModel, table=True):
     last_error: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     resumable: bool = False
     research_plan: dict | None = Field(default=None, sa_column=jsonb_column(nullable=True))
+    outline: dict | None = Field(default=None, sa_column=jsonb_column(nullable=True))
     open_questions: list = Field(default_factory=list, sa_column=jsonb_column())
     progress: dict = Field(default_factory=dict, sa_column=jsonb_column())
     last_run_id: uuid.UUID | None = None

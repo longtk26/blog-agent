@@ -6,8 +6,14 @@ from src.libs.database import arun_in_session
 from src.libs.events import TaskEventBroker
 from src.libs.exceptions import NotFoundException
 from src.modules.agent.ports.output.workflow_store import IWorkflowStore
+from src.modules.articles.infrastructure.persistence import DraftRepository, EvaluationRepository, RevisionRepository
 from src.modules.research.infrastructure.persistence import BriefRepository, ClaimRepository, SourceRepository
+from src.modules.styles.infrastructure.persistence import StyleGuideRepository
+from src.modules.styles.domain.active_style import resolve_active_style
 from src.modules.shared.domain.entities import (
+    ArticleDraftEntity,
+    ArticleRevisionEntity,
+    EvaluationResultEntity,
     EventActor,
     ResearchBriefEntity,
     ResearchClaimEntity,
@@ -127,3 +133,34 @@ class WorkflowStore(IWorkflowStore):
 
     async def save_brief(self, brief: ResearchBriefEntity) -> ResearchBriefEntity:
         return await arun_in_session(lambda s: BriefRepository(s).upsert(brief))
+
+    async def get_brief(self, task_id: uuid.UUID) -> ResearchBriefEntity | None:
+        return await arun_in_session(lambda s: BriefRepository(s).get_by_task(task_id))
+
+    async def get_draft(self, task_id: uuid.UUID) -> ArticleDraftEntity | None:
+        return await arun_in_session(lambda s: DraftRepository(s).get(task_id))
+
+    async def save_draft(self, draft: ArticleDraftEntity) -> ArticleDraftEntity:
+        return await arun_in_session(lambda s: DraftRepository(s).save(draft))
+
+    async def slug_taken(self, slug: str, task_id: uuid.UUID) -> bool:
+        return await arun_in_session(lambda s: RevisionRepository(s).slug_taken(slug, task_id))
+
+    async def latest_revision(self, task_id: uuid.UUID) -> ArticleRevisionEntity | None:
+        return await arun_in_session(lambda s: RevisionRepository(s).latest(task_id))
+
+    async def create_revision(
+        self, revision: ArticleRevisionEntity, evaluations: list[EvaluationResultEntity]
+    ) -> ArticleRevisionEntity:
+        def run(session):
+            saved = RevisionRepository(session).create(revision)
+            for evaluation in evaluations:
+                evaluation.revision_id = saved.id
+            EvaluationRepository(session).add_many(evaluations)
+            return saved
+
+        return await arun_in_session(run)
+
+    async def style_guide(self) -> tuple[str, str]:
+        guide = resolve_active_style(await arun_in_session(lambda s: StyleGuideRepository(s).latest()))
+        return guide.version, guide.content

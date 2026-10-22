@@ -71,6 +71,12 @@ class Config(BaseSettings):
     workflow_max_concurrency: int = 2
     node_timeout_seconds: float = 900.0
 
+    # Drafting (Epic 3)
+    draft_max_sections: int = 9
+    draft_max_self_revisions: int = 2
+    draft_min_judge_score: int = 3
+    draft_evidence_claims: int = 80
+
     langsmith_tracing: bool = False
     langsmith_api_key: SecretStr | None = None
     langsmith_project: str = "blog-agent-local"

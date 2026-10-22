@@ -19,7 +19,9 @@ class GetTaskUsecase():
         if task is None:
             raise NotFoundException(f"Task '{task_id}' not found")
         trace_url = await self.tracing.run_url(task.last_run_id) if task.last_run_id else None
-        return TaskResponseDto.from_entity(task, is_running=self.runner.is_running(str(task_id)), trace_url=trace_url)
+        running = self.runner.is_running(str(task_id))
+        pending = None if running else await self.runner.pending_interrupt(str(task_id))
+        return TaskResponseDto.from_entity(task, is_running=running, trace_url=trace_url, pending_interrupt=pending)
 
 
 GetTaskUsecaseDep = Annotated[GetTaskUsecase, Depends(GetTaskUsecase)]

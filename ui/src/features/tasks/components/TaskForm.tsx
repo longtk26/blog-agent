@@ -189,6 +189,19 @@ export function TaskForm() {
               )}
             />
 
+            <Controller
+              name="reviewOutline"
+              control={control}
+              render={({ field }) => (
+                <Field orientation="horizontal">
+                  <Checkbox id="task-reviewOutline" checked={field.value} onCheckedChange={(value) => field.onChange(value === true)} />
+                  <FieldLabel htmlFor="task-reviewOutline" className="font-normal">
+                    Let me review the outline before drafting
+                  </FieldLabel>
+                </Field>
+              )}
+            />
+
             <FieldSet>
               <FieldLegend variant="label">Publish to (after your approval)</FieldLegend>
               <div className="flex gap-6">

@@ -19,6 +19,7 @@ export const createTaskSchema = z.object({
   format: z.enum(["concept", "tutorial", "comparison", "series_part"]),
   requirements: z.string().trim().max(4000),
   includeDiagram: z.enum(["auto", "yes", "no"]),
+  reviewOutline: z.boolean(),
   publishToSanity: z.boolean(),
   publishToDevto: z.boolean(),
   seriesName: z.string().trim().max(120),
@@ -39,6 +40,7 @@ export const createTaskDefaults: TCreateTaskFormValues = {
   format: "concept",
   requirements: "",
   includeDiagram: "auto",
+  reviewOutline: false,
   publishToSanity: true,
   publishToDevto: false,
   seriesName: "",
@@ -66,6 +68,7 @@ export function toCreateTaskPayload(values: TCreateTaskFormValues): TCreateTaskP
     format: values.format,
     requirements: values.requirements || undefined,
     include_diagram: values.includeDiagram,
+    review_outline: values.reviewOutline,
     publication_targets: [
       ...(values.publishToSanity ? (["sanity"] as const) : []),
       ...(values.publishToDevto ? (["devto"] as const) : []),

@@ -33,3 +33,8 @@ class IWorkflowRunner(ABC):
     @abstractmethod
     async def thread_status(self, task_id: str) -> ThreadStatus:
         pass
+
+    @abstractmethod
+    async def pending_interrupt(self, task_id: str) -> dict | None:
+        """Value of the interrupt the thread is paused at (e.g. {"type": "awaiting_review", ...}), if any."""
+        pass

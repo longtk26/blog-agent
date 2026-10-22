@@ -7,17 +7,19 @@ from src.libs.events import TaskEventBroker
 from src.modules.agent.graph.blog_graph import build_blog_graph
 from src.modules.agent.graph.deps import WorkflowDeps
 from src.modules.agent.infrastructure.adapters import LangGraphWorkflowRunner, LangSmithTracing, WorkflowStore
+from src.modules.articles.infrastructure.persistence import DraftRepository, EvaluationRepository, RevisionRepository
 from src.modules.research.infrastructure.persistence import BriefRepository, ClaimRepository, SourceRepository
 from src.modules.shared.domain.entities import TaskMode, WritingTaskEntity
 from src.modules.tasks.infrastructure.persistence import TaskEventRepository, TaskRepository
-from tests.fakes import FakeExtractor, FakeModelFactory, FakeSearchProvider, research_responder
+from tests.fakes import FakeExtractor, FakeModelFactory, FakeSearchProvider, WritingScript
 
 
 class Harness:
-    def __init__(self, checkpointer, extractor: FakeExtractor | None = None, responder=research_responder):
+    def __init__(self, checkpointer, extractor: FakeExtractor | None = None, responder=None):
+        self.script = responder or WritingScript()
         self.broker = TaskEventBroker()
         self.store = WorkflowStore(self.broker)
-        self.models = FakeModelFactory(responder)
+        self.models = FakeModelFactory(self.script)
         self.search = FakeSearchProvider()
         self.extractor = extractor or FakeExtractor()
         deps = WorkflowDeps(store=self.store, models=self.models, search=self.search, extractor=self.extractor, settings=config)
@@ -51,3 +53,12 @@ class Harness:
 
     def events(self, task_id):
         return run_in_session(lambda s: TaskEventRepository(s).list_after(task_id, 0, 5000))
+
+    def revisions(self, task_id):
+        return run_in_session(lambda s: RevisionRepository(s).list_by_task(task_id))
+
+    def evaluations(self, revision_id):
+        return run_in_session(lambda s: EvaluationRepository(s).list_by_revision(revision_id))
+
+    def draft(self, task_id):
+        return run_in_session(lambda s: DraftRepository(s).get(task_id))

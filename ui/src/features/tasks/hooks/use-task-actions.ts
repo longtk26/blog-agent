@@ -3,7 +3,7 @@ import { toast } from "sonner";
 
 import { tasksApi } from "../api/tasks-api";
 import { taskKeys } from "../query-keys";
-import type { TCreateTaskPayload, TPromotePayload, TTask } from "../types";
+import type { TCreateTaskPayload, TOutline, TPromotePayload, TTask } from "../types";
 
 function useTaskMutation<TVariables>(
   mutationFn: (variables: TVariables) => Promise<TTask>,
@@ -35,4 +35,8 @@ export function useRetryTask() {
 
 export function usePromoteTask(id: string) {
   return useTaskMutation((payload: TPromotePayload) => tasksApi.promote(id, payload), "Promoted to an article");
+}
+
+export function useApproveOutline(id: string) {
+  return useTaskMutation((outline: Partial<TOutline> | undefined) => tasksApi.approveOutline(id, outline), "Outline approved — drafting");
 }

@@ -86,21 +86,22 @@ async def test_promote_continues_same_thread_without_new_searches(checkpointer):
     await h.runner.resume(str(task_id), {"action": "promote", "angle": "first principles"})
     await h.wait(task_id)
 
-    assert h.task(task_id).status == TaskStatus.OUTLINING
+    assert h.task(task_id).status == TaskStatus.AWAITING_REVIEW
     assert h.search.queries == searches
     state = await h.graph.aget_state({"configurable": {"thread_id": str(task_id)}})
     assert state.values["promotion"]["angle"] == "first principles"
     assert state.values["mode"] == "article"
-    assert await h.runner.thread_status(str(task_id)) == ThreadStatus.INTERRUPTED  # paused at the Epic 3 stub
+    assert (await h.runner.pending_interrupt(str(task_id)))["type"] == "awaiting_review"
 
 
-async def test_article_mode_goes_straight_to_outline(checkpointer):
+async def test_article_mode_goes_straight_to_writing(checkpointer):
     h = Harness(checkpointer)
     task_id = h.create_task(TaskMode.ARTICLE)
     await h.run(task_id)
-    assert h.task(task_id).status == TaskStatus.OUTLINING
+    assert h.task(task_id).status == TaskStatus.AWAITING_REVIEW
     statuses = [e.to_status for e in h.events(task_id) if e.type == "status_changed"]
-    assert statuses == ["researching", "outlining"]
+    # one self-revision round: validating -> drafting -> validating
+    assert statuses == ["researching", "outlining", "drafting", "validating", "drafting", "validating", "awaiting_review"]
 
 
 async def test_failed_node_retries_from_checkpoint_without_duplicates(checkpointer):
@@ -163,7 +164,7 @@ async def test_recover_marks_interrupted_runs_failed_and_keeps_paused_ones(check
     await h.run(paused)  # completed + paused at interrupt -> not active anyway
 
     article = h.create_task(TaskMode.ARTICLE)
-    await h.run(article)  # outlining, paused at stub interrupt -> active but paused
+    await h.run(article)  # awaiting_review, paused at interrupt -> at rest
 
     crashed = h.create_task()
     def set_researching(session):
@@ -179,7 +180,7 @@ async def test_recover_marks_interrupted_runs_failed_and_keeps_paused_ones(check
     await fresh.runner.recover()
     await fresh.wait(queued)
 
-    assert fresh.task(article).status == TaskStatus.OUTLINING
+    assert fresh.task(article).status == TaskStatus.AWAITING_REVIEW
     crashed_task = fresh.task(crashed)
     assert crashed_task.status == TaskStatus.FAILED and crashed_task.resumable
     assert crashed_task.last_error == "Interrupted by API restart"

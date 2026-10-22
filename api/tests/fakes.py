@@ -189,3 +189,76 @@ def research_responder(schema: type[BaseModel], messages: list[BaseMessage]) -> 
             recommended_source_refs=sources[:1] + ["S99"],
         )
     raise AssertionError(f"unexpected schema {schema}")
+
+
+# --- writing --------------------------------------------------------------------------------
+
+from src.modules.agent.schemas.writing import (  # noqa: E402
+    ClaimMapEntryOut,
+    JudgeIssueOut,
+    JudgeReportOut,
+    JudgeScoresOut,
+    MetadataOut,
+    OutlineOut,
+    OutlineSectionOut,
+    RequirementMapOut,
+    SectionDraftOut,
+)
+
+URL = re.compile(r"\]\((https://[^)]+)\)")
+SECTION = re.compile(r"Write: the section '([^']+)'")
+
+
+class WritingScript:
+    """Scripted writer/judge. The first judge call flags one section as a blocker, later calls pass."""
+
+    def __init__(self, judge_blocks_first: bool = True):
+        self.judge_calls = 0
+        self.judge_blocks_first = judge_blocks_first
+        self.section_prompts: dict[str, list[str]] = defaultdict(list)
+
+    def __call__(self, schema: type[BaseModel], messages: list[BaseMessage]) -> BaseModel:
+        text = _human_text(messages)
+        if schema is OutlineOut:
+            return OutlineOut(
+                title_options=["LoRA Fine-Tuning Explained", "How LoRA Works"],
+                angle="LoRA from first principles for engineers",
+                intro_goal="Why parameter-efficient fine-tuning matters",
+                sections=[
+                    OutlineSectionOut(heading="1. How LoRA Works", goal="mechanism", key_points=["frozen weights"], claim_refs=["C1", "C2"], needs=["diagram"], est_words=120),
+                    OutlineSectionOut(heading="QLoRA Memory Savings", goal="memory", key_points=["4-bit"], claim_refs=["C3"], est_words=120),
+                    OutlineSectionOut(heading="Summary & What's Next", goal="wrap up", key_points=["table"], needs=["summary_table"], est_words=80),
+                ],
+                requirement_map=[RequirementMapOut(requirement="memory savings", section_index=1)],
+                next_steps="Part 2: hands-on QLoRA",
+            )
+        if schema is SectionDraftOut:
+            heading = (SECTION.search(text) or [None, "intro"])[1]
+            self.section_prompts[heading].append(text)
+            url = (URL.findall(text.split("Evidence for this part:")[1]) or ["https://arxiv.org/abs/2106.09685"])[0]
+            if heading == "intro":
+                body = "Fine-tuning large models is expensive.\n\nIn this guide, we explain **LoRA** and QLoRA."
+            elif heading == "Summary & What's Next":
+                body = "### Summary & What's Next\n\n| Core Concept | Summary Takeaway |\n| :--- | :--- |\n| **LoRA** | Train small adapters |"
+            else:
+                revised = " (revised)" if "REVISION:" in text else ""
+                body = (
+                    f"We start with the mechanism{revised}: according to [the source]({url}), only small matrices are trained.\n\n"
+                    "```mermaid\nflowchart LR\n    A[\"<b>Frozen W</b>\"] --> B[\"<b>Adapter</b>\"]\n```"
+                )
+            return SectionDraftOut(
+                markdown=f"## {heading}\n\n{body}",  # the node must strip a repeated heading
+                claim_map=[ClaimMapEntryOut(sentence="only small matrices are trained", claim_refs=["C1"], support="supported")],
+            )
+        if schema is MetadataOut:
+            return MetadataOut(title="LoRA Fine-Tuning Explained", description="How LoRA and QLoRA cut fine-tuning cost.", tags=["LLM", "lora", "fine-tuning"], slug="LoRA Fine-Tuning Explained")
+        if schema is JudgeReportOut:
+            self.judge_calls += 1
+            block = self.judge_blocks_first and self.judge_calls == 1
+            return JudgeReportOut(
+                scores=JudgeScoresOut(factual_support=2 if block else 4, depth_fit=4, audience_fit=4, requirements_coverage=4, style_adherence=4, clarity=4),
+                issues=[JudgeIssueOut(section="How LoRA Works", severity="blocker", problem="Claim lacks a number", suggested_fix="Add the parameter reduction")] if block else [],
+                unsupported_statements=["LoRA is always better"] if block else [],
+                summary="Needs work" if block else "Good",
+            )
+        return research_responder(schema, messages)

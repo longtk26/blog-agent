@@ -15,7 +15,16 @@ const components: Components = {
       {children}
     </a>
   ),
+  pre: ({ children }) => <pre className="my-4 overflow-x-auto rounded-md bg-muted p-3 font-mono text-xs [&>code]:bg-transparent [&>code]:p-0">{children}</pre>,
   code: ({ children }) => <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-sm">{children}</code>,
+  table: ({ children }) => (
+    <div className="my-4 overflow-x-auto">
+      <table className="w-full border-collapse text-left text-sm">{children}</table>
+    </div>
+  ),
+  th: ({ children }) => <th className="border-b px-2 py-1.5 font-medium">{children}</th>,
+  td: ({ children }) => <td className="border-b px-2 py-1.5 align-top">{children}</td>,
+  hr: () => <hr className="my-6 border-border" />,
   em: ({ children }) => <em className="text-muted-foreground">{children}</em>,
 };
 

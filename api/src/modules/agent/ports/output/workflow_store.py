@@ -3,6 +3,9 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 from src.modules.shared.domain.entities import (
+    ArticleDraftEntity,
+    ArticleRevisionEntity,
+    EvaluationResultEntity,
     EventActor,
     ResearchBriefEntity,
     ResearchClaimEntity,
@@ -85,4 +88,37 @@ class IWorkflowStore(ABC):
 
     @abstractmethod
     async def save_brief(self, brief: ResearchBriefEntity) -> ResearchBriefEntity:
+        pass
+
+    @abstractmethod
+    async def get_brief(self, task_id: uuid.UUID) -> ResearchBriefEntity | None:
+        pass
+
+    @abstractmethod
+    async def get_draft(self, task_id: uuid.UUID) -> ArticleDraftEntity | None:
+        pass
+
+    @abstractmethod
+    async def save_draft(self, draft: ArticleDraftEntity) -> ArticleDraftEntity:
+        pass
+
+    @abstractmethod
+    async def slug_taken(self, slug: str, task_id: uuid.UUID) -> bool:
+        """True if another task already uses this slug for a revision."""
+        pass
+
+    @abstractmethod
+    async def latest_revision(self, task_id: uuid.UUID) -> ArticleRevisionEntity | None:
+        pass
+
+    @abstractmethod
+    async def create_revision(
+        self, revision: ArticleRevisionEntity, evaluations: list[EvaluationResultEntity]
+    ) -> ArticleRevisionEntity:
+        """Insert an immutable revision and its evaluation results in one transaction."""
+        pass
+
+    @abstractmethod
+    async def style_guide(self) -> tuple[str, str]:
+        """(version, content) of the active style guide."""
         pass

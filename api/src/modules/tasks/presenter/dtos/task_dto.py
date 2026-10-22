@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -48,6 +49,7 @@ class CreateTaskRequestDto(BaseModel):
     series: SeriesDto | None = None
     requirements: str | None = Field(default=None, max_length=4000)
     include_diagram: IncludeDiagram = IncludeDiagram.AUTO
+    review_outline: bool = False
     publication_targets: list[PublicationTarget] = Field(default_factory=list)
     budgets: TaskBudgetsDto | None = None
 
@@ -76,6 +78,7 @@ class CreateTaskRequestDto(BaseModel):
             series=SeriesInfo(**self.series.model_dump()) if self.series else None,
             requirements=self.requirements,
             include_diagram=self.include_diagram,
+            review_outline=self.review_outline,
             publication_targets=self.publication_targets,
             budgets=TaskBudgets(**overrides),
             status=TaskStatus.QUEUED,
@@ -92,6 +95,34 @@ class PromoteTaskRequestDto(BaseModel):
     requirements: str | None = Field(default=None, max_length=4000)
 
 
+class OutlineSectionEditDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    key: str = Field(pattern=r"^s\d{1,2}$")
+    heading: str = Field(min_length=2, max_length=200)
+    heading_style: Literal["numbered", "step", "plain"] = "numbered"
+    goal: str = Field(default="", max_length=1000)
+    key_points: list[str] = Field(default_factory=list, max_length=10)
+    needs: list[str] = Field(default_factory=list, max_length=7)
+    est_words: int = Field(default=300, ge=80, le=1500)
+    claim_ids: list[str] = Field(default_factory=list, max_length=80)
+
+
+class OutlineEditDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    title: str | None = Field(default=None, max_length=200)
+    angle: str | None = Field(default=None, max_length=500)
+    intro_goal: str | None = Field(default=None, max_length=1000)
+    sections: list[OutlineSectionEditDto] | None = Field(default=None, min_length=1, max_length=12)
+
+
+class ApproveOutlineRequestDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    outline: OutlineEditDto | None = None
+
+
 class TaskResponseDto(BaseModel):
     id: uuid.UUID
     topic: str
@@ -104,6 +135,7 @@ class TaskResponseDto(BaseModel):
     requirements: str | None
     angle: str | None
     include_diagram: IncludeDiagram
+    review_outline: bool
     publication_targets: list[PublicationTarget]
     budgets: TaskBudgets
     status: TaskStatus
@@ -111,16 +143,25 @@ class TaskResponseDto(BaseModel):
     last_error: str | None
     resumable: bool
     research_plan: dict | None
+    outline: dict | None
     open_questions: list[str]
     progress: TaskProgress
     is_running: bool
+    pending_interrupt: dict | None = None
     trace_url: str | None
     created_at: datetime
     updated_at: datetime
 
     @classmethod
-    def from_entity(cls, task: WritingTaskEntity, is_running: bool, trace_url: str | None = None) -> "TaskResponseDto":
-        return cls(**task.model_dump(exclude={"last_run_id"}), is_running=is_running, trace_url=trace_url)
+    def from_entity(
+        cls, task: WritingTaskEntity, is_running: bool, trace_url: str | None = None, pending_interrupt: dict | None = None
+    ) -> "TaskResponseDto":
+        return cls(
+            **task.model_dump(exclude={"last_run_id"}),
+            is_running=is_running,
+            trace_url=trace_url,
+            pending_interrupt=pending_interrupt,
+        )
 
 
 class TaskSummaryDto(BaseModel):

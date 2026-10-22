@@ -9,12 +9,14 @@ from src.libs.security import limiter
 from src.modules.shared.domain.entities import TaskMode
 from src.modules.shared.domain.value_objects import TaskStatus
 from src.modules.tasks.presenter.dtos import (
+    ApproveOutlineRequestDto,
     CreateTaskRequestDto,
     PromoteTaskRequestDto,
     TaskListResponseDto,
     TaskResponseDto,
 )
 from src.modules.tasks.usecases import (
+    ApproveOutlineUsecaseDep,
     CancelTaskUsecaseDep,
     CreateTaskUsecaseDep,
     GetTaskUsecaseDep,
@@ -65,6 +67,11 @@ async def retry_task(request: Request, task_id: uuid.UUID, usecase: RetryTaskUse
 @task_router.post("/{task_id}/promote", response_model=TaskResponseDto)
 @limiter.limit(config.rate_limit_strict)
 async def promote_task(request: Request, task_id: uuid.UUID, body: PromoteTaskRequestDto, usecase: PromoteTaskUsecaseDep):
+    return await usecase.execute(task_id, body)
+
+
+@task_router.post("/{task_id}/outline/approve", response_model=TaskResponseDto)
+async def approve_outline(task_id: uuid.UUID, body: ApproveOutlineRequestDto, usecase: ApproveOutlineUsecaseDep):
     return await usecase.execute(task_id, body)
 
 

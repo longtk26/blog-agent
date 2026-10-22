@@ -234,3 +234,48 @@ flowchart TD
 | LangChain | Prompt composition with static context files, structured output for outlines/claim maps, chunked generation |
 | LangGraph | Conditional routing on evaluation results, bounded loops, `interrupt()` for human-in-the-loop, keeping state small (ids vs blobs) |
 | LangSmith | Comparing self-revision rounds, tagging prompt versions in metadata |
+
+---
+
+## Implementation notes (delivered 2026-10-22)
+
+| Story | Where | Notes |
+|---|---|---|
+| E3-S1 | `agent/nodes/writing.py::outline`, `review_outline` | The planner returns `OutlineOut`, using a per-format template from `prompts/writing.py`. If a must-cover requirement is unmapped, the outline is regenerated once. Claim refs (`C#`) are resolved to claim ids. The outline is stored on the task (`writing_tasks.outline`). **Optional review** (`review_outline`): a separate node calls `interrupt()`, so the LLM work is not repeated on resume. `POST /tasks/{id}/outline/approve` accepts edits to the title, headings and goals. "Step N" headings are only allowed in tutorials. |
+| E3-S2 | `agent/prompts/style_guide.md` (`style-v2`), `render_contract.md` (`render-v1`), `modules/styles/` | The seed guide is curated from `blogs/fine_tuning/*.md`. `GET/PUT /settings/style-guide` stores versions `owner-N` in the DB, and the latest one wins. Each revision records the style-guide and render-contract versions. The UI editor is on the Settings page. |
+| E3-S3 | `draft_article` | **Drafting:** the intro and each section are written one at a time with `LLM_WRITER_MODEL`. Each call sees the outline, that section's evidence (claims with source URLs), the tail of the previous section, the style guide and the render contract. The draft is saved after every section, so a retry resumes there. **Assembly is deterministic:** H1, intro, a generated TOC (github-slugger port), numbered sections separated by `---`, and References built from the sources the text actually links. The claim map is kept per section and stored as claim ids. |
+| E3-S4 | `normalize_metadata` | Title = H1. The description is cut to 160 characters at a word boundary. Tags are 1–4, lowercase alphanumeric (Dev.to rules). The slug is unique across tasks (`-2`, `-3` suffixes). |
+| E3-S5 | `articles/domain/validators.py` | 20 rules: H1, heading levels, TOC anchors, code fences and languages, Python `ast` and JSON parsing, a Mermaid lint, relative links, links outside the sources, image URLs, block spacing (matching how the site's `normalizeMarkdown` behaves), raw HTML (dangerous tags and `on*=` attributes are blockers), required sections, must-cover, metadata, and word count. Run against your real posts, they found the broken relative `.md` cross-links. *Not done:* the optional link-liveness check. |
+| E3-S6 | `judge_draft` | `JudgeReportOut` returns six scores (1–5), issues tied to a section, and unsupported statements. It is stored in `evaluation_results` with the model and prompt version. |
+| E3-S7 | `self_revise` | Triggered by validator blockers, judge blockers, or any score below `DRAFT_MIN_JUDGE_SCORE` (3). Only the affected sections are rewritten; the others stay byte-identical. Capped at `DRAFT_MAX_SELF_REVISIONS` (2), after which remaining issues are surfaced for review. |
+| E3-S8 | `save_revision`, `await_review`, `modules/articles/` | `article_revisions` is immutable: a Postgres trigger rejects `UPDATE`. `content_hash` = SHA-256 of canonical JSON (`articles/domain/content_hash.py`). New endpoints: `GET /tasks/{id}/revisions` and `GET /revisions/{id}` (with evaluations). The thread then pauses at `interrupt({"type": "awaiting_review"})` for Epic 4. |
+| UI | `features/tasks/components/{OutlineCard,OutlineReviewForm,DraftPanel}.tsx`, `features/style-guide/` | **Task page:** the Plan tab shows the outline, and the approval form when the task is paused there. A Draft tab shows metadata, automated checks, judge scores, unsupported statements and a *basic* preview; Epic 4 replaces the preview. **New task form:** a "review the outline" option. **Settings:** the style guide editor. |
+
+**Also changed:**
+- The task detail API returns `pending_interrupt`, so the UI knows what the task is waiting for.
+- On startup, the runner resumes threads parked at the Epic 2 `not_implemented` placeholder.
+
+**Verification:**
+- 167 pytest tests pass, 22 of them integration tests against Postgres. Epic 3 adds coverage of:
+  - the full article run, with exactly one scripted self-revision touching only the flagged section;
+  - the self-revision cap;
+  - outline review with owner edits;
+  - placeholder auto-resume;
+  - the owner style guide reaching prompts;
+  - the immutability trigger;
+  - the revision and style-guide APIs.
+- The validators, the slugger (checked against real TOC anchors), the assembler and the hash have unit tests.
+- **Manual run in Docker** with real Gemini (`gemini-3.1-flash-lite`) and Tavily, on the topic "How LoRA fine-tuning works":
+  - Took 50 s: research (3 questions, all covered), outline (5 sections), 1,618-word draft.
+  - 0 validator blockers; judge scores 4–5; one unsupported statement flagged.
+  - Paused at `awaiting_review` with r1 saved.
+- **Fixes made after reading that real draft:**
+  - TOC link text no longer repeats the number.
+  - "Step" headings are limited to tutorials, and numbered sections use their position.
+  - A repeated section heading is stripped.
+  - The style guide now says to use "we", not "I", and to keep link text short.
+
+**Known gaps:**
+- The preview is basic Markdown (Epic 4).
+- Mermaid is linted, not rendered (Epic 7).
+- The LLM sometimes uses long phrases as link text; this should improve with the `style-v2` rule.

@@ -10,6 +10,17 @@ from .writing_task_entity import (
     TaskProgress,
 )
 from .task_event_entity import TaskEventEntity, EventActor
+from .article_entity import (
+    IssueSeverity,
+    RevisionAuthor,
+    ValidationIssue,
+    ArticleMetadata,
+    DraftSection,
+    ArticleDraftEntity,
+    ArticleRevisionEntity,
+    EvaluationResultEntity,
+    StyleGuideEntity,
+)
 from .research_entity import (
     ResearchSourceEntity,
     ResearchClaimEntity,
@@ -35,4 +46,13 @@ __all__ = [
     "ResearchBriefEntity",
     "SourceType",
     "SourceStatus",
+    "IssueSeverity",
+    "RevisionAuthor",
+    "ValidationIssue",
+    "ArticleMetadata",
+    "DraftSection",
+    "ArticleDraftEntity",
+    "ArticleRevisionEntity",
+    "EvaluationResultEntity",
+    "StyleGuideEntity",
 ]

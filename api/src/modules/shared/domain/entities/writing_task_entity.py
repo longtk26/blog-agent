@@ -70,6 +70,7 @@ class WritingTaskEntity(BaseModel):
     requirements: str | None = None
     angle: str | None = None
     include_diagram: IncludeDiagram = IncludeDiagram.AUTO
+    review_outline: bool = False
     publication_targets: list[PublicationTarget] = Field(default_factory=list)
     budgets: TaskBudgets = Field(default_factory=TaskBudgets)
 
@@ -78,6 +79,7 @@ class WritingTaskEntity(BaseModel):
     last_error: str | None = None
     resumable: bool = False
     research_plan: dict | None = None
+    outline: dict | None = None
     open_questions: list[str] = Field(default_factory=list)
     progress: TaskProgress = Field(default_factory=TaskProgress)
     last_run_id: uuid.UUID | None = None

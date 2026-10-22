@@ -467,10 +467,3 @@ class ResearchNodes:
         # Pauses the thread; `POST /tasks/{id}/promote` resumes it with the owner's choices.
         promotion = interrupt({"type": "awaiting_promotion", "task_id": state["task_id"]})
         return {"mode": "article", "promotion": promotion}
-
-    @workflow_node("outline", TaskStatus.OUTLINING)
-    async def outline(self, state: BlogState) -> dict:
-        # Placeholder until Epic 3: keep the thread paused (resumable) instead of ending it.
-        emit("info", message="Outline and drafting arrive in Epic 3; the task is paused here.")
-        interrupt({"type": "not_implemented", "stage": "outline"})
-        return {}

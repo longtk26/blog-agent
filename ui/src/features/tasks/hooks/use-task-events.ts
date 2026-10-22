@@ -13,6 +13,8 @@ const REFRESH_TYPES = new Set([
   "source_failed",
   "source_assessed",
   "brief_ready",
+  "outline_ready",
+  "revision_saved",
   "budget_update",
   "paused",
   "error",

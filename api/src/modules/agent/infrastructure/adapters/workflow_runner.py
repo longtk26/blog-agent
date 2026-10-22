@@ -12,11 +12,14 @@ from src.modules.agent.ports.output.tracing import ITracing
 from src.modules.agent.ports.output.workflow_runner import IWorkflowRunner, ThreadStatus
 from src.modules.agent.ports.output.workflow_store import IWorkflowStore
 from src.modules.agent.prompts.research import PROMPT_VERSION as RESEARCH_PROMPT_VERSION
+from src.modules.agent.prompts.writing import PROMPT_VERSION as WRITING_PROMPT_VERSION
 from src.modules.shared.domain.value_objects import ACTIVE_STATUSES, TaskStatus
 
 logger = get_logger(__name__)
 
-PROMPT_VERSIONS = {"research": RESEARCH_PROMPT_VERSION}
+PROMPT_VERSIONS = {"research": RESEARCH_PROMPT_VERSION, "writing": WRITING_PROMPT_VERSION}
+# Interrupts left by placeholder nodes in earlier versions; resumed automatically once the real node exists.
+PLACEHOLDER_INTERRUPTS = {"not_implemented"}
 RECURSION_LIMIT = 80
 
 
@@ -73,6 +76,14 @@ class LangGraphWorkflowRunner(IWorkflowRunner):
         if any(task.interrupts for task in snapshot.tasks):
             return ThreadStatus.INTERRUPTED
         return ThreadStatus.PENDING if snapshot.next else ThreadStatus.FINISHED
+
+    async def pending_interrupt(self, task_id: str) -> dict | None:
+        snapshot = await self.graph.aget_state(self._thread(str(task_id)))
+        for task in snapshot.tasks:
+            for pending in task.interrupts:
+                value = getattr(pending, "value", None)
+                return value if isinstance(value, dict) else {"value": value}
+        return None
 
     async def cancel(self, task_id: str) -> None:
         task = self._running.get(str(task_id))
@@ -136,6 +147,10 @@ class LangGraphWorkflowRunner(IWorkflowRunner):
             task_id = str(task.id)
             thread = await self.thread_status(task_id)
             if thread == ThreadStatus.INTERRUPTED:
+                pending = await self.pending_interrupt(task_id) or {}
+                if pending.get("type") in PLACEHOLDER_INTERRUPTS:
+                    logger.info("Resuming task paused at a placeholder", extra={"context": {"task_id": task_id}})
+                    await self.resume(task_id, {"action": "continue"})
                 continue
             resumable = thread != ThreadStatus.FINISHED
             await self.store.fail_task(task.id, task.status, "Interrupted by API restart", resumable=resumable)

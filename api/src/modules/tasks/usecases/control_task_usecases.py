@@ -9,7 +9,7 @@ from src.modules.agent.ports.output import IWorkflowRunnerDep, ThreadStatus
 from src.modules.shared.domain.entities import EventActor, TaskMode, WritingTaskEntity
 from src.modules.shared.domain.value_objects import CANCELLABLE_STATUSES, TaskStatus
 from src.modules.tasks.ports.output import ITaskEventRepoDep, ITaskRepoDep
-from src.modules.tasks.presenter.dtos import PromoteTaskRequestDto, TaskResponseDto
+from src.modules.tasks.presenter.dtos import ApproveOutlineRequestDto, PromoteTaskRequestDto, TaskResponseDto
 from src.modules.tasks.domain.task_transitions import TaskTransitioner
 
 
@@ -95,6 +95,24 @@ class PromoteTaskUsecase(_TaskControl):
         )
 
 
+class ApproveOutlineUsecase(_TaskControl):
+    async def execute(self, task_id: uuid.UUID, dto: ApproveOutlineRequestDto) -> TaskResponseDto:
+        task = self._get(task_id)
+        self._ensure_idle(task_id)
+        pending = await self.runner.pending_interrupt(str(task_id)) or {}
+        if task.status != TaskStatus.OUTLINING or pending.get("type") != "outline_review":
+            raise ConflictException("This task is not waiting for an outline review", code=ErrorCode.NOTHING_TO_RESUME)
+        command = {"action": "approve_outline"}
+        if dto.outline is not None:
+            command["outline"] = dto.outline.model_dump(mode="json", exclude_none=True)
+        self.transitioner.record(task_id, "outline_approved", {"edited": dto.outline is not None}, actor=EventActor.OWNER)
+        self.tasks.session.commit()
+        self.broker.notify(task_id)
+        await self.runner.resume(str(task_id), command)
+        return TaskResponseDto.from_entity(task, is_running=True)
+
+
 CancelTaskUsecaseDep = Annotated[CancelTaskUsecase, Depends(CancelTaskUsecase)]
 RetryTaskUsecaseDep = Annotated[RetryTaskUsecase, Depends(RetryTaskUsecase)]
 PromoteTaskUsecaseDep = Annotated[PromoteTaskUsecase, Depends(PromoteTaskUsecase)]
+ApproveOutlineUsecaseDep = Annotated[ApproveOutlineUsecase, Depends(ApproveOutlineUsecase)]

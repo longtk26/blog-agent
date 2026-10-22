@@ -49,6 +49,28 @@ export type TResearchPlan = {
   out_of_scope: string[];
 };
 
+export type TOutlineSection = {
+  key: string;
+  heading: string;
+  heading_style: "numbered" | "step" | "plain";
+  goal: string;
+  key_points: string[];
+  claim_ids: string[];
+  needs: string[];
+  est_words: number;
+};
+
+export type TOutline = {
+  title: string;
+  title_options: string[];
+  angle: string;
+  intro_goal: string;
+  next_steps: string;
+  must_cover: string[];
+  covered_requirements: string[];
+  sections: TOutlineSection[];
+};
+
 export type TSeries = { name: string; part: number | null; previous_post_id: string | null };
 
 export type TTask = {
@@ -63,6 +85,7 @@ export type TTask = {
   requirements: string | null;
   angle: string | null;
   include_diagram: TIncludeDiagram;
+  review_outline: boolean;
   publication_targets: TPublicationTarget[];
   budgets: TTaskBudgets;
   status: TTaskStatus;
@@ -70,9 +93,11 @@ export type TTask = {
   last_error: string | null;
   resumable: boolean;
   research_plan: TResearchPlan | null;
+  outline: TOutline | null;
   open_questions: string[];
   progress: TTaskProgress;
   is_running: boolean;
+  pending_interrupt: { type: string; [key: string]: unknown } | null;
   trace_url: string | null;
   created_at: string;
   updated_at: string;
@@ -102,6 +127,7 @@ export type TCreateTaskPayload = {
   format: TTaskFormat;
   requirements?: string;
   include_diagram: TIncludeDiagram;
+  review_outline: boolean;
   publication_targets: TPublicationTarget[];
   series?: { name: string; part?: number };
   budgets?: Partial<TTaskBudgets>;
@@ -167,5 +193,61 @@ export type TResearchBrief = {
     angles?: { title: string; audience: string; rationale: string }[];
     open_questions?: string[];
   };
+  created_at: string;
+};
+
+export type TIssueSeverity = "blocker" | "warning" | "info";
+
+export type TValidationIssue = {
+  rule: string;
+  severity: TIssueSeverity;
+  message: string;
+  line: number | null;
+  section: string | null;
+  source: "validator" | "judge";
+};
+
+export type TEvaluation = {
+  kind: "deterministic" | "judge";
+  passed: boolean;
+  scores: Record<string, number>;
+  issues: TValidationIssue[];
+  model: string | null;
+  prompt_version: string | null;
+  created_at: string;
+};
+
+export type TRevisionSummary = {
+  id: string;
+  revision_number: number;
+  created_by: "ai" | "owner";
+  title: string;
+  slug: string;
+  content_hash: string;
+  word_count: number | null;
+  checks_passed: Record<string, boolean>;
+  created_at: string;
+};
+
+export type TRevision = {
+  id: string;
+  task_id: string;
+  revision_number: number;
+  parent_revision_id: string | null;
+  created_by: "ai" | "owner";
+  title: string;
+  slug: string;
+  description: string;
+  tags: string[];
+  markdown: string;
+  content_hash: string;
+  metadata: {
+    self_revisions?: number;
+    unsupported_statements?: string[];
+    word_count?: number;
+    style_guide_version?: string;
+    models?: Record<string, string | null>;
+  };
+  evaluations: TEvaluation[];
   created_at: string;
 };

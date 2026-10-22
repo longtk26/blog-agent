@@ -1,6 +1,9 @@
 import { apiClient } from "@/lib/api-client";
 import type {
   TCreateTaskPayload,
+  TOutline,
+  TRevision,
+  TRevisionSummary,
   TPromotePayload,
   TResearchBrief,
   TSourceList,
@@ -28,5 +31,9 @@ export const tasksApi = {
   promote: (id: string, payload: TPromotePayload) => apiClient.post<TTask>(`/tasks/${id}/promote`, payload),
   sources: (id: string) => apiClient.get<TSourceList>(`/tasks/${id}/sources`),
   brief: (id: string) => apiClient.get<TResearchBrief>(`/tasks/${id}/research-brief`),
+  revisions: (id: string) => apiClient.get<{ items: TRevisionSummary[] }>(`/tasks/${id}/revisions`),
+  revision: (revisionId: string) => apiClient.get<TRevision>(`/revisions/${revisionId}`),
+  approveOutline: (id: string, outline?: Partial<TOutline>) =>
+    apiClient.post<TTask>(`/tasks/${id}/outline/approve`, outline ? { outline } : {}),
   eventsUrl: (id: string, after: number) => apiClient.eventSourceUrl(`/tasks/${id}/events?after=${after}`),
 };

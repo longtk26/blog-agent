@@ -30,7 +30,7 @@ def clean_tables(migrated_db):
         import psycopg
 
         with psycopg.connect(TEST_DB_URL, autocommit=True) as conn:
-            conn.execute("TRUNCATE writing_tasks CASCADE")
+            conn.execute("TRUNCATE writing_tasks, style_guides CASCADE")
     yield
 
 

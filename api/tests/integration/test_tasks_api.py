@@ -4,12 +4,12 @@ import pytest
 from fastapi.testclient import TestClient
 
 import src.main as main
-from tests.fakes import FakeExtractor, FakeModelFactory, FakeSearchProvider, research_responder
+from tests.fakes import FakeExtractor, FakeModelFactory, FakeSearchProvider, WritingScript
 
 
 @pytest.fixture
 def client(monkeypatch):
-    monkeypatch.setattr(main, "get_model_factory", lambda: FakeModelFactory(research_responder))
+    monkeypatch.setattr(main, "get_model_factory", lambda: FakeModelFactory(WritingScript()))
     monkeypatch.setattr(main, "get_search_provider", lambda: FakeSearchProvider())
     monkeypatch.setattr(main, "get_page_extractor", lambda: FakeExtractor())
     with TestClient(main.app) as test_client:
@@ -44,6 +44,7 @@ def test_research_only_lifecycle_over_http(client):
     assert task["budgets"]["max_sources"] == 10
 
     done = wait_for_status(client, task["id"], {"completed"})
+    assert done["pending_interrupt"]["type"] == "awaiting_promotion"
     assert done["progress"]["sources_found"] == 4
     assert done["open_questions"]
 
@@ -72,7 +73,7 @@ def test_research_only_lifecycle_over_http(client):
 
     promoted = client.post(f"/tasks/{task['id']}/promote", json={"angle": "LoRA from first principles"})
     assert promoted.status_code == 200, promoted.text
-    final = wait_for_status(client, task["id"], {"outlining"})
+    final = wait_for_status(client, task["id"], {"awaiting_review"})
     assert final["mode"] == "article" and final["angle"] == "LoRA from first principles"
 
     again = client.post(f"/tasks/{task['id']}/promote", json={})
@@ -102,3 +103,26 @@ def test_retry_rejects_non_failed_task(client):
     wait_for_status(client, task["id"], {"completed"})
     response = client.post(f"/tasks/{task['id']}/retry", json={})
     assert response.status_code == 400 and response.json()["code"] == "INVALID_TRANSITION"
+
+
+def test_revisions_and_style_guide_endpoints(client):
+    task = client.post("/tasks", json={"topic": "How LoRA fine-tuning works", "mode": "article"}).json()
+    wait_for_status(client, task["id"], {"awaiting_review"})
+
+    revisions = client.get(f"/tasks/{task['id']}/revisions").json()["items"]
+    assert len(revisions) == 1 and revisions[0]["checks_passed"] == {"deterministic": True, "judge": True}
+    detail = client.get(f"/revisions/{revisions[0]['id']}").json()
+    assert detail["markdown"].startswith("# LoRA Fine-Tuning Explained")
+    assert {e["kind"] for e in detail["evaluations"]} == {"deterministic", "judge"}
+    assert client.get(f"/tasks/{task['id']}").json()["outline"]["sections"]
+
+    guide = client.get("/settings/style-guide").json()
+    assert guide["source"] == "seed" and guide["version"] == "style-v2"
+    updated = client.put("/settings/style-guide", json={"content": "Write like the owner. " * 5}).json()
+    assert updated["source"] == "owner" and updated["version"] == "owner-1"
+    assert client.get("/settings/style-guide").json()["version"] == "owner-1"
+    assert client.put("/settings/style-guide", json={"content": "short"}).status_code == 422
+    assert client.get("/revisions/00000000-0000-0000-0000-000000000000").status_code == 404
+
+    approve = client.post(f"/tasks/{task['id']}/outline/approve", json={})
+    assert approve.status_code == 409 and approve.json()["code"] == "NOTHING_TO_RESUME"

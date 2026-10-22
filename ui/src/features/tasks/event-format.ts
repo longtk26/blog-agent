@@ -57,14 +57,46 @@ export function describeEvent(event: TTaskEvent): TEventView {
       };
     case "brief_ready":
       return { title: "Research brief ready", detail: `${str(p.findings)} key findings`, tone: "success" };
+    case "outline_ready":
+      return { title: `Outline ready: “${str(p.title)}”`, detail: `${str(p.sections)} sections`, tone: "success" };
+    case "outline_approved":
+      return { title: p.edited ? "You edited and approved the outline" : "You approved the outline", tone: "success" };
+    case "section_drafted":
+      return { title: `Drafted: ${str(p.heading)}`, detail: `${str(p.words)} words`, tone: "default" };
+    case "draft_assembled":
+      return { title: `Draft assembled: ${str(p.title)}`, detail: `${str(p.words)} words`, tone: "default" };
+    case "validation_done":
+      return {
+        title: "Automated checks",
+        detail: `${str(p.blockers)} blockers · ${str(p.warnings)} warnings`,
+        tone: Number(p.blockers) > 0 ? "warning" : "success",
+      };
+    case "judge_done": {
+      const scores = (p.scores ?? {}) as Record<string, number>;
+      const lowest = Math.min(...Object.values(scores));
+      return {
+        title: p.will_revise ? "Editor review: revising" : "Editor review",
+        detail: `lowest score ${Number.isFinite(lowest) ? lowest : "?"}/5`,
+        tone: p.needs_revision ? "warning" : "success",
+      };
+    }
+    case "self_revision":
+      return {
+        title: `Self-revision round ${str(p.round)}`,
+        detail: Array.isArray(p.sections) && p.sections.length ? `rewrote ${p.sections.join(", ")}` : "metadata only",
+        tone: "default",
+      };
+    case "revision_saved":
+      return { title: `Saved revision r${str(p.revision_number)}`, detail: `hash ${str(p.content_hash)}`, tone: "success" };
     case "paused": {
       const interrupts = Array.isArray(p.interrupts) ? (p.interrupts as Record<string, unknown>[]) : [];
       const kind = str(interrupts[0]?.type);
-      return {
-        title: kind === "awaiting_promotion" ? "Paused — research complete, waiting for you" : "Paused",
-        detail: kind === "not_implemented" ? "Outline and drafting arrive in Epic 3" : undefined,
-        tone: "warning",
+      const titles: Record<string, string> = {
+        awaiting_promotion: "Paused — research complete, waiting for you",
+        outline_review: "Paused — approve the outline to start drafting",
+        awaiting_review: "Draft ready — waiting for your review",
       };
+      return { title: titles[kind] ?? "Paused", tone: "warning" };
     }
     case "error":
       return { title: `Error in ${str(p.node) || str(p.stage) || "workflow"}`, detail: str(p.message), tone: "error" };

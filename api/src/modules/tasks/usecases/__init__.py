@@ -1,7 +1,12 @@
 from .create_task_usecase import CreateTaskUsecaseDep
 from .list_tasks_usecase import ListTasksUsecaseDep
 from .get_task_usecase import GetTaskUsecaseDep
-from .control_task_usecases import CancelTaskUsecaseDep, RetryTaskUsecaseDep, PromoteTaskUsecaseDep
+from .control_task_usecases import (
+    CancelTaskUsecaseDep,
+    RetryTaskUsecaseDep,
+    PromoteTaskUsecaseDep,
+    ApproveOutlineUsecaseDep,
+)
 from .stream_task_events_usecase import StreamTaskEventsUsecaseDep
 
 __all__ = [
@@ -11,5 +16,6 @@ __all__ = [
     "CancelTaskUsecaseDep",
     "RetryTaskUsecaseDep",
     "PromoteTaskUsecaseDep",
+    "ApproveOutlineUsecaseDep",
     "StreamTaskEventsUsecaseDep",
 ]

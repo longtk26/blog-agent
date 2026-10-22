@@ -13,3 +13,8 @@ class BlogState(TypedDict, total=False):
     gaps: list[str]             # question ids without strong evidence
     brief_id: str
     promotion: dict | None      # owner input when a research-only task is promoted
+    outline: dict               # sections + requirement coverage (also stored on the task)
+    review_outline: bool
+    needs_revision: bool        # judge verdict for the bounded self-revision loop
+    revision_id: str            # latest saved ArticleRevision
+    review: dict | None         # owner decision on resume from awaiting_review (Epic 4)

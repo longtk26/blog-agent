@@ -7,6 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useTaskDetail } from "../hooks/use-task-detail";
+import { DraftPanel } from "./DraftPanel";
+import { OutlineCard } from "./OutlineCard";
 import { ResearchBriefView } from "./ResearchBriefView";
 import { ResearchPlanCard } from "./ResearchPlanCard";
 import { SourcesPanel } from "./SourcesPanel";
@@ -16,7 +18,7 @@ import { TaskStatusBadge } from "./TaskStatusBadge";
 import { TaskTimeline } from "./TaskTimeline";
 
 export function TaskDetail() {
-  const { id, task, error, isPending, events, connected, hasBrief } = useTaskDetail();
+  const { id, task, error, isPending, events, connected, hasBrief, hasDraft } = useTaskDetail();
 
   if (isPending) {
     return (
@@ -55,13 +57,17 @@ export function TaskDetail() {
               <TabsTrigger value="brief" disabled={!hasBrief}>
                 Brief
               </TabsTrigger>
+              <TabsTrigger value="draft" disabled={!hasDraft}>
+                Draft
+              </TabsTrigger>
             </TabsList>
             <Card className="mt-3">
               <CardContent>
                 <TabsContent value="activity">
                   <TaskTimeline events={events} connected={connected} />
                 </TabsContent>
-                <TabsContent value="plan">
+                <TabsContent value="plan" className="space-y-8">
+                  <OutlineCard task={task} />
                   <ResearchPlanCard plan={task.research_plan} openQuestions={task.open_questions} />
                 </TabsContent>
                 <TabsContent value="sources">
@@ -69,6 +75,9 @@ export function TaskDetail() {
                 </TabsContent>
                 <TabsContent value="brief">
                   <ResearchBriefView taskId={id} enabled={hasBrief} />
+                </TabsContent>
+                <TabsContent value="draft">
+                  <DraftPanel taskId={id} enabled={hasDraft} />
                 </TabsContent>
               </CardContent>
             </Card>
