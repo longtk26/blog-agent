@@ -1,10 +1,11 @@
 import Link from "next/link";
 
-import { ComingSoon } from "@/components/layout/ComingSoon";
 import { Container } from "@/components/layout/Container";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { Stack } from "@/components/layout/Stack";
 import { Button } from "@/components/ui/button";
+import { TaskFilters } from "@/features/tasks/components/TaskFilters";
+import { TaskTable } from "@/features/tasks/components/TaskTable";
 
 export default function TasksPage() {
   return (
@@ -19,7 +20,8 @@ export default function TasksPage() {
             </Button>
           }
         />
-        <ComingSoon title="No tasks yet">The task list arrives with Epic 2 (research workflow).</ComingSoon>
+        <TaskFilters />
+        <TaskTable />
       </Stack>
     </Container>
   );

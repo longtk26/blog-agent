@@ -18,6 +18,10 @@ class TracingStatusDto(BaseModel):
     project: str | None
 
 
+class SearchStatusDto(BaseModel):
+    provider: str
+
+
 class HealthCheckResponseDto(BaseModel):
     status: Literal["healthy", "degraded"]
     app: str
@@ -25,6 +29,7 @@ class HealthCheckResponseDto(BaseModel):
     database: ComponentStatusDto
     checkpointer: ComponentStatusDto
     llm: LlmStatusDto
+    search: SearchStatusDto
     tracing: TracingStatusDto
 
 

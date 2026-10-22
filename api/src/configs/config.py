@@ -54,6 +54,23 @@ class Config(BaseSettings):
     openai_api_key: SecretStr | None = None
     google_api_key: SecretStr | None = None
 
+    # Research (Epic 2). search_provider "auto" = tavily when TAVILY_API_KEY is set, else duckduckgo.
+    search_provider: str = "auto"
+    tavily_api_key: SecretStr | None = None
+    research_max_queries: int = 20
+    research_max_sources: int = 40
+    research_max_rounds: int = 4
+    research_quality_threshold: float = 0.5
+    research_domain_denylist: Annotated[list[str], NoDecode] = []
+    research_source_chars_for_llm: int = 20000
+    fetch_timeout_seconds: float = 15.0
+    fetch_max_bytes: int = 2_000_000
+    fetch_allow_private_hosts: bool = False
+    extract_concurrency: int = 4
+    assess_concurrency: int = 3
+    workflow_max_concurrency: int = 2
+    node_timeout_seconds: float = 900.0
+
     langsmith_tracing: bool = False
     langsmith_api_key: SecretStr | None = None
     langsmith_project: str = "blog-agent-local"
@@ -63,7 +80,7 @@ class Config(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 
-    @field_validator("cors_origins", mode="before")
+    @field_validator("cors_origins", "research_domain_denylist", mode="before")
     @classmethod
     def split_origins(cls, value):
         if isinstance(value, str):
@@ -75,6 +92,7 @@ class Config(BaseSettings):
         "anthropic_api_key",
         "openai_api_key",
         "google_api_key",
+        "tavily_api_key",
         "langsmith_api_key",
         mode="before",
     )
@@ -98,6 +116,19 @@ class Config(BaseSettings):
         if not sep or not provider or not model:
             raise ValueError("must look like '<provider>:<model>', e.g. 'anthropic:claude-sonnet-5-5'")
         return value
+
+    @field_validator("search_provider")
+    @classmethod
+    def validate_search_provider(cls, value: str) -> str:
+        if value not in ("auto", "tavily", "duckduckgo"):
+            raise ValueError("must be one of: auto, tavily, duckduckgo")
+        return value
+
+    @property
+    def resolved_search_provider(self) -> str:
+        if self.search_provider == "auto":
+            return "tavily" if self.tavily_api_key else "duckduckgo"
+        return self.search_provider
 
     @property
     def tracing_enabled(self) -> bool:

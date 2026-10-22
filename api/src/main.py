@@ -1,3 +1,4 @@
+import asyncio
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -7,9 +8,19 @@ from slowapi.middleware import SlowAPIMiddleware
 from src.configs import config
 from src.configs.logger import get_logger, setup_logging
 from src.libs.database import CheckpointerManager
+from src.libs.events import event_broker
 from src.libs.exceptions import register_exception_handlers
 from src.libs.security import ApiKeyMiddleware, JsonContentTypeMiddleware, RequestContextMiddleware, limiter
-from src.modules.agent.infrastructure.adapters import disable_env_tracing, get_tracing
+from src.modules.agent.graph.blog_graph import build_blog_graph
+from src.modules.agent.graph.deps import WorkflowDeps
+from src.modules.agent.infrastructure.adapters import (
+    LangGraphWorkflowRunner,
+    WorkflowStore,
+    disable_env_tracing,
+    get_model_factory,
+    get_tracing,
+)
+from src.modules.research.infrastructure.adapters import get_page_extractor, get_search_provider
 from src.routers import all_router
 
 setup_logging(config)
@@ -28,11 +39,39 @@ async def lifespan(app: FastAPI):
     )
     await checkpointer_manager.open()
     app.state.checkpointer_manager = checkpointer_manager
+
+    event_broker.bind_loop(asyncio.get_running_loop())
+    store = WorkflowStore(event_broker)
+    deps = WorkflowDeps(
+        store=store,
+        models=get_model_factory(),
+        search=get_search_provider(),
+        extractor=get_page_extractor(),
+        settings=config,
+    )
+    runner = LangGraphWorkflowRunner(
+        build_blog_graph(deps, checkpointer_manager.saver),
+        store,
+        get_tracing(),
+        max_concurrency=config.workflow_max_concurrency,
+        secrets=config.secret_values(),
+    )
+    app.state.workflow_runner = runner
+    await runner.recover()
     logger.info(
         "API started",
-        extra={"context": {"env": config.env, "tracing": config.tracing_enabled, "auth": bool(config.agent_api_key)}},
+        extra={
+            "context": {
+                "env": config.env,
+                "tracing": config.tracing_enabled,
+                "auth": bool(config.agent_api_key),
+                "search": deps.search.name,
+                "extractor": deps.extractor.name,
+            }
+        },
     )
     yield
+    await runner.shutdown()
     get_tracing().flush()
     await checkpointer_manager.close()
 

@@ -61,6 +61,7 @@ export function HealthDetails() {
         <CardContent>
           <StatusRow label="Database" value={data.database.ok ? "ok" : "down"} ok={data.database.ok} />
           <StatusRow label="Checkpointer" value={data.checkpointer.ok ? "ok" : "down"} ok={data.checkpointer.ok} />
+          <StatusRow label="Web search" value={data.search.provider} ok />
           <StatusRow
             label="LangSmith tracing"
             value={data.tracing.enabled ? (data.tracing.project ?? "on") : "off"}

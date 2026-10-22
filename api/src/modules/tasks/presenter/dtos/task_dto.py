@@ -1,0 +1,157 @@
+import uuid
+from datetime import datetime
+
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+
+from src.configs import config
+from src.modules.shared.domain.entities import (
+    IncludeDiagram,
+    PublicationTarget,
+    SeriesInfo,
+    TaskBudgets,
+    TaskDepth,
+    TaskEventEntity,
+    TaskFormat,
+    TaskMode,
+    TaskProgress,
+    WritingTaskEntity,
+)
+from src.modules.shared.domain.value_objects import TaskStatus
+
+
+class SeriesDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    name: str = Field(min_length=1, max_length=120)
+    part: int | None = Field(default=None, ge=1, le=100)
+    previous_post_id: str | None = Field(default=None, max_length=120)
+
+
+class TaskBudgetsDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    max_queries: int | None = Field(default=None, ge=1, le=config.research_max_queries)
+    max_sources: int | None = Field(default=None, ge=1, le=config.research_max_sources)
+    max_research_rounds: int | None = Field(default=None, ge=1, le=config.research_max_rounds)
+    results_per_query: int | None = Field(default=None, ge=1, le=10)
+
+
+class CreateTaskRequestDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    topic: str = Field(min_length=5, max_length=500)
+    mode: TaskMode = TaskMode.ARTICLE
+    audience: str | None = Field(default=None, max_length=300)
+    depth: TaskDepth = TaskDepth.INTERMEDIATE
+    language: str = Field(default="en", pattern=r"^[a-z]{2}(-[A-Z]{2})?$")
+    format: TaskFormat = TaskFormat.CONCEPT
+    series: SeriesDto | None = None
+    requirements: str | None = Field(default=None, max_length=4000)
+    include_diagram: IncludeDiagram = IncludeDiagram.AUTO
+    publication_targets: list[PublicationTarget] = Field(default_factory=list)
+    budgets: TaskBudgetsDto | None = None
+
+    @field_validator("topic", "audience", "requirements")
+    @classmethod
+    def strip_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value or None
+
+    @field_validator("publication_targets")
+    @classmethod
+    def unique_targets(cls, value: list[PublicationTarget]) -> list[PublicationTarget]:
+        return list(dict.fromkeys(value))
+
+    def to_entity(self) -> WritingTaskEntity:
+        overrides = self.budgets.model_dump(exclude_none=True) if self.budgets else {}
+        return WritingTaskEntity(
+            topic=self.topic,
+            mode=self.mode,
+            audience=self.audience,
+            depth=self.depth,
+            language=self.language,
+            format=self.format,
+            series=SeriesInfo(**self.series.model_dump()) if self.series else None,
+            requirements=self.requirements,
+            include_diagram=self.include_diagram,
+            publication_targets=self.publication_targets,
+            budgets=TaskBudgets(**overrides),
+            status=TaskStatus.QUEUED,
+        )
+
+
+class PromoteTaskRequestDto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    angle: str | None = Field(default=None, max_length=300)
+    audience: str | None = Field(default=None, max_length=300)
+    depth: TaskDepth | None = None
+    format: TaskFormat | None = None
+    requirements: str | None = Field(default=None, max_length=4000)
+
+
+class TaskResponseDto(BaseModel):
+    id: uuid.UUID
+    topic: str
+    mode: TaskMode
+    audience: str | None
+    depth: TaskDepth
+    language: str
+    format: TaskFormat
+    series: SeriesInfo | None
+    requirements: str | None
+    angle: str | None
+    include_diagram: IncludeDiagram
+    publication_targets: list[PublicationTarget]
+    budgets: TaskBudgets
+    status: TaskStatus
+    failed_stage: TaskStatus | None
+    last_error: str | None
+    resumable: bool
+    research_plan: dict | None
+    open_questions: list[str]
+    progress: TaskProgress
+    is_running: bool
+    trace_url: str | None
+    created_at: datetime
+    updated_at: datetime
+
+    @classmethod
+    def from_entity(cls, task: WritingTaskEntity, is_running: bool, trace_url: str | None = None) -> "TaskResponseDto":
+        return cls(**task.model_dump(exclude={"last_run_id"}), is_running=is_running, trace_url=trace_url)
+
+
+class TaskSummaryDto(BaseModel):
+    id: uuid.UUID
+    topic: str
+    mode: TaskMode
+    format: TaskFormat
+    status: TaskStatus
+    progress: TaskProgress
+    last_error: str | None
+    is_running: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class TaskListResponseDto(BaseModel):
+    items: list[TaskSummaryDto]
+    total: int
+    limit: int
+    offset: int
+
+
+class TaskEventDto(BaseModel):
+    id: int
+    type: str
+    from_status: str | None
+    to_status: str | None
+    actor: str
+    payload: dict
+    created_at: datetime
+
+    @classmethod
+    def from_entity(cls, event: TaskEventEntity) -> "TaskEventDto":
+        return cls(**event.model_dump(exclude={"task_id"}))

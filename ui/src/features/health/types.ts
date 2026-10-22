@@ -12,6 +12,9 @@ export type THealth = {
     default_provider: string | null;
     roles: Record<string, string | null>;
   };
+  search: {
+    provider: string;
+  };
   tracing: {
     enabled: boolean;
     project: string | null;

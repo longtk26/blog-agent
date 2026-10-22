@@ -1,9 +1,10 @@
 from .model_factory import IModelFactory, ModelRole, ModelSpec
 from .tracing import ITracing
-from .workflow_runner import IWorkflowRunner
+from .workflow_runner import IWorkflowRunner, ThreadStatus
+from .workflow_store import IWorkflowStore
 
 # Dep bindings live in infrastructure; re-exported lazily so adapters can import these ports without a cycle.
-_DEPS = {"IModelFactoryDep", "ITracingDep"}
+_DEPS = {"IModelFactoryDep", "ITracingDep", "IWorkflowRunnerDep"}
 
 
 def __getattr__(name: str):
@@ -20,6 +21,9 @@ __all__ = [
     "ModelSpec",
     "ITracing",
     "IWorkflowRunner",
+    "ThreadStatus",
+    "IWorkflowStore",
     "IModelFactoryDep",
     "ITracingDep",
+    "IWorkflowRunnerDep",
 ]

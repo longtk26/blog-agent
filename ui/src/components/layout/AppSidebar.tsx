@@ -3,6 +3,7 @@
 import { BotIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Suspense } from "react";
 
 import {
   Sidebar,
@@ -23,9 +24,28 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export function AppSidebar() {
-  const pathname = usePathname();
+function NavItems({ pathname }: { pathname: string | null }) {
+  return (
+    <SidebarMenu>
+      {NAV_ITEMS.filter((item) => item.enabled).map((item) => (
+        <SidebarMenuItem key={item.href}>
+          <SidebarMenuButton asChild isActive={pathname ? isActive(pathname, item.href) : false} tooltip={item.title}>
+            <Link href={item.href}>
+              <item.icon />
+              <span>{item.title}</span>
+            </Link>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      ))}
+    </SidebarMenu>
+  );
+}
 
+function ActiveNavItems() {
+  return <NavItems pathname={usePathname()} />;
+}
+
+export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -48,18 +68,10 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {NAV_ITEMS.filter((item) => item.enabled).map((item) => (
-                <SidebarMenuItem key={item.href}>
-                  <SidebarMenuButton asChild isActive={isActive(pathname, item.href)} tooltip={item.title}>
-                    <Link href={item.href}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
+            {/* usePathname() suspends on dynamic routes under Cache Components; fall back to no highlight. */}
+            <Suspense fallback={<NavItems pathname={null} />}>
+              <ActiveNavItems />
+            </Suspense>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

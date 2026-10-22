@@ -4,17 +4,20 @@ from fastapi import Depends
 from src.configs import config
 from src.modules.agent.ports.output import IModelFactoryDep, ITracingDep, ModelRole
 from src.modules.health.ports.output import ISystemProbeDep
+from src.modules.research.ports.output import ISearchProviderDep
 from src.modules.health.presenter.dtos import (
     ComponentStatusDto,
     HealthCheckResponseDto,
     LlmStatusDto,
+    SearchStatusDto,
     TracingStatusDto,
 )
 
 
 class HealthCheckUsecase():
-    def __init__(self, probe: ISystemProbeDep, models: IModelFactoryDep, tracing: ITracingDep):
+    def __init__(self, probe: ISystemProbeDep, models: IModelFactoryDep, tracing: ITracingDep, search: ISearchProviderDep):
         self.probe = probe
+        self.search = search
         self.models = models
         self.tracing = tracing
 
@@ -34,6 +37,7 @@ class HealthCheckUsecase():
                 default_provider=self.models.spec(ModelRole.WRITER).provider,
                 roles=roles,
             ),
+            search=SearchStatusDto(provider=self.search.name),
             tracing=TracingStatusDto(
                 enabled=self.tracing.enabled,
                 project=self.tracing.project if self.tracing.enabled else None,

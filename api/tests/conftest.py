@@ -16,5 +16,12 @@ os.environ.update(
         "LLM_FAST_MODEL": "",
         "LLM_JUDGE_MODEL": "",
         "CHECKPOINT_SCHEMA": "langgraph_test",
+        "SEARCH_PROVIDER": "duckduckgo",
+        # Never let the developer's real keys (blog-agent/.env) reach tests, traces or assertion output.
+        "ANTHROPIC_API_KEY": "",
+        "OPENAI_API_KEY": "",
+        "GOOGLE_API_KEY": "",
+        "TAVILY_API_KEY": "",
+        "LANGSMITH_API_KEY": "",
     }
 )

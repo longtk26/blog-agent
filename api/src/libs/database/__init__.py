@@ -3,6 +3,7 @@ from .session import (
     DBSessionManager,
     db_session_manager,
 )
+from .scope import run_in_session, arun_in_session
 from .checkpointer import (
     CheckpointerManager,
     CheckpointerDep,
@@ -15,4 +16,6 @@ __all__ = [
     "CheckpointerManager",
     "CheckpointerDep",
     "CheckpointerManagerDep",
+    "run_in_session",
+    "arun_in_session",
 ]

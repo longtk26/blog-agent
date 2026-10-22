@@ -58,22 +58,23 @@ flowchart TD
 
 | From | Allowed to |
 |---|---|
-| `queued` | `researching`, `failed`, `rejected` (cancel) |
+| `queued` | `researching`, `failed`, `rejected` |
 | `researching` | `outlining`, `completed`, `failed`, `rejected` |
-| `outlining` | `drafting`, `awaiting_review` (optional outline review), `failed` |
-| `drafting` | `generating_diagram`, `validating`, `failed` |
-| `generating_diagram` | `validating`, `failed` |
-| `validating` | `drafting` (self-revision), `awaiting_review`, `failed` |
+| `outlining` | `drafting`, `awaiting_review` (optional outline review), `failed`, `rejected` |
+| `drafting` | `generating_diagram`, `validating`, `failed`, `rejected` |
+| `generating_diagram` | `validating`, `failed`, `rejected` |
+| `validating` | `drafting` (self-revision), `awaiting_review`, `failed`, `rejected` |
 | `awaiting_review` | `revision_requested`, `approved`, `rejected` |
-| `revision_requested` | `researching`, `outlining`, `drafting`, `generating_diagram` |
+| `revision_requested` | `researching`, `outlining`, `drafting`, `generating_diagram`, `failed`, `rejected` |
 | `approved` | `publishing`, `awaiting_review` (new revision created) |
 | `publishing` | `published`, `partially_published`, `failed` |
 | `partially_published` | `publishing`, `awaiting_review` |
 | `published` | `awaiting_review` (owner edits → update flow) |
-| `completed` (research only) | `outlining` (promote to article) |
-| `failed` | the stage recorded in `failed_stage` (resume) |
+| `completed` (research only) | `outlining` (promote to article), `rejected` |
+| `failed` | **only** the stage recorded in `failed_stage` (retry), or `rejected` |
+| `rejected` | — (terminal; doubles as "cancelled") |
 
-The table adds `completed` to the brief's status list, for research-only tasks.
+The table adds `completed` to the brief's status list, for research-only tasks. *(Updated during implementation: `rejected` is reachable from every non-publishing state, so a task can always be cancelled. It lives in `api/src/modules/shared/domain/value_objects/task_status.py`.)*
 
 ---
 
@@ -315,3 +316,41 @@ The table adds `completed` to the brief's status list, for research-only tasks.
 | LangChain | Tools with Pydantic schemas, `with_structured_output`, retrieval of web documents, prompt templates |
 | LangGraph | `StateGraph`, conditional edges, loops with counters, `recursion_limit`, streaming (`updates`, `custom`, `get_stream_writer`), resume from checkpoint |
 | LangSmith | Inspecting tool calls, node-level spans, filtering traces by `task_id` metadata |
+
+---
+
+## Implementation notes (delivered 2026-10-22)
+
+| Story | Where | Notes |
+|---|---|---|
+| E2-S1 | `modules/tasks/` | `POST/GET /tasks`, `GET /tasks/{id}`. DTOs use `extra="forbid"`. Budgets are capped by server maximums (`RESEARCH_MAX_*`). By default the list hides `rejected` tasks; pass `archived=true` to show them. |
+| E2-S2 | `shared/domain/value_objects/task_status.py`, `tasks/domain/task_transitions.py` | `TaskTransitioner` is the **only** writer of `status`. It runs under a row lock (`SELECT … FOR UPDATE`) and writes a `status_changed` event in the same transaction. |
+| E2-S3 | `agent/graph/blog_graph.py`, `agent/nodes/base.py`, `agent/infrastructure/adapters/workflow_runner.py` | One thread per task, with `thread_id = task_id`. State holds only small values; page text, claims and briefs live in tables. `@workflow_node` handles status, start/finish events, timeout and failure capture. The runner runs each thread as an asyncio task, with at most `WORKFLOW_MAX_CONCURRENCY` at once. |
+| E2-S4 | `agent/nodes/research.py::plan_research`, `agent/prompts/research.py`, `agent/schemas/research.py` | Schemas carry no length or range constraints, because providers differ in which ones they accept. Limits are enforced in `normalize_*` after parsing. One repair retry is made on invalid output. |
+| E2-S5 | `research/infrastructure/adapters/` | **Search:** Tavily, or keyless DuckDuckGo, chosen with `SEARCH_PROVIDER=auto`. **Extraction:** Tavily extract, falling back to httpx + trafilatura. **SSRF guard:** URLs must be http(s) and resolve only to public IPs, and every redirect hop is re-checked. Pages are limited to 2 MB and HTML/text content types. URLs are canonicalised (tracking parameters stripped) and de-duplicated by a unique `(task_id, canonical_url)` key. Search runs through a LangChain `StructuredTool`, so it shows up as a tool span. |
+| E2-S6 | `assess_sources`, `nodes/evidence.py` | Page text is wrapped in `<untrusted_source>`, and any closing tag inside it is neutralised. The assessment node has no tools. Each quote is checked verbatim against the page text after normalising whitespace, quotes and ellipses (`quote_verified`). Sources below `RESEARCH_QUALITY_THRESHOLD` become `low_quality`. |
+| E2-S7 | `check_coverage` | Coverage is computed deterministically: a question counts as covered when a claim from an `assessed` source at or above the threshold answers it. Follow-up queries target only the uncovered questions. Rounds, queries and sources are all budgeted. |
+| E2-S8 | `synthesize_research`, `nodes/brief_render.py` | The LLM sees short refs (`S2`, `C5`) instead of UUIDs. Refs that don't exist are dropped, and findings without evidence are marked `supported: false`. **Research-only:** the task moves to `completed`, then hits an `interrupt()`. `POST /tasks/{id}/promote` resumes the **same thread** with `Command(resume=…)`, and no new searches run. |
+| E2-S9 | `GET /tasks/{id}/events` | SSE replays the persisted `task_events`, honouring `Last-Event-ID` and `?after=`, then streams live events. The in-process broker wakes listeners. A heartbeat goes out every 15 s, and an `event: end` is sent when the task is at rest. Custom events come from `get_stream_writer()` and are persisted by the runner. |
+| E2-S10 | `LangGraphWorkflowRunner.recover`, `POST /tasks/{id}/retry` | **On startup:** active tasks without a live run become `failed` with `resumable=true`. Tasks paused at an interrupt are left alone, and queued tasks are started. **Retry** resumes from the checkpoint, so completed nodes are not re-run. |
+| E2-S11 | `ui/src/features/tasks/`, `app/tasks/**` | Pages: a form (RHF + Zod, with example chips), a list (Zustand filters) and a detail page. The detail page has an SSE timeline, the plan, sources with claims and quote checks, a brief tab, a sidebar, and cancel, retry and promote actions. `/tasks/[id]` is partially prerendered: `useParams` sits under `<Suspense>`, as Cache Components requires. |
+
+**Extra:** `outline` is an **Epic 3 placeholder**. It pauses the thread with `interrupt({"type": "not_implemented"})`, so article tasks rest at `outlining` and can be resumed once Epic 3 replaces the node.
+
+**Verification:**
+- 123 pytest tests pass. Of these, 17 are integration tests against real Postgres with a scripted fake LLM, search and extractor. They cover:
+  - the full research-only run, including a follow-up round and de-duplication;
+  - a prompt-injection page;
+  - promotion on the same thread;
+  - node failure followed by a checkpoint retry, with no duplicate sources or re-fetching;
+  - per-source failures;
+  - restart recovery;
+  - cancel;
+  - the HTTP API, including SSE replay and `Last-Event-ID`.
+- `alembic check` is clean. The UI passes `tsc`, `eslint` and `next build`.
+- **Manual run in Docker** with real Gemini (`gemini-3.1-flash-lite`) and DuckDuckGo, on the topic "pgvector vs dedicated engines":
+  - 4 questions, 7 sources and 42 claims; every question covered.
+  - The brief was produced, then promoted, and the task is paused at `outlining`.
+  - 2 of the 4 DuckDuckGo queries failed, probably rate-limited. The run recovered without intervention. A Tavily key is recommended.
+
+**Not verified:** Tavily against the real API (no key; covered only by HTTP-mocked tests) and LangSmith traces (tracing is off).
