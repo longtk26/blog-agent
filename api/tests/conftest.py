@@ -23,5 +23,8 @@ os.environ.update(
         "GOOGLE_API_KEY": "",
         "TAVILY_API_KEY": "",
         "LANGSMITH_API_KEY": "",
+        "SANITY_API_WRITE_TOKEN": "",
+        "RATE_LIMIT_DEFAULT": "10000/minute",
+        "RATE_LIMIT_STRICT": "10000/minute",
     }
 )

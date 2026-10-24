@@ -10,5 +10,6 @@ export const taskKeys = {
   brief: (id: string) => [...taskKeys.detail(id), "brief"] as const,
   revisions: (id: string) => [...taskKeys.detail(id), "revisions"] as const,
   approvals: (id: string) => [...taskKeys.detail(id), "approvals"] as const,
+  publications: (id: string) => [...taskKeys.detail(id), "publications"] as const,
   revision: (revisionId: string) => [...taskKeys.all, "revision", revisionId] as const,
 };

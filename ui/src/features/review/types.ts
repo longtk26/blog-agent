@@ -31,5 +31,31 @@ export type TApproval = {
   superseded_at: string | null;
 };
 
+export type TPublicationStatus = "pending" | "published" | "failed" | "unpublished";
+
+export type TPublication = {
+  id: string;
+  task_id: string;
+  destination: TPublicationTarget;
+  article_revision_id: string;
+  rendered_content_hash: string;
+  destination_id: string | null;
+  destination_url: string | null;
+  destination_meta: {
+    studio_url?: string;
+    cover_image_key?: string;
+    image_count?: number;
+    tag_count?: number;
+    [key: string]: unknown;
+  };
+  status: TPublicationStatus;
+  attempt_count: number;
+  last_error: string | null;
+  published_at: string | null;
+  unpublished_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type TReviewMode = "preview" | "edit" | "split" | "diff";
-export type TSidebarTab = "issues" | "claims" | "sources" | "metadata";
+export type TSidebarTab = "issues" | "claims" | "sources" | "metadata" | "publish";

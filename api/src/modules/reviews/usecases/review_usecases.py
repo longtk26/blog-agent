@@ -295,7 +295,8 @@ class ApproveRevisionUsecase(_Review):
             raise NotFoundException(f"Revision '{revision_id}' not found")
         task_id = revision.task_id
         self._ensure_idle(task_id)
-        if await self._pending_type(task_id) != "awaiting_review":
+        pending = await self._pending_type(task_id)
+        if pending is not None and pending != "awaiting_review":
             raise ConflictException("The workflow is not waiting for a review decision", code=ErrorCode.NOTHING_TO_RESUME)
 
         task, approvals = self._approve(revision, dto)
@@ -303,7 +304,8 @@ class ApproveRevisionUsecase(_Review):
         self._feedback(
             task, 1, None, {"action": "approve", "revision": revision.revision_number, "destinations": [str(d) for d in dto.destinations]}
         )
-        await self.runner.resume(str(task_id), {"action": "approve", "revision_id": str(revision.id)})
+        if pending == "awaiting_review":
+            await self.runner.resume(str(task_id), {"action": "approve", "revision_id": str(revision.id)})
         return ApprovalListResponseDto(items=[ApprovalDto.from_entity(a) for a in approvals])
 
     @Transactional

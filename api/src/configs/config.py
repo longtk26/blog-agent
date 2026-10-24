@@ -83,6 +83,19 @@ class Config(BaseSettings):
     review_research_max_sources: int = 6
     revision_max_chars: int = 200_000
 
+    # Publishing (Epic 5)
+    sanity_project_id: str = "sanity_project_id"
+    sanity_dataset: str = "blogs"
+    sanity_api_version: str = "2025-01-20"
+    sanity_api_write_token: SecretStr | None = None
+    sanity_site_base_url: str = "https://leon-pham.vercel.app"
+    sanity_studio_base_url: str = "https://sanity_studio_base_url.sanity.studio"
+    sanity_test_dataset: str | None = None
+    sanity_generate_thumbnail: bool = True
+    thumbnail_model: str = "gemini-3.1-flash-image"
+    blogs_export_enabled: bool = False
+    blogs_dir: str = "../blogs"
+
     langsmith_tracing: bool = False
     langsmith_api_key: SecretStr | None = None
     langsmith_project: str = "blog-agent-local"
@@ -106,6 +119,7 @@ class Config(BaseSettings):
         "google_api_key",
         "tavily_api_key",
         "langsmith_api_key",
+        "sanity_api_write_token",
         mode="before",
     )
     @classmethod

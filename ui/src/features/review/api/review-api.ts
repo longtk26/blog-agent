@@ -1,6 +1,6 @@
 import type { TRevision, TTask } from "@/features/tasks/types";
 import { apiClient } from "@/lib/api-client";
-import type { TApproval, TApprovalPayload, TOwnerRevisionPayload, TReviewPayload } from "../types";
+import type { TApproval, TApprovalPayload, TOwnerRevisionPayload, TPublication, TReviewPayload } from "../types";
 
 export const reviewApi = {
   saveRevision: (taskId: string, payload: TOwnerRevisionPayload) => apiClient.post<TRevision>(`/tasks/${taskId}/revisions`, payload),
@@ -8,4 +8,11 @@ export const reviewApi = {
   approve: (revisionId: string, payload: TApprovalPayload) =>
     apiClient.post<{ items: TApproval[] }>(`/revisions/${revisionId}/approvals`, payload),
   approvals: (taskId: string) => apiClient.get<{ items: TApproval[] }>(`/tasks/${taskId}/approvals`),
+  publish: (revisionId: string, destinations: string[]) =>
+    apiClient.post<{ items: TPublication[] }>(`/revisions/${revisionId}/publish`, { destinations }),
+  publications: (taskId: string) => apiClient.get<{ items: TPublication[] }>(`/tasks/${taskId}/publications`),
+  retryPublication: (taskId: string, destination: string) =>
+    apiClient.post<{ items: TPublication[] }>(`/tasks/${taskId}/publications/${destination}/retry`, {}),
+  unpublish: (taskId: string, payload: { slug: string; destinations?: string[] }) =>
+    apiClient.post<{ items: TPublication[] }>(`/tasks/${taskId}/unpublish`, payload),
 };

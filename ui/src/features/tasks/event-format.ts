@@ -98,6 +98,37 @@ export function describeEvent(event: TTaskEvent): TEventView {
       };
       return { title: titles[kind] ?? "Paused", tone: "warning" };
     }
+    case "publishing_started":
+      return {
+        title: `Publishing to ${humanize(str(p.destination))}`,
+        detail: p.revision_id ? `revision ${str(p.revision_id).slice(0, 8)}` : undefined,
+        tone: "default",
+      };
+    case "asset_uploaded":
+      return {
+        title: `Uploaded ${str(p.filename) || str(p.asset_id)}`,
+        detail: p.total ? `${str(p.index)} of ${str(p.total)} assets` : undefined,
+        tone: "muted",
+        noisy: true,
+      };
+    case "publish_succeeded":
+      return {
+        title: `Published to ${humanize(str(p.destination))}`,
+        detail: str(p.url) || undefined,
+        tone: "success",
+      };
+    case "publish_failed":
+      return {
+        title: `Publish failed: ${humanize(str(p.destination))}`,
+        detail: str(p.error) || undefined,
+        tone: "error",
+      };
+    case "unpublished":
+      return {
+        title: `Unpublished from ${humanize(str(p.destination))}`,
+        detail: p.slug ? `slug: ${str(p.slug)}` : undefined,
+        tone: "warning",
+      };
     case "error":
       return { title: `Error in ${str(p.node) || str(p.stage) || "workflow"}`, detail: str(p.message), tone: "error" };
     case "info":

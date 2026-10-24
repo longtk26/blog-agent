@@ -38,6 +38,7 @@ export function useReview() {
   });
   const sources = useTaskSources(taskId);
   const approvals = useQuery({ queryKey: taskKeys.approvals(taskId), queryFn: () => reviewApi.approvals(taskId) });
+  const publications = useQuery({ queryKey: taskKeys.publications(taskId), queryFn: () => reviewApi.publications(taskId) });
 
   const revision = revisionQuery.data;
   const isLatest = Boolean(revision && latest && revision.id === latest.id);
@@ -54,6 +55,7 @@ export function useReview() {
     revision,
     sources: sources.data?.items ?? [],
     approvals: approvals.data?.items ?? [],
+    publications: publications.data?.items ?? [],
     isLatest,
     canEdit: Boolean(task && isLatest && idle && EDITABLE.includes(task.status)),
     canReview: Boolean(task && isLatest && idle && task.status === "awaiting_review" && waitingForReview),
@@ -114,5 +116,39 @@ export function useReviewActions(taskId: string) {
     onError,
   });
 
-  return { save, review, approve };
+  const publish = useMutation({
+    mutationFn: ({ revisionId, destinations }: { revisionId: string; destinations: string[] }) =>
+      reviewApi.publish(revisionId, destinations),
+    onSuccess: (result) => {
+      refresh();
+      queryClient.invalidateQueries({ queryKey: taskKeys.publications(taskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+      toast.success(`Published to ${result.items.map((p) => p.destination).join(", ")}`);
+    },
+    onError,
+  });
+
+  const retryPublication = useMutation({
+    mutationFn: (destination: string) => reviewApi.retryPublication(taskId, destination),
+    onSuccess: (result) => {
+      refresh();
+      queryClient.invalidateQueries({ queryKey: taskKeys.publications(taskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+      toast.success(`Retried publishing to ${result.items.map((p) => p.destination).join(", ")}`);
+    },
+    onError,
+  });
+
+  const unpublish = useMutation({
+    mutationFn: (payload: { slug: string; destinations?: string[] }) => reviewApi.unpublish(taskId, payload),
+    onSuccess: (result) => {
+      refresh();
+      queryClient.invalidateQueries({ queryKey: taskKeys.publications(taskId) });
+      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+      toast.success(`Unpublished ${result.items.map((p) => p.destination).join(", ")}`);
+    },
+    onError,
+  });
+
+  return { save, review, approve, publish, retryPublication, unpublish };
 }

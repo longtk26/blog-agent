@@ -14,6 +14,7 @@ import { useReviewStore } from "@/store/review-store";
 import { isDraftDirty } from "../hooks/use-revision-editor";
 import { useReview } from "../hooks/use-review";
 import { ApproveDialog } from "./ApproveDialog";
+import { PublishDialog } from "./PublishDialog";
 import { RejectDialog } from "./RejectDialog";
 import { RequestRevisionDialog } from "./RequestRevisionDialog";
 import { ReviewMain } from "./ReviewMain";
@@ -37,18 +38,50 @@ function StatusNote({ task }: { task: TTask }) {
       </Alert>
     );
   }
+  if (task.status === "publishing") {
+    return (
+      <Alert>
+        <Loader2Icon className="animate-spin" />
+        <AlertTitle>Publishing in progress</AlertTitle>
+        <AlertDescription>Assets are being uploaded and the post document is syncing to Sanity.</AlertDescription>
+      </Alert>
+    );
+  }
   if (task.status === "approved") {
     return (
       <Alert>
-        <AlertTitle>Approved — waiting to publish</AlertTitle>
-        <AlertDescription>Publishing arrives in Epic 5. Editing now voids the approval and returns the task to review.</AlertDescription>
+        <AlertTitle>Approved — ready to publish</AlertTitle>
+        <AlertDescription>
+          This revision is approved. Click <strong>Publish</strong> to sync it to Sanity. Editing now voids the approval and returns the task to review.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  if (task.status === "published") {
+    return (
+      <Alert>
+        <AlertTitle>Published on website</AlertTitle>
+        <AlertDescription>
+          This post is live on Sanity. Check the Publish tab in the sidebar to view links or unpublish.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+  if (task.status === "partially_published") {
+    return (
+      <Alert variant="destructive">
+        <AlertTitle>Partially published</AlertTitle>
+        <AlertDescription>
+          Publishing failed on one or more destinations. Check the Publish tab in the sidebar to review and retry.
+        </AlertDescription>
       </Alert>
     );
   }
   if (task.status === "failed") {
+    const isPublishFailure = task.failed_stage === "publishing";
     return (
       <Alert variant="destructive">
-        <AlertTitle>The last revision round failed</AlertTitle>
+        <AlertTitle>{isPublishFailure ? "Publishing failed" : "The last revision round failed"}</AlertTitle>
         <AlertDescription>{task.last_error ?? "Retry it from the task page."}</AlertDescription>
       </Alert>
     );
@@ -107,6 +140,19 @@ export function ReviewPage() {
             <RejectDialog taskId={taskId} disabled={!review.canReject} />
             <RequestRevisionDialog taskId={taskId} revision={revision} disabled={!review.canReview || dirty} />
             <ApproveDialog task={task} revision={revision} disabled={!review.canReview || dirty} />
+            <PublishDialog
+              taskId={taskId}
+              revision={revision}
+              approvals={review.approvals}
+              publications={review.publications}
+              disabled={
+                task.is_running ||
+                dirty ||
+                !review.approvals.some(
+                  (a) => a.article_revision_id === revision.id && a.decision === "approved",
+                )
+              }
+            />
           </div>
         </div>
         <StatusNote task={task} />
@@ -118,7 +164,14 @@ export function ReviewPage() {
             canEdit={review.canEdit}
             readOnlyReason={review.canEdit ? null : readOnlyReason(task, review.isLatest)}
           />
-          <ReviewSidebar revision={revision} sources={review.sources} approvals={review.approvals} canEdit={review.canEdit} />
+          <ReviewSidebar
+            task={task}
+            revision={revision}
+            sources={review.sources}
+            approvals={review.approvals}
+            publications={review.publications}
+            canEdit={review.canEdit}
+          />
         </div>
       </Stack>
     </Container>
