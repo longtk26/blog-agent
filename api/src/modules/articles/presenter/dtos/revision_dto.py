@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from src.modules.shared.domain.entities import (
+    ApprovalEntity,
     ArticleRevisionEntity,
     EvaluationResultEntity,
     RevisionAuthor,
@@ -28,20 +29,38 @@ class EvaluationDto(BaseModel):
 class RevisionSummaryDto(BaseModel):
     id: uuid.UUID
     revision_number: int
+    parent_revision_id: uuid.UUID | None
     created_by: RevisionAuthor
     title: str
     slug: str
     content_hash: str
     word_count: int | None
     checks_passed: dict[str, bool]
+    feedback: str | None            # owner feedback that produced this AI revision
+    review_target: str | None
+    sections_changed: list[str]
+    out_of_scope: list[str]         # changed sections the owner did not ask about
+    approved_for: list[str]         # destinations with a live (not superseded) approval
     created_at: datetime
 
     @classmethod
-    def from_entity(cls, revision: ArticleRevisionEntity, evaluations: list[EvaluationResultEntity]) -> "RevisionSummaryDto":
+    def from_entity(
+        cls, revision: ArticleRevisionEntity, evaluations: list[EvaluationResultEntity], approvals: list[ApprovalEntity] | None = None
+    ) -> "RevisionSummaryDto":
+        review = revision.metadata.get("review") or {}
         return cls(
-            **revision.model_dump(include={"id", "revision_number", "created_by", "title", "slug", "content_hash", "created_at"}),
+            **revision.model_dump(
+                include={"id", "revision_number", "parent_revision_id", "created_by", "title", "slug", "content_hash", "created_at"}
+            ),
             word_count=revision.metadata.get("word_count"),
             checks_passed={e.kind: e.passed for e in evaluations},
+            feedback=review.get("feedback"),
+            review_target=review.get("target"),
+            sections_changed=revision.metadata.get("sections_changed", []),
+            out_of_scope=review.get("out_of_scope", []),
+            approved_for=sorted(
+                str(a.destination) for a in approvals or [] if a.article_revision_id == revision.id and a.decision == "approved"
+            ),
         )
 
 

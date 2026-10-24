@@ -4,6 +4,9 @@ import { ChevronDownIcon } from "lucide-react";
 import { Controller } from "react-hook-form";
 import type { Control } from "react-hook-form";
 
+import { CopyIcon } from "lucide-react";
+
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -77,11 +80,32 @@ function SelectField({ control, name, label, options }: SelectFieldProps) {
 }
 
 export function TaskForm() {
-  const { form, onSubmit, applyExample, isSubmitting } = useCreateTaskForm();
+  const { form, onSubmit, applyExample, cloneSource, isSubmitting } = useCreateTaskForm();
   const { control } = form;
 
   return (
     <form onSubmit={onSubmit} className="space-y-6">
+      {cloneSource ? (
+        <Alert>
+          <CopyIcon />
+          <AlertTitle>Cloning “{cloneSource.topic}”</AlertTitle>
+          <AlertDescription>
+            The form is prefilled from that task. Change what you need; the original stays archived.
+            <Controller
+              name="reuseSources"
+              control={control}
+              render={({ field }) => (
+                <Field orientation="horizontal" className="mt-2">
+                  <Checkbox id="task-reuseSources" checked={field.value} onCheckedChange={(value) => field.onChange(value === true)} />
+                  <FieldLabel htmlFor="task-reuseSources" className="font-normal">
+                    Reuse its {cloneSource.progress.sources_assessed} assessed sources (they count towards the source budget)
+                  </FieldLabel>
+                </Field>
+              )}
+            />
+          </AlertDescription>
+        </Alert>
+      ) : null}
       <div className="flex flex-wrap gap-2">
         {TOPIC_EXAMPLES.map((example) => (
           <Button key={example.label} type="button" variant="outline" size="sm" onClick={() => applyExample(example)}>

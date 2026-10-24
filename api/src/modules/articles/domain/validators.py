@@ -177,6 +177,10 @@ def check_blocks(markdown: str) -> list[ValidationIssue]:
             issues.append(_issue("BLOCK_SPACING", W, "Image/HTML line directly follows text; add a blank line or it merges into the paragraph", number))
     if markdown.count("$$") % 2:
         issues.append(_issue("MATH_UNBALANCED", W, "Unbalanced $$ display-math delimiters"))
+    for number, line in lines:
+        # remark-math treats a one-line $$...$$ as inline math: no centred block on the site.
+        if re.fullmatch(r"\s*\$\$.+\$\$\s*", line):
+            issues.append(_issue("MATH_INLINE_DISPLAY", W, "One-line $$…$$ renders inline on the site; put $$ on separate lines", number))
     return issues
 
 

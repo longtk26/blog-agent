@@ -30,3 +30,15 @@ def compute_content_hash(
         separators=(",", ":"),
     )
     return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def revision_content_hash(revision) -> str:
+    """Recompute the hash of a stored ArticleRevisionEntity from its own fields (never trust the stored value)."""
+    return compute_content_hash(
+        title=revision.title,
+        slug=revision.slug,
+        description=revision.description,
+        tags=revision.tags,
+        markdown=revision.markdown,
+        diagram_asset_hashes=(revision.metadata or {}).get("diagram_asset_hashes"),
+    )

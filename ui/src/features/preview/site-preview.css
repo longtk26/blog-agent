@@ -1,0 +1,77 @@
+/* Port of profile-ui/app/globals.css ".prose-post" (see PROVENANCE.md).
+ * The site uses Tailwind v3, where these rules beat utility classes by specificity. In this dashboard's
+ * Tailwind v4, utilities live in a cascade layer, so the rules are deliberately unlayered to win the same way. */
+
+.site-preview {
+  background-color: #09090b; /* site --background: zinc-950 */
+  color: #fafafa;
+  /* The site configures no font family, so it renders Tailwind v3's default stack (not Geist). Size and line
+   * height are reset too: dashboard containers (e.g. tabs) set text-sm. */
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  font-size: 1rem;
+  line-height: 1.5;
+  font-feature-settings: "rlig" 1, "calt" 1;
+  color-scheme: dark;
+}
+
+.site-preview .prose-post {
+  @apply text-zinc-300 leading-relaxed;
+}
+.site-preview .prose-post h1,
+.site-preview .prose-post h2,
+.site-preview .prose-post h3,
+.site-preview .prose-post h4 {
+  @apply text-zinc-50 font-semibold mt-8 mb-3;
+  scroll-margin-top: 1rem;
+}
+.site-preview .prose-post h1 { @apply text-3xl; }
+.site-preview .prose-post h2 { @apply text-2xl; }
+.site-preview .prose-post h3 { @apply text-xl; }
+.site-preview .prose-post p { @apply mb-4 text-zinc-300 leading-7; }
+.site-preview .prose-post a { @apply text-emerald-400 hover:text-emerald-300 underline underline-offset-2 transition-colors; }
+.site-preview .prose-post strong { @apply text-zinc-50 font-semibold; }
+.site-preview .prose-post code {
+  @apply bg-zinc-800 text-emerald-300 px-1.5 py-0.5 rounded text-sm font-mono;
+}
+.site-preview .prose-post pre {
+  @apply bg-zinc-900 border border-zinc-800 rounded-xl p-4 overflow-x-auto mb-4;
+}
+.site-preview .prose-post pre code {
+  @apply bg-transparent p-0 text-zinc-200;
+}
+.site-preview .prose-post ul,
+.site-preview .prose-post ol {
+  @apply mb-4 pl-6 space-y-1;
+}
+.site-preview .prose-post ul { @apply list-disc; }
+.site-preview .prose-post ol { @apply list-decimal; }
+.site-preview .prose-post li { @apply text-zinc-300; }
+.site-preview .prose-post blockquote {
+  @apply border-l-4 border-emerald-500 pl-4 italic text-zinc-400 my-4;
+}
+.site-preview .prose-post img {
+  @apply rounded-xl my-6 w-full object-cover;
+}
+.site-preview .prose-post hr {
+  @apply border-zinc-800 my-8;
+}
+.site-preview .prose-post table {
+  /* Tailwind v3 preflight defaults the site relies on */
+  border-collapse: collapse;
+  text-indent: 0;
+  border-color: inherit;
+}
+
+/* KaTeX display math polish */
+.site-preview .prose-post .katex-display {
+  @apply my-6 py-3 px-4 rounded-xl bg-zinc-900/40 border border-zinc-800/80 overflow-x-auto text-center;
+}
+.site-preview .prose-post .katex-display > .katex {
+  @apply inline-block text-zinc-100;
+}
+
+/* Claim hover highlight (CSS Custom Highlight API), dashboard-only */
+::highlight(review-claim) {
+  background-color: rgb(250 204 21 / 0.35);
+  color: #fafafa;
+}

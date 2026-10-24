@@ -5,7 +5,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from src.modules.agent.prompts.research import describe_task
 from src.modules.shared.domain.entities import WritingTaskEntity
 
-PROMPT_VERSION = "writing-v1"
+PROMPT_VERSION = "writing-v2"
 
 FORMAT_TEMPLATES = {
     "concept": (
@@ -47,6 +47,8 @@ def outline_messages(
     style_guide: str,
     max_sections: int,
     feedback: str | None = None,
+    owner_feedback: str | None = None,
+    current_outline: str | None = None,
 ) -> list[BaseMessage]:
     diagram_rule = {
         "yes": "Include at least one diagram (needs: diagram).",
@@ -69,6 +71,12 @@ def outline_messages(
         f"{describe_task(task)}\n\nMust-cover requirements:\n{requirements}\n\n"
         f"Research summary:\n{brief_summary}\n\nEvidence:\n{evidence}\n\n<style_guide>\n{style_guide}\n</style_guide>"
     )
+    if owner_feedback:
+        human += (
+            "\n\nThe owner reviewed the article built from the current outline and asked for a structural change. "
+            "Restructure accordingly; keep what the feedback does not touch.\n"
+            f"Current outline:\n{current_outline or '(unknown)'}\n\nOwner feedback:\n<feedback>\n{owner_feedback}\n</feedback>"
+        )
     if feedback:
         human += f"\n\nYour previous outline had problems; fix them:\n{feedback}"
     return [SystemMessage(system), HumanMessage(human)]
@@ -87,6 +95,7 @@ def section_messages(
     render_contract: str,
     current_markdown: str | None = None,
     feedback: str | None = None,
+    owner_feedback: str | None = None,
 ) -> list[BaseMessage]:
     part = "the INTRODUCTION (1-2 framing paragraphs, no heading)" if section_heading is None else f"the section '{section_heading}'"
     system = (
@@ -106,7 +115,15 @@ def section_messages(
         f"Write: {part}\n{section_brief}\n\nEvidence for this part:\n{evidence or '- (no direct evidence; keep factual claims minimal)'}\n\n"
         f"End of the previous part (for flow):\n{previous_tail or '(start of article)'}\n\n{_context(style_guide, render_contract)}"
     )
-    if current_markdown is not None:
+    if current_markdown is not None and owner_feedback:
+        human += (
+            "\n\nOWNER REVISION: the owner reviewed this part and asked for the change below. Apply it faithfully, "
+            "keep everything the feedback does not mention, and keep the evidence rules (no invented facts).\n"
+            f"Owner feedback:\n<feedback>\n{owner_feedback}\n</feedback>\n\nCurrent text:\n<current>\n{current_markdown}\n</current>"
+        )
+        if feedback:
+            human += f"\n\nAlso fix these problems found by automated checks:\n{feedback}"
+    elif current_markdown is not None:
         human += (
             f"\n\nREVISION: rewrite this part to fix the problems below. Keep everything that is already good.\n"
             f"Problems:\n{feedback}\n\nCurrent text:\n<current>\n{current_markdown}\n</current>"
@@ -143,4 +160,39 @@ def judge_messages(
         f"{describe_task(task)}\n\nMust-cover requirements:\n{requirements}\n\nEvidence:\n{evidence}\n\n"
         f"<style_guide>\n{style_guide}\n</style_guide>\n\n<draft>\n{article}\n</draft>"
     )
+    return [SystemMessage(system), HumanMessage(human)]
+
+
+def metadata_revision_messages(task: WritingTaskEntity, current: dict, feedback: str, intro: str) -> list[BaseMessage]:
+    system = (
+        "Revise the publishing metadata of a technical blog post according to the owner's feedback. Change only what "
+        "the feedback asks for. Description: one plain-text sentence of at most 160 characters. Tags: 1-4 lowercase "
+        "alphanumeric words. Slug: lowercase words joined by dashes; keep the current slug unless the feedback asks to change it."
+    )
+    human = (
+        f"{describe_task(task)}\n\nCurrent metadata:\n- title: {current.get('title')}\n- slug: {current.get('slug')}\n"
+        f"- description: {current.get('description')}\n- tags: {', '.join(current.get('tags', []))}\n\n"
+        f"Owner feedback:\n<feedback>\n{feedback}\n</feedback>\n\nIntroduction:\n{intro[:1500]}"
+    )
+    return [SystemMessage(system), HumanMessage(human)]
+
+
+def feedback_route_messages(
+    task: WritingTaskEntity, feedback: str, section_names: list[str], scoped: list[str]
+) -> list[BaseMessage]:
+    system = (
+        "Classify the owner's review feedback on a draft article into the ONE stage that must redo work:\n"
+        "- research: needs facts, sources or evidence the article does not have yet\n"
+        "- outline: change the structure (add/remove/merge/reorder sections, different angle)\n"
+        "- draft: rewrite the wording or content of specific sections (the default when unsure)\n"
+        "- diagram: only a diagram should change\n"
+        "- metadata: only the title, description, slug or tags should change\n"
+        "Also list the affected sections, using the section names exactly as given (use 'Introduction' for the intro). "
+        "Leave sections empty if the feedback applies to the whole article."
+    )
+    names = "\n".join(f"- {name}" for name in section_names)
+    human = f"{describe_task(task)}\n\nSections:\n{names}\n\n"
+    if scoped:
+        human += f"The owner pointed at these sections: {', '.join(scoped)}\n\n"
+    human += f"Owner feedback:\n<feedback>\n{feedback}\n</feedback>"
     return [SystemMessage(system), HumanMessage(human)]

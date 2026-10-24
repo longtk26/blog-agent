@@ -29,5 +29,12 @@ class ITracing(ABC):
         pass
 
     @abstractmethod
+    def record_feedback(
+        self, run_id: uuid.UUID | str, key: str, *, score: float | None = None, comment: str | None = None, value: Any = None
+    ) -> None:
+        """Attach human feedback (review decisions) to a traced run; a no-op when tracing is off."""
+        pass
+
+    @abstractmethod
     def flush(self) -> None:
         pass

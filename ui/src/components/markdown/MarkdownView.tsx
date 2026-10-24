@@ -2,7 +2,8 @@ import ReactMarkdown from "react-markdown";
 import type { Components } from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-// Basic, safe Markdown (no raw HTML). Epic 4 replaces this with the site-accurate renderer.
+// Basic, safe Markdown (no raw HTML) for dashboard text such as research briefs.
+// Drafts use the site-accurate renderer in features/preview instead.
 const components: Components = {
   h1: ({ children }) => <h1 className="mb-4 text-2xl font-semibold tracking-tight">{children}</h1>,
   h2: ({ children }) => <h2 className="mt-8 mb-3 text-lg font-semibold">{children}</h2>,

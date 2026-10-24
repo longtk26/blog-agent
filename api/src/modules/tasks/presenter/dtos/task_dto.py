@@ -52,6 +52,9 @@ class CreateTaskRequestDto(BaseModel):
     review_outline: bool = False
     publication_targets: list[PublicationTarget] = Field(default_factory=list)
     budgets: TaskBudgetsDto | None = None
+    # Clone (E4-S8): the UI prefills the form from this task; reuse_sources copies its assessed sources and claims.
+    clone_from_task_id: uuid.UUID | None = None
+    reuse_sources: bool = False
 
     @field_validator("topic", "audience", "requirements")
     @classmethod

@@ -52,6 +52,12 @@ class MetadataOut(BaseModel):
     slug: str = Field(description="URL slug: lowercase words joined by dashes, at most 80 characters")
 
 
+class FeedbackRouteOut(BaseModel):
+    target: Literal["research", "outline", "draft", "diagram", "metadata"]
+    sections: list[str] = Field(default_factory=list, description="Affected section names exactly as listed; empty = whole article")
+    reason: str = Field(default="", description="One sentence: why this stage")
+
+
 class JudgeScoresOut(BaseModel):
     factual_support: int = Field(description="1-5: claims are backed by the evidence")
     depth_fit: int = Field(description="1-5: matches the requested depth")

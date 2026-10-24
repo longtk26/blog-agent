@@ -77,6 +77,12 @@ class Config(BaseSettings):
     draft_min_judge_score: int = 3
     draft_evidence_claims: int = 80
 
+    # Review (Epic 4)
+    max_review_rounds: int = 10              # safety net on AI revision requests per task
+    review_research_max_queries: int = 4     # budget for follow-up research asked for in review
+    review_research_max_sources: int = 6
+    revision_max_chars: int = 200_000
+
     langsmith_tracing: bool = False
     langsmith_api_key: SecretStr | None = None
     langsmith_project: str = "blog-agent-local"

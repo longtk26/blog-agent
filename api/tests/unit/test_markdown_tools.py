@@ -3,7 +3,10 @@ import pytest
 from src.modules.articles.domain.markdown_tools import (
     Slugger,
     assemble_article,
+    changed_sections,
+    draft_sections_from_markdown,
     extract_headings,
+    split_article,
     strip_heading_number,
     tidy_markdown,
 )
@@ -78,3 +81,73 @@ def test_assembled_article_passes_structure_and_anchor_checks():
         ),
     )
     assert [i for i in issues if i.severity == "blocker"] == []
+
+
+# --- reading articles back (Epic 4) -----------------------------------------------------------
+
+ARTICLE = """# LoRA Explained
+
+Intro paragraph.
+
+## Table of Contents
+
+1. [How It Works](#1-how-it-works)
+
+---
+
+## 1. How It Works
+
+Body one.
+
+```python
+## not a heading
+x = 1
+```
+
+---
+
+## Step 2: Install
+
+Body two.
+
+---
+
+## References
+
+1. [Paper](https://arxiv.org/abs/2106.09685)
+"""
+
+
+def test_split_article_inverts_assembly():
+    parts = split_article(ARTICLE)
+    assert parts.title == "LoRA Explained"
+    assert parts.intro == "Intro paragraph."
+    assert [h for h, _ in parts.sections] == ["1. How It Works", "Step 2: Install"]
+    assert parts.sections[0][1].endswith("x = 1\n```")  # fenced '##' is not a heading, separator trimmed
+    assert parts.references == "1. [Paper](https://arxiv.org/abs/2106.09685)"
+
+
+def test_changed_sections_reports_only_edited_parts():
+    edited = ARTICLE.replace("Body two.", "Body two, edited.").replace("# LoRA Explained", "# LoRA, Explained")
+    assert changed_sections(ARTICLE, edited) == ["Title", "Install"]
+    assert changed_sections(ARTICLE, ARTICLE) == []
+    soft_wrapped = ARTICLE.replace("Intro paragraph.", "Intro\nparagraph.")
+    assert changed_sections(ARTICLE, soft_wrapped) == []  # the site joins soft-wrapped lines anyway
+    removed = ARTICLE.replace("## Step 2: Install\n\nBody two.\n\n---\n\n", "")
+    assert changed_sections(ARTICLE, removed) == ["Install"]
+
+
+def test_draft_sections_keep_keys_and_claims_of_unchanged_sections():
+    existing = [
+        DraftSection(key="intro", heading=None, heading_style="plain", markdown="Intro paragraph.", claim_map=[{"x": 1}]),
+        DraftSection(key="s1", heading="How It Works", goal="mechanism", markdown="old body", claim_map=[{"y": 1}]),
+        DraftSection(key="s2", heading="Install", heading_style="step", markdown="Body two.", claim_map=[{"z": 1}]),
+    ]
+    added = ARTICLE.replace("## References", "## 3. Owner Notes\n\nNew section.\n\n---\n\n## References")
+    sections = draft_sections_from_markdown(added, existing)
+    assert [(s.key, s.heading, s.heading_style) for s in sections] == [
+        ("intro", None, "plain"), ("s1", "How It Works", "numbered"), ("s2", "Install", "step"), ("s3", "Owner Notes", "numbered"),
+    ]
+    assert sections[0].claim_map == [{"x": 1}]   # unchanged text keeps its claim map
+    assert sections[1].claim_map == [] and sections[1].goal == "mechanism"  # edited text drops stale claims
+    assert sections[2].claim_map == [{"z": 1}]

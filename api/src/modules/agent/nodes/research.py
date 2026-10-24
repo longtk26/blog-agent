@@ -1,5 +1,6 @@
 import asyncio
 import hashlib
+import re
 import uuid
 from datetime import datetime, timezone
 
@@ -17,6 +18,7 @@ from src.modules.agent.prompts.research import (
     assess_source_messages,
     follow_up_messages,
     plan_research_messages,
+    review_research_messages,
     synthesize_messages,
 )
 from src.modules.agent.schemas import (
@@ -76,6 +78,17 @@ class ResearchNodes:
         budgets.max_research_rounds = min(budgets.max_research_rounds, settings.research_max_rounds)
         return budgets
 
+    @staticmethod
+    def _limits(state: BlogState, budgets, known_sources: int) -> tuple[int, int, bool]:
+        """(queries left, sources left, another round allowed). Follow-up research requested in review runs in
+        its own `research_window` (base counters + limits) so the original research budget does not block it."""
+        window = state.get("research_window") or {}
+        done = len(state.get("done_queries", []))
+        queries_left = window.get("max_queries", budgets.max_queries) - (done - window.get("queries", 0))
+        sources_left = window.get("max_sources", budgets.max_sources) - (known_sources - window.get("sources", 0))
+        rounds_used = state.get("round", 1) - window.get("round", 0)
+        return max(0, queries_left), max(0, sources_left), rounds_used < window.get("max_rounds", budgets.max_research_rounds)
+
     async def _progress(self, state: BlogState, **overrides) -> None:
         task_id = _task_id(state)
         counts = await self.deps.store.source_counts(task_id)
@@ -118,10 +131,9 @@ class ResearchNodes:
         task = await self.deps.store.get_task(task_id)
         budgets = await self._budgets(task)
         done = list(state.get("done_queries", []))
-        queries = state.get("pending_queries", [])[: max(0, budgets.max_queries - len(done))]
-
         known = await self.deps.store.known_urls(task_id)
-        remaining_sources = max(0, budgets.max_sources - len(known))
+        queries_left, remaining_sources, _ = self._limits(state, budgets, len(known))
+        queries = state.get("pending_queries", [])[:queries_left]
         denylist = self.deps.settings.research_domain_denylist
 
         ran: list[tuple[dict, list[SearchResult]]] = []
@@ -309,19 +321,14 @@ class ResearchNodes:
             and source.status == SourceStatus.ASSESSED
             and (source.quality_score or 0) >= threshold
         }
-        gaps = [q["id"] for q in questions if q["id"] not in supported]
+        focus = set(state.get("focus_questions") or [q["id"] for q in questions])
+        gaps = [q["id"] for q in questions if q["id"] in focus and q["id"] not in supported]
         round_number = state.get("round", 1)
         done = state.get("done_queries", [])
         emit("coverage_checked", round=round_number, supported=sorted(supported), gaps=gaps)
 
-        can_continue = (
-            gaps
-            and round_number < budgets.max_research_rounds
-            and len(done) < budgets.max_queries
-            and len(sources) < budgets.max_sources
-        )
-        if can_continue:
-            remaining = budgets.max_queries - len(done)
+        remaining, sources_left, more_rounds = self._limits(state, budgets, len(sources))
+        if gaps and more_rounds and remaining > 0 and sources_left > 0:
             gap_questions = [q for q in questions if q["id"] in gaps]
             follow_up = await invoke_structured(
                 self.deps.models.get(ModelRole.PLANNER),
@@ -454,7 +461,68 @@ class ResearchNodes:
 
     @staticmethod
     def route_after_synthesis(state: BlogState) -> str:
+        if state.get("review_target") == "research":
+            return "revise_sections"  # follow-up research from review: rewrite only the affected sections
         return "await_promotion" if state.get("mode") == "research_only" else "outline"
+
+    # --- follow-up research requested in review (Epic 4) ---------------------------------------
+
+    @workflow_node("plan_review_research", TaskStatus.RESEARCHING, timeout_seconds=300)
+    async def plan_review_research(self, state: BlogState) -> dict:
+        task_id = _task_id(state)
+        task = await self.deps.store.get_task(task_id)
+        budgets = await self._budgets(task)
+        settings = self.deps.settings
+        plan = state.get("plan") or task.research_plan or {"questions": [], "queries": []}
+        existing = plan.get("questions", [])
+        done = list(state.get("done_queries", []))
+        max_queries = min(settings.review_research_max_queries, budgets.max_queries)
+        feedback = state.get("review_feedback", "")
+
+        out = await invoke_structured(
+            self.deps.models.get(ModelRole.PLANNER),
+            ResearchPlanOut,
+            review_research_messages(task, feedback, existing, done, max_queries),
+        )
+        out = normalize_plan(out, max_queries, max_questions=3)
+        # Renumber after the existing questions so ids stay unique across the merged plan.
+        start = max((int(q["id"][1:]) for q in existing if re.fullmatch(r"Q\d+", q.get("id", ""))), default=0) + 1
+        renamed = {q.id: f"Q{start + index}" for index, q in enumerate(out.questions)}
+        new_questions = [{**q.model_dump(mode="json"), "id": renamed[q.id]} for q in out.questions]
+        queries = normalize_queries(out.queries, set(renamed), max_queries, exclude=set(done))
+        pending = [{**q.model_dump(mode="json"), "question_ids": [renamed[i] for i in q.question_ids]} for q in queries]
+        if not new_questions:
+            new_questions = [{"id": f"Q{start}", "question": feedback[:300], "must_cover": True}]
+        if not pending:
+            pending = [
+                {
+                    "query": " ".join(f"{task.topic} {feedback}".split())[:300],
+                    "intent": "Evidence requested in review",
+                    "question_ids": [new_questions[0]["id"]],
+                    "preferred_source_types": [],
+                }
+            ]
+
+        merged = {**plan, "questions": [*existing, *new_questions]}
+        await self.deps.store.update_task(task_id, research_plan=merged)
+        known = await self.deps.store.known_urls(task_id)
+        round_number = state.get("round", 1)
+        window = {
+            "queries": len(done),
+            "sources": len(known),
+            "round": round_number,
+            "max_queries": max_queries,
+            "max_sources": min(settings.review_research_max_sources, budgets.max_sources),
+            "max_rounds": 1,
+        }
+        emit("follow_up_planned", round=round_number + 1, queries=[q["query"] for q in pending], reason="review")
+        return {
+            "plan": merged,
+            "round": round_number + 1,
+            "pending_queries": pending,
+            "research_window": window,
+            "focus_questions": [q["id"] for q in new_questions],
+        }
 
     # --- research-only pause / article hand-off -----------------------------------------------
 

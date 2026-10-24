@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Grid } from "@/components/layout/Grid";
+import { useHydrated } from "@/hooks/use-hydrated";
 import { useHealth } from "../hooks/use-health";
 
 type StatusRowProps = {
@@ -25,8 +26,10 @@ function StatusRow({ label, value, ok }: StatusRowProps) {
 
 export function HealthDetails() {
   const { data, error, isPending } = useHealth();
+  // The header's health badge shares this query; it can resolve before this card hydrates.
+  const hydrated = useHydrated();
 
-  if (isPending) {
+  if (isPending || !hydrated) {
     return (
       <Grid cols={2}>
         <Skeleton className="h-40" />

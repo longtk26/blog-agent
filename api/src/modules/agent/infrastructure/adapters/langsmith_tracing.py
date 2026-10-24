@@ -84,6 +84,21 @@ class LangSmithTracing(ITracing):
             logger.warning("Could not resolve LangSmith run URL", extra={"context": {"error": type(exc).__name__}})
             return None
 
+    def record_feedback(
+        self, run_id: uuid.UUID | str, key: str, *, score: float | None = None, comment: str | None = None, value: Any = None
+    ) -> None:
+        if not self.enabled or self.client is None:
+            return
+        try:
+            # The redacting anonymizer only covers runs, so feedback text is redacted here too.
+            redact = build_secret_anonymizer(self.config.secret_values())
+            self.client.create_feedback(
+                run_id, key, score=score, value=value, comment=redact(comment) if (redact and comment) else comment,
+                trace_id=run_id, feedback_source_type="app",
+            )
+        except Exception as exc:
+            logger.warning("Could not record LangSmith feedback", extra={"context": {"error": type(exc).__name__}})
+
     def flush(self) -> None:
         if self.enabled and self.client is not None:
             try:

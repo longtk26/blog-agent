@@ -38,12 +38,13 @@ def emit(event_type: str, **payload: Any) -> None:
     writer({"type": event_type, **payload})
 
 
-def workflow_node(name: str, stage: TaskStatus | None, timeout_seconds: float | None = None):
+def workflow_node(name: str, stage: TaskStatus | None, timeout_seconds: float | None = None, run_when_rejected: bool = False):
     """Wraps a node method: status bookkeeping, start/finish events, timeout, and failure capture.
 
     On failure the task becomes `failed` (resumable) with `failed_stage=stage` and the exception is re-raised,
     so the checkpoint stays at the last completed step and `retry` re-runs only this node.
-    Interrupts (GraphBubbleUp) and cancellation pass straight through.
+    Interrupts (GraphBubbleUp) and cancellation pass straight through. Pause nodes set `run_when_rejected` so a
+    rejection can be delivered to them and end the thread instead of leaving it suspended.
     """
 
     def decorator(fn: NodeFn):
@@ -52,7 +53,7 @@ def workflow_node(name: str, stage: TaskStatus | None, timeout_seconds: float | 
             deps = self.deps
             task_id = uuid.UUID(state["task_id"])
             task = await deps.store.get_task(task_id)
-            if task.status == TaskStatus.REJECTED:
+            if task.status == TaskStatus.REJECTED and not run_when_rejected:
                 raise TaskCancelled(str(task_id))
             if stage is not None and task.status != stage:
                 await deps.store.transition(task_id, stage)

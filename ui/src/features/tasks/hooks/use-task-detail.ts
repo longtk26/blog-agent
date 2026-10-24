@@ -11,7 +11,9 @@ export function useTaskDetail() {
   const live = task ? isTaskLive(task) : true;
   const { events, connected } = useTaskEvents(id, live);
   const hasBrief = events.some((event) => event.type === "brief_ready") || task?.status === "completed";
-  const hasDraft = events.some((event) => event.type === "revision_saved") || task?.status === "awaiting_review";
+  const hasDraft =
+    events.some((event) => event.type === "revision_saved") ||
+    ["awaiting_review", "revision_requested", "approved", "published", "partially_published"].includes(task?.status ?? "");
 
   return { id, task, error: query.error, isPending: query.isPending, events, connected, hasBrief, hasDraft };
 }

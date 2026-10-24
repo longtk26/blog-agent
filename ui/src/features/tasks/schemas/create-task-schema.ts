@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import type { TCreateTaskPayload } from "../types";
+import type { TCreateTaskPayload, TTask } from "../types";
 
 const optionalCount = (max: number) =>
   z
@@ -27,6 +27,7 @@ export const createTaskSchema = z.object({
   maxQueries: optionalCount(20),
   maxSources: optionalCount(40),
   maxRounds: optionalCount(4),
+  reuseSources: z.boolean(),
 });
 
 export type TCreateTaskFormValues = z.infer<typeof createTaskSchema>;
@@ -48,11 +49,33 @@ export const createTaskDefaults: TCreateTaskFormValues = {
   maxQueries: "",
   maxSources: "",
   maxRounds: "",
+  reuseSources: false,
 };
+
+/** Prefill for "clone this task" (E4-S8). */
+export function taskToFormValues(task: TTask): TCreateTaskFormValues {
+  return {
+    ...createTaskDefaults,
+    topic: task.topic,
+    mode: task.mode,
+    audience: task.audience ?? "",
+    depth: task.depth,
+    language: task.language,
+    format: task.format,
+    requirements: task.requirements ?? "",
+    includeDiagram: task.include_diagram,
+    reviewOutline: task.review_outline,
+    publishToSanity: task.publication_targets.includes("sanity"),
+    publishToDevto: task.publication_targets.includes("devto"),
+    seriesName: task.series?.name ?? "",
+    seriesPart: task.series?.part ? String(task.series.part) : "",
+    reuseSources: true,
+  };
+}
 
 const toNumber = (value: string) => (value === "" ? undefined : Number(value));
 
-export function toCreateTaskPayload(values: TCreateTaskFormValues): TCreateTaskPayload {
+export function toCreateTaskPayload(values: TCreateTaskFormValues, cloneFromTaskId?: string): TCreateTaskPayload {
   const budgets = {
     max_queries: toNumber(values.maxQueries),
     max_sources: toNumber(values.maxSources),
@@ -75,5 +98,6 @@ export function toCreateTaskPayload(values: TCreateTaskFormValues): TCreateTaskP
     ],
     series: values.seriesName ? { name: values.seriesName, part: toNumber(values.seriesPart) } : undefined,
     budgets: hasBudgets ? JSON.parse(JSON.stringify(budgets)) : undefined,
+    ...(cloneFromTaskId ? { clone_from_task_id: cloneFromTaskId, reuse_sources: values.reuseSources } : {}),
   };
 }

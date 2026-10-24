@@ -187,3 +187,128 @@ def assemble_article(title: str, sections: list[DraftSection], references: list[
     parts.append("---")
     parts.append(references_block)
     return "\n\n".join(p.strip() for p in parts if p.strip()) + "\n"
+
+
+# --- reading an assembled article back (owner edits, revision comparison) ---------------------
+
+INTRO = "Introduction"
+_STEP_HEADING = re.compile(r"^step\s+\d+\s*[:.\-]", re.IGNORECASE)
+_NUMBERED_HEADING = re.compile(r"^\d+(?:\.\d+)*[.)]?\s")
+
+
+@dataclass
+class ArticleParts:
+    title: str
+    intro: str
+    sections: list[tuple[str, str]]   # (H2 heading text as written, body)
+    references: str | None
+
+
+def split_article(markdown: str) -> ArticleParts:
+    """Inverse of `assemble_article`: H1 title, intro, H2 sections (TOC dropped, `---` separators trimmed)."""
+    title, intro_lines = "", []
+    sections: list[tuple[str, list[str]]] = []
+    references: list[str] | None = None
+    current: list[str] | None = intro_lines
+    in_fence = False
+    for line in markdown.replace("\r\n", "\n").split("\n"):
+        if _FENCE.match(line):
+            in_fence = not in_fence
+        elif not in_fence:
+            h1 = re.match(r"^#\s+(.*?)\s*#*\s*$", line)
+            h2 = re.match(r"^##\s+(.*?)\s*#*\s*$", line)
+            if h1 and not title and not sections:
+                title = heading_text(h1.group(1))
+                continue
+            if h2:
+                text = h2.group(1).strip()
+                plain = heading_text(text)
+                if plain == "Table of Contents":
+                    current = None
+                elif plain == "References":
+                    references = []
+                    current = references
+                else:
+                    sections.append((text, []))
+                    current = sections[-1][1]
+                continue
+        if current is not None:
+            current.append(line)
+
+    def body(lines: list[str]) -> str:
+        text = "\n".join(lines).strip()
+        text = re.sub(r"^(?:---\s*\n+)+", "", text)
+        return re.sub(r"(?:\n+---\s*)+$", "", text).strip()
+
+    return ArticleParts(
+        title=title,
+        intro=body(intro_lines),
+        sections=[(heading, body(lines)) for heading, lines in sections],
+        references=body(references) if references is not None else None,
+    )
+
+
+def heading_style_of(heading: str) -> str:
+    if _STEP_HEADING.match(heading):
+        return "step"
+    return "numbered" if _NUMBERED_HEADING.match(heading) else "plain"
+
+
+def section_name(heading: str) -> str:
+    return strip_heading_number(heading_text(heading))
+
+
+def _named_bodies(markdown: str) -> dict[str, str]:
+    parts = split_article(markdown)
+    # Compared after tidy_markdown: soft-wrapped vs joined lines render identically on the site.
+    bodies = {"Title": parts.title, INTRO: tidy_markdown(parts.intro)}
+    for heading, text in parts.sections:
+        bodies[section_name(heading)] = tidy_markdown(text)
+    bodies["References"] = tidy_markdown(parts.references or "")
+    return bodies
+
+
+def changed_sections(before: str, after: str) -> list[str]:
+    """Names of the sections (plus Title/Introduction/References) whose rendered text differs, in article order."""
+    old, new = _named_bodies(before), _named_bodies(after)
+    names = list(new) + [name for name in old if name not in new]
+    return [name for name in names if old.get(name) != new.get(name)]
+
+
+def draft_sections_from_markdown(markdown: str, existing: list[DraftSection]) -> list[DraftSection]:
+    """Owner-edited markdown -> working-draft sections, keeping keys/goals/claim maps of sections that still exist."""
+    parts = split_article(markdown)
+    by_name = {section_name(s.heading): s for s in existing if s.heading}
+    intro = next((s for s in existing if s.key == "intro"), None)
+    used_numbers = [int(s.key[1:]) for s in existing if re.fullmatch(r"s\d+", s.key)]
+    next_number = max(used_numbers, default=0) + 1
+
+    sections = [
+        DraftSection(
+            key="intro",
+            heading=None,
+            heading_style="plain",
+            goal=intro.goal if intro else "",
+            markdown=parts.intro,
+            claim_map=intro.claim_map if intro and intro.markdown == parts.intro else [],
+            revisions=intro.revisions if intro else 0,
+        )
+    ]
+    seen: set[str] = set()
+    for heading, text in parts.sections:
+        name = section_name(heading)
+        match = by_name.get(name) if name not in seen else None
+        seen.add(name)
+        if match is None:
+            key, goal, claim_map, revisions = f"s{next_number}", "", [], 0
+            next_number += 1
+        else:
+            key, goal, revisions = match.key, match.goal, match.revisions
+            claim_map = match.claim_map if match.markdown == text else []
+        sections.append(
+            DraftSection(
+                key=key, heading=name, heading_style=heading_style_of(heading), goal=goal,
+                markdown=text, claim_map=claim_map, revisions=revisions,
+            )
+        )
+    return sections

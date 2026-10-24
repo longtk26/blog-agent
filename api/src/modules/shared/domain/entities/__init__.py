@@ -21,6 +21,7 @@ from .article_entity import (
     EvaluationResultEntity,
     StyleGuideEntity,
 )
+from .approval_entity import ApprovalEntity, ApprovalDecision
 from .research_entity import (
     ResearchSourceEntity,
     ResearchClaimEntity,
@@ -55,4 +56,6 @@ __all__ = [
     "ArticleRevisionEntity",
     "EvaluationResultEntity",
     "StyleGuideEntity",
+    "ApprovalEntity",
+    "ApprovalDecision",
 ]

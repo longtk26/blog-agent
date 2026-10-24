@@ -18,3 +18,9 @@ class BlogState(TypedDict, total=False):
     needs_revision: bool        # judge verdict for the bounded self-revision loop
     revision_id: str            # latest saved ArticleRevision
     review: dict | None         # owner decision on resume from awaiting_review (Epic 4)
+    review_target: str          # research | outline | draft | diagram | metadata, for the current review round
+    review_feedback: str
+    revise_keys: list[str]      # draft section keys the review round may rewrite
+    research_window: dict       # follow-up research budget: base counters + limits (see ResearchNodes._limits)
+    focus_questions: list[str]  # question ids follow-up research must cover
+    publish: dict | None        # owner input on resume from awaiting_publish (Epic 5)

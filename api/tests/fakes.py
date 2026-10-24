@@ -195,6 +195,7 @@ def research_responder(schema: type[BaseModel], messages: list[BaseMessage]) -> 
 
 from src.modules.agent.schemas.writing import (  # noqa: E402
     ClaimMapEntryOut,
+    FeedbackRouteOut,
     JudgeIssueOut,
     JudgeReportOut,
     JudgeScoresOut,
@@ -216,6 +217,9 @@ class WritingScript:
         self.judge_calls = 0
         self.judge_blocks_first = judge_blocks_first
         self.section_prompts: dict[str, list[str]] = defaultdict(list)
+        # What the feedback classifier answers when the owner leaves target=auto.
+        self.route = FeedbackRouteOut(target="draft", sections=["QLoRA Memory Savings"], reason="wording")
+        self.route_calls = 0
 
     def __call__(self, schema: type[BaseModel], messages: list[BaseMessage]) -> BaseModel:
         text = _human_text(messages)
@@ -241,7 +245,7 @@ class WritingScript:
             elif heading == "Summary & What's Next":
                 body = "### Summary & What's Next\n\n| Core Concept | Summary Takeaway |\n| :--- | :--- |\n| **LoRA** | Train small adapters |"
             else:
-                revised = " (revised)" if "REVISION:" in text else ""
+                revised = " (owner-requested)" if "OWNER REVISION:" in text else " (revised)" if "REVISION:" in text else ""
                 body = (
                     f"We start with the mechanism{revised}: according to [the source]({url}), only small matrices are trained.\n\n"
                     "```mermaid\nflowchart LR\n    A[\"<b>Frozen W</b>\"] --> B[\"<b>Adapter</b>\"]\n```"
@@ -250,6 +254,11 @@ class WritingScript:
                 markdown=f"## {heading}\n\n{body}",  # the node must strip a repeated heading
                 claim_map=[ClaimMapEntryOut(sentence="only small matrices are trained", claim_refs=["C1"], support="supported")],
             )
+        if schema is FeedbackRouteOut:
+            self.route_calls += 1
+            return self.route
+        if schema is MetadataOut and "Owner feedback" in text:
+            return MetadataOut(title="LoRA Fine-Tuning, Explained Simply", description="How LoRA and QLoRA cut fine-tuning cost.", tags=["llm", "lora"], slug="lora-fine-tuning-explained")
         if schema is MetadataOut:
             return MetadataOut(title="LoRA Fine-Tuning Explained", description="How LoRA and QLoRA cut fine-tuning cost.", tags=["LLM", "lora", "fine-tuning"], slug="LoRA Fine-Tuning Explained")
         if schema is JudgeReportOut:

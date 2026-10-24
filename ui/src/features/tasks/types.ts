@@ -131,6 +131,8 @@ export type TCreateTaskPayload = {
   publication_targets: TPublicationTarget[];
   series?: { name: string; part?: number };
   budgets?: Partial<TTaskBudgets>;
+  clone_from_task_id?: string;
+  reuse_sources?: boolean;
 };
 
 export type TPromotePayload = {
@@ -220,13 +222,31 @@ export type TEvaluation = {
 export type TRevisionSummary = {
   id: string;
   revision_number: number;
+  parent_revision_id: string | null;
   created_by: "ai" | "owner";
   title: string;
   slug: string;
   content_hash: string;
   word_count: number | null;
   checks_passed: Record<string, boolean>;
+  feedback: string | null;
+  review_target: string | null;
+  sections_changed: string[];
+  out_of_scope: string[];
+  approved_for: TPublicationTarget[];
   created_at: string;
+};
+
+export type TClaimMapEntry = { sentence: string; claim_ids: string[]; support: "supported" | "partial" | "unsupported" };
+
+export type TRevisionReview = {
+  round: number | null;
+  feedback: string;
+  requested_target: string;
+  target: string;
+  scope_sections: string[];
+  reviewed_revision_id: string | null;
+  out_of_scope: string[];
 };
 
 export type TRevision = {
@@ -242,6 +262,10 @@ export type TRevision = {
   markdown: string;
   content_hash: string;
   metadata: {
+    outline?: TOutline;
+    claim_map?: Record<string, TClaimMapEntry[]>;
+    sections_changed?: string[];
+    review?: TRevisionReview;
     self_revisions?: number;
     unsupported_statements?: string[];
     word_count?: number;

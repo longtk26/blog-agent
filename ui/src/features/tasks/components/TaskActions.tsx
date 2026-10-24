@@ -1,6 +1,7 @@
 "use client";
 
-import { ExternalLinkIcon, RotateCcwIcon, SquareIcon } from "lucide-react";
+import { CopyIcon, ExternalLinkIcon, PencilRulerIcon, RotateCcwIcon, SquareIcon } from "lucide-react";
+import Link from "next/link";
 
 import {
   AlertDialog,
@@ -30,6 +31,7 @@ export function TaskActions({ task }: TaskActionsProps) {
   const canRetry = task.status === "failed" && task.resumable && !task.is_running;
   const canPromote = task.status === "completed" && task.mode === "research_only" && !task.is_running;
   const canCancel = !NOT_CANCELLABLE.includes(task.status);
+  const canReview = ["awaiting_review", "revision_requested", "approved", "published", "partially_published"].includes(task.status);
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -46,6 +48,20 @@ export function TaskActions({ task }: TaskActionsProps) {
         </Button>
       ) : null}
       {canPromote ? <PromoteDialog task={task} /> : null}
+      {task.status === "rejected" ? (
+        <Button variant="outline" asChild>
+          <Link href={`/tasks/new?from=${task.id}`}>
+            <CopyIcon /> Clone
+          </Link>
+        </Button>
+      ) : null}
+      {canReview ? (
+        <Button asChild>
+          <Link href={`/tasks/${task.id}/review`}>
+            <PencilRulerIcon /> Review
+          </Link>
+        </Button>
+      ) : null}
       {canCancel ? (
         <AlertDialog>
           <AlertDialogTrigger asChild>

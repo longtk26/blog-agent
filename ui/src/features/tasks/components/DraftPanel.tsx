@@ -1,9 +1,13 @@
 "use client";
 
-import { MarkdownView } from "@/components/markdown/MarkdownView";
+import { PencilRulerIcon } from "lucide-react";
+import Link from "next/link";
+
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SitePreview } from "@/features/preview/components/SitePreview";
 import { formatDateTime, humanize } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { useLatestRevision } from "../hooks/use-task";
@@ -57,6 +61,11 @@ export function DraftPanel({ taskId, enabled }: DraftPanelProps) {
         <span className="font-mono">· {revision.content_hash.slice(0, 12)}</span>
         <span>· {revision.metadata.word_count ?? "?"} words</span>
         <span>· {revision.metadata.self_revisions ?? 0} self-revisions</span>
+        <Button size="sm" className="ml-auto" asChild>
+          <Link href={`/tasks/${taskId}/review`}>
+            <PencilRulerIcon /> Open review
+          </Link>
+        </Button>
       </div>
 
       <dl className="grid gap-2 rounded-lg border p-3 text-sm sm:grid-cols-[120px_1fr]">
@@ -109,10 +118,7 @@ export function DraftPanel({ taskId, enabled }: DraftPanelProps) {
         </section>
       ) : null}
 
-      <section className="rounded-lg border p-4">
-        <p className="mb-3 text-xs text-muted-foreground">Basic preview — the site-accurate preview and editor arrive in Epic 4.</p>
-        <MarkdownView markdown={revision.markdown} />
-      </section>
+      <SitePreview markdown={revision.markdown} title={revision.title} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ from src.modules.agent.ports.output.workflow_runner import IWorkflowRunner, Thre
 from src.modules.agent.ports.output.workflow_store import IWorkflowStore
 from src.modules.agent.prompts.research import PROMPT_VERSION as RESEARCH_PROMPT_VERSION
 from src.modules.agent.prompts.writing import PROMPT_VERSION as WRITING_PROMPT_VERSION
+from src.modules.shared.domain.entities import EventActor
 from src.modules.shared.domain.value_objects import ACTIVE_STATUSES, TaskStatus
 
 logger = get_logger(__name__)
@@ -103,6 +104,12 @@ class LangGraphWorkflowRunner(IWorkflowRunner):
             task_uuid = uuid.UUID(task_id)
             try:
                 task = await self.store.get_task(task_uuid)
+                resume = graph_input.resume if isinstance(graph_input, Command) and isinstance(graph_input.resume, dict) else {}
+                review_metadata = {
+                    f"review_{k}": v for k, v in resume.items() if k in ("action", "round", "revision_id") and v is not None
+                }
+                if resume.get("feedback"):
+                    review_metadata["review_feedback"] = self.redactor(str(resume["feedback"]))[:2000]
                 run_id = uuid.uuid4()
                 await self.store.update_task(task_uuid, last_run_id=run_id)
                 run_config = self.tracing.run_config(
@@ -113,6 +120,7 @@ class LangGraphWorkflowRunner(IWorkflowRunner):
                         "mode": str(task.mode),
                         "format": str(task.format),
                         "prompt_versions": PROMPT_VERSIONS,
+                        **review_metadata,
                     },
                     run_id=run_id,
                     configurable={"thread_id": task_id},
@@ -148,6 +156,12 @@ class LangGraphWorkflowRunner(IWorkflowRunner):
             thread = await self.thread_status(task_id)
             if thread == ThreadStatus.INTERRUPTED:
                 pending = await self.pending_interrupt(task_id) or {}
+                if task.status == TaskStatus.REVISION_REQUESTED and pending.get("type") == "awaiting_review":
+                    # The API stopped between accepting a revision request and resuming the graph: hand it back.
+                    await self.store.transition(
+                        task.id, TaskStatus.AWAITING_REVIEW, actor=EventActor.SYSTEM, reason="revision_request_lost"
+                    )
+                    continue
                 if pending.get("type") in PLACEHOLDER_INTERRUPTS:
                     logger.info("Resuming task paused at a placeholder", extra={"context": {"task_id": task_id}})
                     await self.resume(task_id, {"action": "continue"})

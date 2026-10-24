@@ -6,7 +6,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
 from src.modules.shared.domain.entities import WritingTaskEntity
 
-PROMPT_VERSION = "research-v1"
+PROMPT_VERSION = "research-v2"
 
 UNTRUSTED_TAG = "untrusted_source"
 _CLOSING_TAG = re.compile(rf"</?\s*{UNTRUSTED_TAG}", re.IGNORECASE)
@@ -64,6 +64,23 @@ def follow_up_messages(
     gaps = "\n".join(f"- {q['id']}: {q['question']}" for q in gap_questions)
     done = "\n".join(f"- {q}" for q in done_queries) or "- (none)"
     human = f"{describe_task(task)}\n\nUnanswered questions:\n{gaps}\n\nQueries already run:\n{done}"
+    return [SystemMessage(system), HumanMessage(human)]
+
+
+def review_research_messages(
+    task: WritingTaskEntity, feedback: str, questions: list[dict], done_queries: list[str], max_queries: int
+) -> list[BaseMessage]:
+    system = (
+        "The owner reviewed a draft article and asked for more evidence. Turn the feedback into 1-3 NEW research "
+        f"questions the existing research does not answer, and at most {max_queries} keyword queries for them. "
+        f"Do not repeat earlier questions or queries. {SOURCE_PREFERENCE} Leave must_cover and out_of_scope empty."
+    )
+    existing = "\n".join(f"- {q['id']}: {q['question']}" for q in questions) or "- (none)"
+    done = "\n".join(f"- {q}" for q in done_queries) or "- (none)"
+    human = (
+        f"{describe_task(task)}\n\nOwner feedback on the draft:\n<feedback>\n{feedback}\n</feedback>\n\n"
+        f"Questions already researched:\n{existing}\n\nQueries already run:\n{done}"
+    )
     return [SystemMessage(system), HumanMessage(human)]
 
 

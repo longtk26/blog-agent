@@ -43,6 +43,7 @@ def test_clean_article_has_no_issues():
         ("Jump to [missing](#nowhere).", "ANCHOR_BROKEN", "blocker"),
         ("#### Too deep", "HEADING_SKIP", "warning"),
         ("$$\nx^2", "MATH_UNBALANCED", "warning"),
+        ("$$x^2 + y^2$$", "MATH_INLINE_DISPLAY", "warning"),
         ("```mermaid\nnot a diagram\n```", "MERMAID_TYPE", "warning"),
     ],
 )
@@ -51,7 +52,7 @@ def test_rule_violations(body, rule, severity):
 
 
 def test_notebook_magics_and_valid_mermaid_pass():
-    body = "```python\n!pip install peft\nimport peft\n```\n\n```mermaid\nflowchart LR\n    A[\"<b>x</b>\"] --> B\n```"
+    body = "```python\n!pip install peft\nimport peft\n```\n\n```mermaid\nflowchart LR\n    A[\"<b>x</b>\"] --> B\n```\n\n$$\nx^2\n$$"
     assert rules(BASE.format(body=body)) == {}
 
 
