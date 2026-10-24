@@ -96,6 +96,10 @@ class Config(BaseSettings):
     blogs_export_enabled: bool = False
     blogs_dir: str = "../blogs"
 
+    # DEV Community Publishing (Epic 8)
+    dev_to_api_key: SecretStr | None = None
+    dev_to_base_url: str = "https://dev.to/api"
+
     # Style & Knowledge (Epic 6)
     embedding_model: str = "google_genai:gemini-embedding-001"
     embedding_dim: int = 768
@@ -134,6 +138,7 @@ class Config(BaseSettings):
         "tavily_api_key",
         "langsmith_api_key",
         "sanity_api_write_token",
+        "dev_to_api_key",
         mode="before",
     )
     @classmethod

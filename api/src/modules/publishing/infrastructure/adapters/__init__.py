@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from src.modules.publishing.infrastructure.adapters.devto_publisher import DevtoPublisher
 from src.modules.publishing.infrastructure.adapters.google_thumbnail_generator import (
     GoogleThumbnailGenerator,
 )
@@ -17,10 +18,22 @@ def get_sanity_publisher() -> SanityPublisher:
 SanityPublisherDep = Annotated[SanityPublisher, Depends(get_sanity_publisher)]
 
 
+def get_devto_publisher(sanity_publisher: SanityPublisherDep) -> DevtoPublisher:
+    return DevtoPublisher(asset_uploader=sanity_publisher)
+
+
+DevtoPublisherDep = Annotated[DevtoPublisher, Depends(get_devto_publisher)]
+
+
 class PublisherRegistry:
-    def __init__(self, sanity_publisher: SanityPublisherDep):
+    def __init__(
+        self,
+        sanity_publisher: SanityPublisherDep,
+        devto_publisher: DevtoPublisherDep,
+    ):
         self._publishers: dict[str, IPublisher] = {
             PublicationTarget.SANITY.value: sanity_publisher,
+            PublicationTarget.DEVTO.value: devto_publisher,
         }
 
     def get(self, destination: PublicationTarget | str) -> IPublisher | None:
@@ -35,6 +48,9 @@ __all__ = [
     "SanityPublisher",
     "get_sanity_publisher",
     "SanityPublisherDep",
+    "DevtoPublisher",
+    "get_devto_publisher",
+    "DevtoPublisherDep",
     "PublisherRegistry",
     "PublisherRegistryDep",
 ]

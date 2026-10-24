@@ -1,7 +1,7 @@
 import uuid
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 from src.modules.shared.domain.entities import ArticleRevisionEntity, PublicationTarget
 
@@ -37,6 +37,7 @@ class IPublisher(ABC):
         revision: ArticleRevisionEntity,
         existing_remote_id: str | None = None,
         on_asset_uploaded: Callable[[str, str, str], None] | None = None,
+        options: dict[str, Any] | None = None,
     ) -> PublishOutcome:
         """Publish revision. Raises PublishError or conflict/validation exceptions."""
         ...

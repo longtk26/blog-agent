@@ -15,4 +15,15 @@ export const reviewApi = {
     apiClient.post<{ items: TPublication[] }>(`/tasks/${taskId}/publications/${destination}/retry`, {}),
   unpublish: (taskId: string, payload: { slug: string; destinations?: string[] }) =>
     apiClient.post<{ items: TPublication[] }>(`/tasks/${taskId}/unpublish`, payload),
+  devtoPreview: (revisionId: string) =>
+    apiClient.get<{
+      title: string;
+      body_markdown: string;
+      rendered_content_hash: string;
+      tags: string[];
+      canonical_url: string | null;
+      main_image: string | null;
+      description: string | null;
+    }>(`/revisions/${revisionId}/render/devto`),
 };
+

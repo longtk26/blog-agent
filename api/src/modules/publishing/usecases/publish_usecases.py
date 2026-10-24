@@ -131,6 +131,7 @@ class PublishRevisionUsecase:
         task_id = revision.task_id
 
         # 1. Gate check for every requested destination before touching task or publications
+        destination_approvals: dict[PublicationTarget, Any] = {}
         for destination in dto.destinations:
             gate_res = self.gate.check(revision_id, destination)
             if not gate_res.passed:
@@ -153,6 +154,25 @@ class PublishRevisionUsecase:
                     raise NotFoundException(f"Revision '{revision_id}' not found")
                 else:
                     raise ForbiddenException(f"Approval gate failed: {gate_res.reason}", code=ErrorCode.FORBIDDEN)
+
+            destination_approvals[destination] = gate_res.approval
+
+            # E8-S4: Dev.to draft vs live mode bound to approval
+            if destination == PublicationTarget.DEVTO and gate_res.approval:
+                approved_mode = (
+                    gate_res.approval.options.get("mode")
+                    or gate_res.approval.options.get("devto_mode")
+                    or "draft"
+                )
+                requested_mode = (
+                    dto.options.get("mode")
+                    or dto.options.get("devto_mode")
+                )
+                if requested_mode and requested_mode != approved_mode:
+                    raise ForbiddenException(
+                        f"Revision r{revision.revision_number} was approved for Dev.to with mode '{approved_mode}', not '{requested_mode}'. Please review and approve with mode '{requested_mode}'.",
+                        code=ErrorCode.FORBIDDEN,
+                    )
 
         # Idempotency: If all requested destinations already succeeded for this revision, return existing results
         existing_pubs = [self.publications.get_by_task_and_destination(task_id, d) for d in dto.destinations]
@@ -229,12 +249,21 @@ class PublishRevisionUsecase:
                     self.session.commit()
                     self.broker.notify(task_id)
 
+                pub_options = dict(dto.options or {})
+                appr = destination_approvals.get(destination)
+                if appr and appr.options:
+                    appr_mode = appr.options.get("mode") or appr.options.get("devto_mode")
+                    if appr_mode:
+                        pub_options["mode"] = appr_mode
+                        pub_options["devto_mode"] = appr_mode
+
                 try:
                     outcome = await publisher.publish(
                         task_id=task_id,
                         revision=revision,
                         existing_remote_id=existing_remote_id,
                         on_asset_uploaded=on_asset,
+                        options=pub_options,
                     )
 
                     pub.status = PublicationStatus.SUCCEEDED

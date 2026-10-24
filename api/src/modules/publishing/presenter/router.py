@@ -2,6 +2,9 @@ import uuid
 
 from fastapi import APIRouter, status
 
+from src.libs.exceptions import NotFoundException
+from src.modules.articles.ports.output import IRevisionRepoDep
+from src.modules.publishing.domain import render_for_devto
 from src.modules.publishing.presenter.dtos import (
     PublicationListResponseDto,
     PublishRequestDto,
@@ -16,6 +19,30 @@ from src.modules.publishing.usecases import (
 from src.modules.shared.domain.entities import PublicationTarget
 
 publishing_router = APIRouter(tags=["publishing"])
+
+
+@publishing_router.get(
+    "/revisions/{revision_id}/render/devto",
+    status_code=status.HTTP_200_OK,
+)
+async def preview_devto_render(
+    revision_id: uuid.UUID,
+    revisions: IRevisionRepoDep,
+):
+    rev = revisions.get(revision_id)
+    if rev is None:
+        raise NotFoundException(f"Revision '{revision_id}' not found")
+    res = await render_for_devto(rev)
+    return {
+        "title": res.title,
+        "body_markdown": res.body_markdown,
+        "rendered_content_hash": res.rendered_content_hash,
+        "tags": res.tags,
+        "canonical_url": res.canonical_url,
+        "main_image": res.main_image,
+        "description": res.description,
+    }
+
 
 
 @publishing_router.post(

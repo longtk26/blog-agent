@@ -1,3 +1,4 @@
+from typing import Any
 import uuid
 from datetime import datetime
 
@@ -7,15 +8,16 @@ from src.modules.shared.domain.entities import PublicationEntity, PublicationTar
 
 
 class PublishRequestDto(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     destinations: list[PublicationTarget] = Field(
         default_factory=lambda: [PublicationTarget.SANITY], min_length=1
     )
+    options: dict[str, Any] = Field(default_factory=dict)
 
 
 class UnpublishRequestDto(BaseModel):
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
     slug: str = Field(min_length=1, max_length=120)
     destinations: list[PublicationTarget] = Field(
@@ -30,6 +32,8 @@ class PublicationDto(BaseModel):
     destination: PublicationTarget | str
     remote_document_id: str | None = None
     remote_url: str | None = None
+    destination_id: str | None = None
+    destination_url: str | None = None
     status: str
     attempt_count: int
     rendered_content_hash: str | None = None
@@ -46,6 +50,8 @@ class PublicationDto(BaseModel):
             destination=entity.destination,
             remote_document_id=entity.remote_document_id,
             remote_url=entity.remote_url,
+            destination_id=entity.remote_document_id,
+            destination_url=entity.remote_url,
             status=str(entity.status),
             attempt_count=entity.attempt_count,
             rendered_content_hash=entity.rendered_content_hash,

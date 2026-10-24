@@ -24,7 +24,7 @@ export type TApproval = {
   article_revision_id: string;
   content_hash: string;
   destination: TPublicationTarget;
-  options: { devto_mode?: TDevtoMode; acknowledged_blockers?: string[] };
+  options: { devto_mode?: TDevtoMode; mode?: TDevtoMode; acknowledged_blockers?: string[] };
   decision: "approved" | "superseded";
   reviewer_id: string;
   reviewed_at: string;
@@ -41,6 +41,8 @@ export type TPublication = {
   rendered_content_hash: string;
   destination_id: string | null;
   destination_url: string | null;
+  remote_document_id?: string | null;
+  remote_url?: string | null;
   destination_meta: {
     studio_url?: string;
     cover_image_key?: string;
@@ -57,7 +59,7 @@ export type TPublication = {
   updated_at: string;
 };
 
-export type TReviewMode = "preview" | "edit" | "split" | "diff";
+export type TReviewMode = "preview" | "devto" | "edit" | "split" | "diff";
 export type TSidebarTab = "issues" | "claims" | "sources" | "metadata" | "diagrams" | "publish";
 
 export type TDiagramAsset = {

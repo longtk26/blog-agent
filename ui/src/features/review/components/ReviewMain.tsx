@@ -16,6 +16,7 @@ import { splitSections, stripHeadingNumber } from "../markdown-sections";
 import type { TReviewMode } from "../types";
 import { MarkdownEditor } from "./MarkdownEditor";
 import { RevisionDiff } from "./RevisionDiff";
+import { DevtoPreview } from "./DevtoPreview";
 
 type ReviewMainProps = {
   taskId: string;
@@ -83,6 +84,7 @@ export function ReviewMain({ taskId, revision, revisions, canEdit, readOnlyReaso
       <div className="flex flex-wrap items-center justify-between gap-2">
         <TabsList>
           <TabsTrigger value="preview">Preview</TabsTrigger>
+          <TabsTrigger value="devto">Dev.to Preview</TabsTrigger>
           <TabsTrigger value="edit">Edit</TabsTrigger>
           <TabsTrigger value="split">Split</TabsTrigger>
           <TabsTrigger value="diff">Changes</TabsTrigger>
@@ -108,6 +110,9 @@ export function ReviewMain({ taskId, revision, revisions, canEdit, readOnlyReaso
 
       <TabsContent value="preview" className="mt-3">
         {preview}
+      </TabsContent>
+      <TabsContent value="devto" className="mt-3">
+        <DevtoPreview revision={revision} />
       </TabsContent>
       <TabsContent value="edit" className="mt-3">
         {editor}

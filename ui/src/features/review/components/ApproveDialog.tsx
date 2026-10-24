@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckCircle2Icon } from "lucide-react";
+import { AlertCircleIcon, CheckCircle2Icon } from "lucide-react";
 import { useState } from "react";
 import { Controller, useWatch } from "react-hook-form";
 
@@ -41,6 +41,7 @@ function ApproveForm({ task, revision, onDone }: { task: TTask; revision: TRevis
     onDone,
   );
   const destinations = useWatch({ control: form.control, name: "destinations" });
+  const devtoMode = useWatch({ control: form.control, name: "devtoMode" });
 
   return (
     <form onSubmit={onSubmit}>
@@ -88,20 +89,31 @@ function ApproveForm({ task, revision, onDone }: { task: TTask; revision: TRevis
           )}
         />
         {destinations.includes("devto") ? (
-          <Controller
-            name="devtoMode"
-            control={form.control}
-            render={({ field }) => (
-              <Field>
-                <FieldLabel>DEV Community mode</FieldLabel>
-                <ToggleGroup type="single" variant="outline" value={field.value} onValueChange={(value) => value && field.onChange(value)}>
-                  <ToggleGroupItem value="draft">Draft on Dev.to</ToggleGroupItem>
-                  <ToggleGroupItem value="published">Publish on Dev.to</ToggleGroupItem>
-                </ToggleGroup>
-                <FieldDescription>Used by the Dev.to publisher (Epic 8).</FieldDescription>
-              </Field>
-            )}
-          />
+          <div className="space-y-2">
+            <Controller
+              name="devtoMode"
+              control={form.control}
+              render={({ field }) => (
+                <Field>
+                  <FieldLabel>DEV Community mode</FieldLabel>
+                  <ToggleGroup type="single" variant="outline" value={field.value} onValueChange={(value) => value && field.onChange(value)}>
+                    <ToggleGroupItem value="draft">Draft on Dev.to</ToggleGroupItem>
+                    <ToggleGroupItem value="published">Publish on Dev.to</ToggleGroupItem>
+                  </ToggleGroup>
+                  <FieldDescription>Choose whether to push as an unlisted draft or go public immediately.</FieldDescription>
+                </Field>
+              )}
+            />
+            {devtoMode === "published" ? (
+              <Alert variant="destructive" className="border-amber-500/50 bg-amber-500/10 text-amber-500 dark:border-amber-500/30 dark:bg-amber-500/10">
+                <AlertCircleIcon className="size-4 text-amber-500" />
+                <AlertTitle className="text-amber-500 font-medium">Warning: Going Public on DEV Community</AlertTitle>
+                <AlertDescription className="text-xs text-amber-600 dark:text-amber-400">
+                  This will publish live immediately to DEV.to feeds and followers once published. If you prefer to review on DEV before releasing, keep &quot;Draft on Dev.to&quot; selected.
+                </AlertDescription>
+              </Alert>
+            ) : null}
+          </div>
         ) : null}
         {blockers.length ? (
           <Controller

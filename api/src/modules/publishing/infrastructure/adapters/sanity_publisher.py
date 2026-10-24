@@ -200,6 +200,7 @@ class SanityPublisher(IPublisher, IAssetUploader):
         revision: ArticleRevisionEntity,
         existing_remote_id: str | None = None,
         on_asset_uploaded: Callable[[str, str, str], None] | None = None,
+        options: dict[str, Any] | None = None,
     ) -> PublishOutcome:
         # Determine deterministic document _id: existing or validated slug
         if existing_remote_id:

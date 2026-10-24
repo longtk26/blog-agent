@@ -57,7 +57,7 @@ export function ReviewSidebar({ task, revision, sources, approvals, publications
             <DiagramsPanel taskId={task.id} canEdit={canEdit} />
           </TabsContent>
           <TabsContent value="publish">
-            <PublicationPanel task={task} revision={revision} publications={publications} />
+            <PublicationPanel task={task} revision={revision} approvals={approvals} publications={publications} />
           </TabsContent>
         </CardContent>
       </Card>

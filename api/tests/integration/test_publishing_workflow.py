@@ -31,18 +31,21 @@ class MockPublisher(IPublisher):
         revision: ArticleRevisionEntity,
         existing_remote_id: str | None = None,
         on_asset_uploaded=None,
+        options=None,
     ) -> PublishOutcome:
         self.calls.append((task_id, revision, existing_remote_id))
+        self.last_options = options
         if self.fail_times > 0:
             self.fail_times -= 1
             raise self.fail_with or RuntimeError("Simulated publisher failure")
 
         doc_id = existing_remote_id or revision.slug
         rendered_hash = hashlib.sha256(revision.markdown.encode("utf-8")).hexdigest()
+        remote_prefix = "https://dev.to/articles" if self._destination == PublicationTarget.DEVTO else "https://leon-pham.vercel.app/posts"
         return PublishOutcome(
             destination=self._destination,
             remote_document_id=doc_id,
-            remote_url=f"https://leon-pham.vercel.app/posts/{doc_id}",
+            remote_url=f"{remote_prefix}/{doc_id}",
             rendered_content_hash=rendered_hash,
             studio_url=f"https://demmqb6o.sanity.studio/structure/post;{doc_id}",
             rendered_markdown=revision.markdown,
@@ -54,7 +57,12 @@ class MockPublisher(IPublisher):
 
 @pytest.fixture
 def mock_publisher():
-    return MockPublisher()
+    return MockPublisher(PublicationTarget.SANITY)
+
+
+@pytest.fixture
+def mock_devto_publisher():
+    return MockPublisher(PublicationTarget.DEVTO)
 
 
 @pytest.fixture
@@ -63,7 +71,7 @@ def script():
 
 
 @pytest.fixture
-def client(monkeypatch, script, mock_publisher):
+def client(monkeypatch, script, mock_publisher, mock_devto_publisher):
     monkeypatch.setattr(main, "get_model_factory", lambda: FakeModelFactory(script))
     monkeypatch.setattr(main, "get_search_provider", lambda: FakeSearchProvider())
     monkeypatch.setattr(main, "get_page_extractor", lambda: FakeExtractor())
@@ -72,6 +80,7 @@ def client(monkeypatch, script, mock_publisher):
         def __init__(self):
             self._publishers = {
                 PublicationTarget.SANITY.value: mock_publisher,
+                PublicationTarget.DEVTO.value: mock_devto_publisher,
             }
 
     main.app.dependency_overrides[PublisherRegistry] = CustomRegistry
@@ -296,3 +305,104 @@ def test_unpublish_flow(client, mock_publisher):
     assert len(mock_publisher.unpublish_calls) == 1
     assert mock_publisher.unpublish_calls[0] == r["slug"]
     assert len(unpub_res.json()["items"]) == 0
+
+
+def test_devto_dual_publishing_and_mode_gate(client, mock_publisher, mock_devto_publisher):
+    # 1. Create task with both sanity and devto
+    created = client.post(
+        "/tasks",
+        json={"topic": "How LoRA fine-tuning works", "publication_targets": ["sanity", "devto"]},
+    )
+    assert created.status_code == 201
+    task_id = created.json()["id"]
+    wait_idle(client, task_id, {"awaiting_review"})
+
+    r = get_revision(client, revisions(client, task_id)[0]["id"])
+
+    # 2. Approve for sanity + devto with draft mode
+    approve_res = client.post(
+        f"/revisions/{r['id']}/approvals",
+        json={
+            "destinations": ["sanity", "devto"],
+            "content_hash": r["content_hash"],
+            "options": {"devto_mode": "draft"},
+            "acknowledge_blockers": True,
+        },
+    )
+    assert approve_res.status_code in (200, 201)
+    wait_idle(client, task_id, {"approved"})
+
+    # 3. Trying to publish devto with mode=published fails gate check
+    bad_mode_res = client.post(
+        f"/revisions/{r['id']}/publish",
+        json={"destinations": ["devto"], "options": {"mode": "published"}},
+    )
+    assert bad_mode_res.status_code == 403
+    assert len(mock_devto_publisher.calls) == 0
+
+    # 4. Publishing approved draft succeeds for both destinations
+    pub_res = client.post(
+        f"/revisions/{r['id']}/publish",
+        json={"destinations": ["sanity", "devto"]},
+    )
+    assert pub_res.status_code == 200
+    items = pub_res.json()["items"]
+    assert len(items) == 2
+    assert {i["destination"] for i in items} == {"sanity", "devto"}
+    assert all(i["status"] == "succeeded" for i in items)
+
+    # Dev.to publisher received draft mode
+    assert mock_devto_publisher.last_options.get("mode") == "draft"
+
+    task = wait_idle(client, task_id, {"published"})
+    assert task["status"] == "published"
+
+
+def test_retry_retries_only_failed_destination(client, mock_publisher, mock_devto_publisher):
+    created = client.post(
+        "/tasks",
+        json={"topic": "How LoRA fine-tuning works", "publication_targets": ["sanity", "devto"]},
+    )
+    task_id = created.json()["id"]
+    wait_idle(client, task_id, {"awaiting_review"})
+    r = get_revision(client, revisions(client, task_id)[0]["id"])
+
+    client.post(
+        f"/revisions/{r['id']}/approvals",
+        json={
+            "destinations": ["sanity", "devto"],
+            "content_hash": r["content_hash"],
+            "options": {"devto_mode": "draft"},
+            "acknowledge_blockers": True,
+        },
+    )
+    wait_idle(client, task_id, {"approved"})
+
+    # Make Dev.to publisher fail once
+    mock_devto_publisher.fail_times = 1
+
+    pub_res = client.post(
+        f"/revisions/{r['id']}/publish",
+        json={"destinations": ["sanity", "devto"]},
+    )
+    assert pub_res.status_code == 200
+    pubs = {p["destination"]: p for p in pub_res.json()["items"]}
+    assert pubs["sanity"]["status"] == "succeeded"
+    assert pubs["devto"]["status"] == "failed"
+
+    # Task is partially published
+    wait_idle(client, task_id, {"partially_published"})
+
+    # Retry ONLY devto
+    initial_sanity_calls = len(mock_publisher.calls)
+    retry_res = client.post(f"/tasks/{task_id}/publications/devto/retry", json={})
+    assert retry_res.status_code == 200
+
+    # Sanity publisher was NOT called again!
+    assert len(mock_publisher.calls) == initial_sanity_calls
+    # Devto publisher was called and now succeeded
+    retry_pubs = {p["destination"]: p for p in retry_res.json()["items"]}
+    assert retry_pubs["devto"]["status"] == "succeeded"
+
+    wait_idle(client, task_id, {"published"})
+

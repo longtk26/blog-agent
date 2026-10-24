@@ -1,9 +1,10 @@
 "use client";
 
-import { ExternalLinkIcon, GlobeIcon, Loader2Icon, SendIcon } from "lucide-react";
+import { ExternalLinkIcon, GlobeIcon, Loader2Icon, SendIcon, Share2Icon } from "lucide-react";
 import { useState } from "react";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -30,23 +31,46 @@ type PublishDialogProps = {
 
 export function PublishDialog({ taskId, revision, approvals, publications, disabled }: PublishDialogProps) {
   const [open, setOpen] = useState(false);
-  const [destinations, setDestinations] = useState<TPublicationTarget[]>(["sanity"]);
   const { publish } = useReviewActions(taskId);
 
   const sanityApproval = approvals.find(
     (a) => a.article_revision_id === revision.id && a.destination === "sanity" && a.decision === "approved",
   );
-  const isApproved = Boolean(sanityApproval);
+  const devtoApproval = approvals.find(
+    (a) => a.article_revision_id === revision.id && a.destination === "devto" && a.decision === "approved",
+  );
+
+  const approvedDestinations: TPublicationTarget[] = [];
+  if (sanityApproval) approvedDestinations.push("sanity");
+  if (devtoApproval) approvedDestinations.push("devto");
+
+  const [destinations, setDestinations] = useState<TPublicationTarget[]>(() =>
+    approvedDestinations.length ? approvedDestinations : ["sanity"],
+  );
+
+  const unapprovedSelected = destinations.filter((d) => {
+    if (d === "sanity") return !sanityApproval;
+    if (d === "devto") return !devtoApproval;
+    return true;
+  });
+
+  const canPublish = destinations.length > 0 && unapprovedSelected.length === 0 && !publish.isPending;
 
   const existingSanityPub = publications.find(
     (p) => p.destination === "sanity" && p.status === "published",
   );
-  const isAlreadyPublished = Boolean(existingSanityPub);
+  const existingDevtoPub = publications.find(
+    (p) => p.destination === "devto" && p.status === "published",
+  );
+  const isAlreadyPublished = Boolean(existingSanityPub || existingDevtoPub);
 
-  const isPending = publish.isPending;
+  const devtoMode =
+    (devtoApproval?.options?.devto_mode as string | undefined) ||
+    (devtoApproval?.options?.mode as string | undefined) ||
+    "draft";
 
   const handlePublish = async () => {
-    if (!isApproved || destinations.length === 0 || isPending) return;
+    if (!canPublish) return;
     try {
       await publish.mutateAsync({
         revisionId: revision.id,
@@ -72,10 +96,10 @@ export function PublishDialog({ taskId, revision, approvals, publications, disab
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <GlobeIcon className="size-5 text-primary" />
-            Publish r{revision.revision_number} to Website
+            Publish r{revision.revision_number}
           </DialogTitle>
           <DialogDescription>
-            Sync this approved revision to Sanity so it appears on your live website.
+            Publish this approved revision to your configured target destinations.
           </DialogDescription>
         </DialogHeader>
 
@@ -116,19 +140,58 @@ export function PublishDialog({ taskId, revision, approvals, publications, disab
           <FieldSet>
             <FieldLegend variant="label">Destinations</FieldLegend>
             <div className="flex flex-col gap-2.5 pt-1">
-              <Field orientation="horizontal" className="w-auto">
-                <Checkbox
-                  id="pub-dest-sanity"
-                  checked={destinations.includes("sanity")}
-                  onCheckedChange={(checked) =>
-                    setDestinations((prev) =>
-                      checked ? [...prev, "sanity"] : prev.filter((d) => d !== "sanity"),
-                    )
-                  }
-                />
-                <FieldLabel htmlFor="pub-dest-sanity" className="font-normal">
-                  Website (Sanity) — <span className="text-muted-foreground font-mono">demmqb6o / blogs</span>
-                </FieldLabel>
+              <Field orientation="horizontal" className="w-auto flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="pub-dest-sanity"
+                    checked={destinations.includes("sanity")}
+                    onCheckedChange={(checked) =>
+                      setDestinations((prev) =>
+                        checked ? [...prev, "sanity"] : prev.filter((d) => d !== "sanity"),
+                      )
+                    }
+                  />
+                  <FieldLabel htmlFor="pub-dest-sanity" className="font-normal cursor-pointer">
+                    Website (Sanity) — <span className="text-muted-foreground font-mono">demmqb6o / blogs</span>
+                  </FieldLabel>
+                </div>
+                {sanityApproval ? (
+                  <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">
+                    Approved
+                  </Badge>
+                ) : (
+                  <Badge variant="secondary">Not Approved</Badge>
+                )}
+              </Field>
+
+              <Field orientation="horizontal" className="w-auto flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="pub-dest-devto"
+                    checked={destinations.includes("devto")}
+                    onCheckedChange={(checked) =>
+                      setDestinations((prev) =>
+                        checked ? [...prev, "devto"] : prev.filter((d) => d !== "devto"),
+                      )
+                    }
+                  />
+                  <FieldLabel htmlFor="pub-dest-devto" className="font-normal cursor-pointer flex items-center gap-1.5">
+                    <Share2Icon className="size-3.5 text-muted-foreground" />
+                    DEV Community (dev.to)
+                  </FieldLabel>
+                </div>
+                {devtoApproval ? (
+                  <div className="flex items-center gap-1.5">
+                    <Badge variant="outline" className="text-emerald-500 border-emerald-500/30">
+                      Approved
+                    </Badge>
+                    <Badge variant="secondary" className="capitalize text-xs">
+                      {devtoMode}
+                    </Badge>
+                  </div>
+                ) : (
+                  <Badge variant="secondary">Not Approved</Badge>
+                )}
               </Field>
             </div>
           </FieldSet>
@@ -137,32 +200,36 @@ export function PublishDialog({ taskId, revision, approvals, publications, disab
             <Alert>
               <AlertTitle>Republishing Article</AlertTitle>
               <AlertDescription>
-                This article is already live. Publishing r{revision.revision_number} will update the post content in-place on Sanity while preserving the original <span className="font-mono">publishedAt</span> timestamp.
+                This article was already published. Publishing r{revision.revision_number} will update the post content in-place while preserving original publication timestamps.
               </AlertDescription>
             </Alert>
           ) : null}
 
-          {!isApproved ? (
+          {unapprovedSelected.length > 0 ? (
             <Alert variant="destructive">
               <AlertTitle>Approval Required</AlertTitle>
               <AlertDescription>
-                Revision r{revision.revision_number} must be approved before it can be published.
+                Destination(s) {unapprovedSelected.join(", ")} must be approved for r{revision.revision_number} before publishing.
               </AlertDescription>
             </Alert>
           ) : null}
         </div>
 
         <DialogFooter className="mt-2">
-          <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={isPending}>
+          <Button type="button" variant="ghost" onClick={() => setOpen(false)} disabled={publish.isPending}>
             Cancel
           </Button>
           <Button
             type="button"
-            disabled={!isApproved || destinations.length === 0 || isPending}
+            disabled={!canPublish}
             onClick={handlePublish}
           >
-            {isPending ? <Loader2Icon className="animate-spin" /> : <SendIcon />}
-            {isPending ? "Publishing…" : isAlreadyPublished ? `Update live post (r${revision.revision_number})` : `Publish now (r${revision.revision_number})`}
+            {publish.isPending ? <Loader2Icon className="animate-spin" /> : <SendIcon />}
+            {publish.isPending
+              ? "Publishing…"
+              : isAlreadyPublished
+              ? `Update post (r${revision.revision_number})`
+              : `Publish now (r${revision.revision_number})`}
           </Button>
         </DialogFooter>
       </DialogContent>
