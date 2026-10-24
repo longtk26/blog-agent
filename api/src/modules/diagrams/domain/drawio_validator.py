@@ -93,8 +93,9 @@ def validate_drawio_xml(xml_content: str, spec: DiagramSpec | None = None) -> Dr
         is_edge = cell.attrib.get("edge") == "1"
 
         if is_vertex:
-            # Container or regular node
-            if cell.attrib.get("container") != "1":
+            # Containers and free text (the diagram title, annotations) are not spec nodes.
+            style = cell.attrib.get("style", "")
+            if cell.attrib.get("container") != "1" and not style.startswith("text;"):
                 parsed_nodes.add(cid)
         elif is_edge:
             src = cell.attrib.get("source")

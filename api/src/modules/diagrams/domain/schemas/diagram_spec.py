@@ -17,6 +17,9 @@ class DiagramNode(BaseModel):
     label: str
     kind: NodeKind = "process"
     group: str | None = None
+    # Icon key from domain/icons.py (e.g. "aws:ec2", "user"). Icon nodes render as a tile with the label
+    # below; nodes without one render as boxes with the text inside.
+    icon: str | None = None
 
 
 class DiagramGroup(BaseModel):
@@ -68,4 +71,4 @@ class DiagramSpec(BaseModel):
     edges: list[DiagramEdge] = Field(default_factory=list)
     participants: list[DiagramParticipant] = Field(default_factory=list)
     messages: list[DiagramMessage] = Field(default_factory=list)
-    style_preset: str = "owner_dark"
+    style_preset: str = Field(default="owner_dark", max_length=64)

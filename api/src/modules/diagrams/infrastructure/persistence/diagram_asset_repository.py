@@ -18,7 +18,8 @@ class DiagramAssetRepository(IDiagramAssetRepository):
     def create(self, asset: DiagramAssetEntity) -> DiagramAssetEntity:
         model = self.__to_model(asset)
         self.session.add(model)
-        self.session.flush()
+        self.session.commit()
+        self.session.refresh(model)
         return self.__to_entity(model)
 
     def get(self, asset_id: uuid.UUID) -> DiagramAssetEntity | None:
@@ -54,14 +55,15 @@ class DiagramAssetRepository(IDiagramAssetRepository):
             if field not in ("id", "created_at"):
                 setattr(model, field, getattr(fresh, field))
         self.session.add(model)
-        self.session.flush()
+        self.session.commit()
+        self.session.refresh(model)
         return self.__to_entity(model)
 
     def delete(self, asset_id: uuid.UUID) -> None:
         model = self.session.get(DiagramAssetModel, asset_id)
         if model:
             self.session.delete(model)
-            self.session.flush()
+            self.session.commit()
 
     @staticmethod
     def __to_model(entity: DiagramAssetEntity) -> DiagramAssetModel:

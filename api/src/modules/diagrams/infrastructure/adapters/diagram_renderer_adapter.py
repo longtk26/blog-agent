@@ -63,6 +63,19 @@ class DiagramRendererAdapter(IDiagramRenderer):
             logger.warning(f"Diagram render error: {exc}")
             return self._fallback_drawio_embed(xml_content)
 
+    async def render_png(self, svg: str, scale: float = 2) -> bytes | None:
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                res = await client.post(f"{self.base_url}/render/png", json={"svg": svg, "scale": scale})
+            if res.status_code == 200:
+                data = res.json().get("png_base64")
+                return base64.b64decode(data) if data else None
+            logger.warning(f"PNG render failed: {res.text[:300]}")
+        except Exception as exc:
+            # The SVG is the published asset; a missing PNG only affects Dev.to and can be regenerated.
+            logger.warning(f"PNG render unavailable: {exc}")
+        return None
+
     async def render_mermaid(self, mermaid_code: str) -> RenderResult:
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:

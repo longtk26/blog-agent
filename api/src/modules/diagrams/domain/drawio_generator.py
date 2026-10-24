@@ -1,228 +1,201 @@
-"""Deterministic draw.io XML generator with owner_dark palette (E7-S3)."""
+"""Deterministic draw.io XML from the computed geometry (E7-S3).
+
+Edges carry explicit exit/entry points and waypoints, so draw.io shows exactly the routes the SVG shows; moving a
+shape in draw.io re-routes only the edges attached to it.
+"""
 
 from xml.sax.saxutils import escape
 
-from src.modules.diagrams.domain.layout import compute_layout, LayoutResult
-from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec, DiagramNode, DiagramEdge
-
-# owner_dark style preset styles
-NODE_STYLES_OWNER_DARK = {
-    "process": (
-        "rounded=1;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#38BDF8;"
-        "strokeWidth=2;fontColor=#F8FAFC;fontStyle=1;align=center;"
-    ),
-    "decision": (
-        "rhombus;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#FBBF24;"
-        "strokeWidth=2;fontColor=#F8FAFC;fontStyle=1;align=center;"
-    ),
-    "datastore": (
-        "shape=cylinder3;whiteSpace=wrap;html=1;boundedLbl=1;backgroundOutline=1;size=15;"
-        "fillColor=#1E293B;strokeColor=#4ADE80;strokeWidth=2;fontColor=#F8FAFC;fontStyle=1;align=center;"
-    ),
-    "service": (
-        "rounded=1;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#818CF8;"
-        "strokeWidth=2;fontColor=#F8FAFC;fontStyle=1;align=center;"
-    ),
-    "actor": (
-        "shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;"
-        "fillColor=#1E293B;strokeColor=#FB7185;strokeWidth=2;fontColor=#F8FAFC;"
-    ),
-    "external": (
-        "rounded=1;whiteSpace=wrap;html=1;dashed=1;fillColor=#1E293B;strokeColor=#94A3B8;"
-        "strokeWidth=2;fontColor=#CBD5E1;align=center;"
-    ),
-    "note": (
-        "shape=note;whiteSpace=wrap;html=1;size=14;fillColor=#FEF08A;strokeColor=#CA8A04;"
-        "fontColor=#713F12;align=left;spacingLeft=5;"
-    ),
-}
-
-GROUP_STYLE_OWNER_DARK = (
-    "swimlane;whiteSpace=wrap;html=1;fillColor=#0F172A;strokeColor=#334155;strokeWidth=1.5;"
-    "fontColor=#94A3B8;fontStyle=1;rounded=1;arcSize=4;collapsible=0;"
+from src.modules.diagrams.domain.geometry import (
+    DiagramGeometry,
+    NodeGeom,
+    SequenceGeometry,
+    build_geometry,
+    build_sequence_geometry,
 )
+from src.modules.diagrams.domain.group_styles import group_style
+from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
+from src.modules.diagrams.domain.svg_renderer import BACKGROUND, BOX_STYLES, EDGE, LABEL_BG, TEXT
 
-EDGE_BASE_STYLE = (
-    "edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;"
-    "strokeColor=#94A3B8;strokeWidth=2;fontColor=#F8FAFC;"
-)
-
-
-def _attr(val: str | None) -> str:
-    if val is None:
-        return ""
-    return escape(str(val), {'"': "&quot;", "\n": "&#xa;"})
+FONT_FAMILY = "Helvetica"
 
 
-def generate_drawio_xml(spec: DiagramSpec, layout: LayoutResult | None = None) -> str:
-    """Generate valid draw.io XML (.drawio) deterministically from DiagramSpec."""
-    if layout is None:
-        layout = compute_layout(spec)
-
-    if spec.type == "sequence":
-        return _generate_sequence_xml(spec, layout)
-
-    return _generate_flowchart_xml(spec, layout)
+def _attr(value: object) -> str:
+    return escape(str(value), {'"': "&quot;", "\n": "&#xa;"})
 
 
-def _generate_flowchart_xml(spec: DiagramSpec, layout: LayoutResult) -> str:
-    diagram_id = "diagram_1"
-    diagram_name = _attr(spec.title)
+def _num(value: float) -> str:
+    return f"{value:.1f}".rstrip("0").rstrip(".")
 
-    lines = [
+
+def _html_lines(lines: list[str]) -> str:
+    return "<br>".join(escape(line) for line in lines)
+
+
+def _header(name: str, width: float, height: float) -> list[str]:
+    return [
         '<mxfile host="app.diagrams.net" agent="blog-agent" version="24.0.0" type="device">',
-        f'  <diagram id="{diagram_id}" name="{diagram_name}">',
-        f'    <mxGraphModel dx="{layout.total_width}" dy="{layout.total_height}" grid="1" gridSize="10" '
-        'guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" '
-        f'pageWidth="{layout.total_width}" pageHeight="{layout.total_height}" math="0" shadow="0">',
-        '      <root>',
+        f'  <diagram id="diagram_1" name="{_attr(name)}">',
+        f'    <mxGraphModel dx="{_num(width)}" dy="{_num(height)}" grid="1" gridSize="10" guides="1" tooltips="1" '
+        f'connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="{_num(width)}" pageHeight="{_num(height)}" '
+        f'background="{BACKGROUND}" math="0" shadow="0">',
+        "      <root>",
         '        <mxCell id="0" />',
         '        <mxCell id="1" parent="0" />',
     ]
 
-    # 1. Groups / Swimlanes
-    # Map group to parent group (or root 1)
-    group_parents: dict[str, str] = {g.id: (g.parent if g.parent else "1") for g in spec.groups}
 
-    for group in spec.groups:
-        grect = layout.groups.get(group.id)
-        if not grect:
-            continue
-        pid = group_parents.get(group.id, "1")
+_FOOTER = ["      </root>", "    </mxGraphModel>", "  </diagram>", "</mxfile>"]
+
+
+def _vertex(cell_id: str, value: str, style: str, parent: str, x: float, y: float, w: float, h: float, extra: str = "") -> str:
+    return (
+        f'        <mxCell id="{_attr(cell_id)}" value="{_attr(value)}" style="{_attr(style)}" vertex="1" '
+        f'parent="{_attr(parent)}"{extra}>\n'
+        f'          <mxGeometry x="{_num(x)}" y="{_num(y)}" width="{_num(w)}" height="{_num(h)}" as="geometry" />\n'
+        "        </mxCell>"
+    )
+
+
+def _node_style(node: NodeGeom) -> str:
+    if node.icon is not None:
+        label = (
+            "verticalLabelPosition=bottom;verticalAlign=top;align=center;"
+            if node.label_side == "bottom"
+            else "labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;spacingLeft=6;"
+        )
+        return (
+            f"sketch=0;outlineConnect=0;gradientColor=none;fillColor={node.icon.color};strokeColor=#ffffff;dashed=0;"
+            f"html=1;fontSize=12;fontStyle=0;fontColor={TEXT};fontFamily={FONT_FAMILY};aspect=fixed;{label}"
+            f"{node.icon.drawio_shape}"
+        )
+    fill, stroke = BOX_STYLES.get(node.kind, BOX_STYLES["process"])
+    shape = {
+        "decision": "rhombus;",
+        "datastore": "shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=7;",
+        "note": "shape=note;size=12;",
+    }.get(node.kind, "rounded=1;arcSize=14;")
+    font = "#713F12" if node.kind == "note" else TEXT
+    dashed = "dashed=1;" if node.kind == "external" else ""
+    bold = "fontStyle=1;" if node.kind in ("process", "service", "decision") else ""
+    return (
+        f"{shape}whiteSpace=wrap;html=1;fillColor={fill};strokeColor={stroke};strokeWidth=1.6;fontColor={font};"
+        f"fontSize=12;fontFamily={FONT_FAMILY};{bold}{dashed}"
+    )
+
+
+def generate_drawio_xml(spec: DiagramSpec, geometry: DiagramGeometry | SequenceGeometry | None = None) -> str:
+    """Generate valid draw.io XML (.drawio) deterministically from a DiagramSpec."""
+    if spec.type == "sequence":
+        return _sequence_xml(spec, geometry if isinstance(geometry, SequenceGeometry) else build_sequence_geometry(spec))
+    if not isinstance(geometry, DiagramGeometry):
+        geometry = build_geometry(spec)
+    return _flow_xml(spec, geometry)
+
+
+def _flow_xml(spec: DiagramSpec, g: DiagramGeometry) -> str:
+    lines = _header(spec.title, g.width, g.height)
+    if g.title:
         lines.append(
-            f'        <mxCell id="{_attr(group.id)}" value="{_attr(group.label)}" '
-            f'style="{GROUP_STYLE_OWNER_DARK}" vertex="1" parent="{_attr(pid)}" container="1">\n'
-            f'          <mxGeometry x="{grect.x}" y="{grect.y}" width="{grect.width}" height="{grect.height}" as="geometry" />\n'
-            '        </mxCell>'
+            _vertex(
+                "diagram_title", g.title.text,
+                f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=16;fontStyle=1;"
+                f"fontColor=#F1F5F9;fontFamily={FONT_FAMILY};",
+                "1", g.title.rect.x, g.title.rect.y - 2, g.title.rect.w + 20, g.title.rect.h + 6,
+            )
         )
 
-    # 2. Nodes
-    for node in spec.nodes:
-        nrect = layout.nodes.get(node.id)
-        if not nrect:
-            continue
-        pid = node.group if node.group and node.group in layout.groups else "1"
-        style = NODE_STYLES_OWNER_DARK.get(node.kind, NODE_STYLES_OWNER_DARK["process"])
-        
-        # Relative coordinates if child of group
-        if pid != "1" and pid in layout.groups:
-            parent_rect = layout.groups[pid]
-            rel_x = max(10, nrect.x - parent_rect.x)
-            rel_y = max(30, nrect.y - parent_rect.y)
-        else:
-            rel_x = nrect.x
-            rel_y = nrect.y
-
+    rects = {grp.id: grp.rect for grp in g.groups}
+    for grp in g.groups:
+        parent = grp.parent if grp.parent in rects else "1"
+        ox, oy = (rects[parent].x, rects[parent].y) if parent != "1" else (0, 0)
+        r = grp.rect
         lines.append(
-            f'        <mxCell id="{_attr(node.id)}" value="{_attr(node.label)}" '
-            f'style="{style}" vertex="1" parent="{_attr(pid)}">\n'
-            f'          <mxGeometry x="{rel_x}" y="{rel_y}" width="{nrect.width}" height="{nrect.height}" as="geometry" />\n'
-            '        </mxCell>'
+            _vertex(grp.id, grp.title, group_style(grp.title).drawio, parent, r.x - ox, r.y - oy, r.w, r.h, ' container="1"')
         )
 
-    # 3. Edges
-    for idx, edge in enumerate(spec.edges):
-        edge_id = f"e{idx}_{edge.from_node}_{edge.to_node}"
-        style_parts = [EDGE_BASE_STYLE]
-        if edge.style == "dashed":
-            style_parts.append("dashed=1;strokeDasharray=4;")
-        
-        if edge.arrow == "both":
-            style_parts.append("startArrow=block;endArrow=block;")
-        elif edge.arrow == "none":
-            style_parts.append("startArrow=none;endArrow=none;")
-        else:
-            style_parts.append("endArrow=block;")
+    for node in g.nodes.values():
+        parent = node.group if node.group in rects else "1"
+        ox, oy = (rects[parent].x, rects[parent].y) if parent != "1" else (0, 0)
+        b = node.body
+        value = _html_lines(node.lines)
+        lines.append(_vertex(node.id, value, _node_style(node), parent, b.x - ox, b.y - oy, b.w, b.h))
 
-        edge_style = "".join(style_parts)
-        edge_label = _attr(edge.label) if edge.label else ""
-
-        lines.append(
-            f'        <mxCell id="{_attr(edge_id)}" value="{edge_label}" '
-            f'style="{edge_style}" edge="1" parent="1" '
-            f'source="{_attr(edge.from_node)}" target="{_attr(edge.to_node)}">\n'
-            '          <mxGeometry relative="1" as="geometry" />\n'
-            '        </mxCell>'
+    for edge in g.edges:
+        src, tgt = g.nodes[edge.source].body, g.nodes[edge.target].body
+        (sx, sy), (tx, ty) = edge.points[0], edge.points[-1]
+        exit_x, exit_y = (sx - src.x) / src.w, (sy - src.y) / src.h
+        entry_x, entry_y = (tx - tgt.x) / tgt.w, (ty - tgt.y) / tgt.h
+        arrows = {"both": "startArrow=block;startFill=1;endArrow=block;endFill=1;", "none": "startArrow=none;endArrow=none;"}
+        style = (
+            f"edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor={EDGE};"
+            f"strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily={FONT_FAMILY};labelBackgroundColor={LABEL_BG};"
+            f"labelBorderColor=#334155;{arrows.get(edge.arrow, 'endArrow=block;endFill=1;')}"
+            f"{'dashed=1;' if edge.dashed else ''}"
+            f"exitX={exit_x:.4f};exitY={exit_y:.4f};exitDx=0;exitDy=0;exitPerimeter=0;"
+            f"entryX={entry_x:.4f};entryY={entry_y:.4f};entryDx=0;entryDy=0;entryPerimeter=0;"
         )
-
-    lines.extend([
-        '      </root>',
-        '    </mxGraphModel>',
-        '  </diagram>',
-        '</mxfile>',
-    ])
+        waypoints = "".join(f'<mxPoint x="{_num(x)}" y="{_num(y)}" />' for x, y in edge.points[1:-1])
+        label_x = f' x="{edge.label_at * 2 - 1:.4f}"' if edge.lines else ""
+        lines.append(
+            f'        <mxCell id="{_attr(edge.id)}" value="{_attr(_html_lines(edge.lines))}" style="{_attr(style)}" '
+            f'edge="1" parent="1" source="{_attr(edge.source)}" target="{_attr(edge.target)}">\n'
+            f'          <mxGeometry{label_x} relative="1" as="geometry">'
+            + (f'<Array as="points">{waypoints}</Array>' if waypoints else "")
+            + "</mxGeometry>\n        </mxCell>"
+        )
+    lines.extend(_FOOTER)
     return "\n".join(lines)
 
 
-def _generate_sequence_xml(spec: DiagramSpec, layout: LayoutResult) -> str:
-    diagram_id = "diagram_seq"
-    diagram_name = _attr(spec.title)
-
-    lines = [
-        '<mxfile host="app.diagrams.net" agent="blog-agent" version="24.0.0" type="device">',
-        f'  <diagram id="{diagram_id}" name="{diagram_name}">',
-        f'    <mxGraphModel dx="{layout.total_width}" dy="{layout.total_height}" grid="1" gridSize="10" '
-        'guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" '
-        f'pageWidth="{layout.total_width}" pageHeight="{layout.total_height}" math="0" shadow="0">',
-        '      <root>',
-        '        <mxCell id="0" />',
-        '        <mxCell id="1" parent="0" />',
-    ]
-
-    # Lifelines
-    for idx, p in enumerate(spec.participants):
-        nrect = layout.nodes[p.id]
-        if p.actor:
-            p_style = (
-                "shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;"
-                "container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;"
-                "portConstraint=eastwest;size=40;participant=umlActor;verticalAlign=bottom;"
-                "fillColor=#1E293B;strokeColor=#FB7185;fontColor=#F8FAFC;"
-            )
-        else:
-            p_style = (
-                "shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;"
-                "container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;"
-                "portConstraint=eastwest;size=40;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#F8FAFC;"
-            )
-
+def _sequence_xml(spec: DiagramSpec, g: SequenceGeometry) -> str:
+    lines = _header(spec.title, g.width, g.height)
+    if g.title:
         lines.append(
-            f'        <mxCell id="{_attr(p.id)}" value="{_attr(p.label)}" '
-            f'style="{p_style}" vertex="1" parent="1">\n'
-            f'          <mxGeometry x="{nrect.x}" y="{nrect.y}" width="{nrect.width}" height="{nrect.height}" as="geometry" />\n'
-            '        </mxCell>'
+            _vertex(
+                "diagram_title", g.title.text,
+                f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=16;fontStyle=1;"
+                f"fontColor=#F1F5F9;fontFamily={FONT_FAMILY};",
+                "1", g.title.rect.x, g.title.rect.y - 2, g.title.rect.w + 20, g.title.rect.h + 6,
+            )
         )
-
-    # Messages
-    for idx, msg in enumerate(spec.messages):
-        msg_id = f"m_{idx}"
-        y_pos = 120 + idx * 50
-        from_rect = layout.nodes.get(msg.from_node)
-        to_rect = layout.nodes.get(msg.to_node)
-        x_from = from_rect.x + from_rect.width // 2 if from_rect else 100
-        x_to = to_rect.x + to_rect.width // 2 if to_rect else 300
-
-        if msg.return_msg:
-            m_style = "html=1;verticalAlign=bottom;endArrow=open;dashed=1;strokeColor=#94A3B8;strokeWidth=2;fontColor=#F8FAFC;"
-        elif msg.async_msg:
-            m_style = "html=1;verticalAlign=bottom;endArrow=open;strokeColor=#38BDF8;strokeWidth=2;fontColor=#F8FAFC;"
-        else:
-            m_style = "html=1;verticalAlign=bottom;endArrow=block;strokeColor=#38BDF8;strokeWidth=2;fontColor=#F8FAFC;"
-
+    for p in g.participants:
+        stroke = "#FB7185" if p.actor else "#38BDF8"
+        style = (
+            "shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;"
+            "collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};"
+            f"size={_num(p.head.h)};fillColor=#1E293B;strokeColor={stroke};fontColor={TEXT};fontStyle=1;"
+            f"fontFamily={FONT_FAMILY};"
+        )
         lines.append(
-            f'        <mxCell id="{_attr(msg_id)}" value="{_attr(msg.label)}" '
-            f'style="{m_style}" edge="1" parent="1">\n'
-            f'          <mxGeometry relative="1" as="geometry">\n'
-            f'            <mxPoint x="{x_from}" y="{y_pos}" as="sourcePoint" />\n'
-            f'            <mxPoint x="{x_to}" y="{y_pos}" as="targetPoint" />\n'
-            '          </mxGeometry>\n'
-            '        </mxCell>'
+            _vertex(p.id, _html_lines(p.lines), style, "1", p.head.x, p.head.y, p.head.w, g.lifeline_bottom - p.head.y)
         )
-
-    lines.extend([
-        '      </root>',
-        '    </mxGraphModel>',
-        '  </diagram>',
-        '</mxfile>',
-    ])
+    for m in g.messages:
+        dashed = "dashed=1;endArrow=open;" if m.dashed else ("endArrow=open;" if m.async_msg else "endArrow=block;endFill=1;")
+        stroke = EDGE if m.dashed else "#38BDF8"
+        style = (
+            f"html=1;verticalAlign=bottom;strokeColor={stroke};strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;"
+            f"fontFamily={FONT_FAMILY};{dashed}"
+        )
+        (x1, y1), (x2, y2) = m.points[0], m.points[-1]
+        waypoints = "".join(f'<mxPoint x="{_num(x)}" y="{_num(y)}" />' for x, y in m.points[1:-1])
+        lines.append(
+            f'        <mxCell id="{_attr(m.id)}" value="{_attr(_html_lines(m.lines))}" style="{_attr(style)}" '
+            'edge="1" parent="1">\n'
+            '          <mxGeometry relative="1" as="geometry">'
+            f'<mxPoint x="{_num(x1)}" y="{_num(y1)}" as="sourcePoint" />'
+            f'<mxPoint x="{_num(x2)}" y="{_num(y2)}" as="targetPoint" />'
+            + (f'<Array as="points">{waypoints}</Array>' if waypoints else "")
+            + "</mxGeometry>\n        </mxCell>"
+        )
+    for n in g.notes:
+        lines.append(
+            _vertex(
+                n.id, _html_lines(n.lines),
+                f"shape=note;size=10;whiteSpace=wrap;html=1;fillColor=#FEF08A;strokeColor=#CA8A04;fontColor=#713F12;"
+                f"fontFamily={FONT_FAMILY};",
+                "1", n.rect.x, n.rect.y, n.rect.w, n.rect.h,
+            )
+        )
+    lines.extend(_FOOTER)
     return "\n".join(lines)

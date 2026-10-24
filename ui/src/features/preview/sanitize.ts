@@ -18,6 +18,10 @@ export const previewSanitizeSchema: TSanitizeSchema = {
     ...defaultSchema.attributes,
     code: [["className", /^language-./, "math-inline", "math-display"]],
   },
+  protocols: {
+    ...defaultSchema.protocols,
+    src: [...(defaultSchema.protocols?.src ?? ["http", "https"]), "asset"],
+  },
 };
 
 export type TSanitizeReport = { removedElements: string[]; removedAttributes: number };

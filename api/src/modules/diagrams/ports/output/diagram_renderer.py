@@ -17,6 +17,11 @@ class IDiagramRenderer(ABC):
         ...
 
     @abstractmethod
+    async def render_png(self, svg: str, scale: float = 2) -> bytes | None:
+        """Rasterise an SVG (generated diagrams are drawn in Python); None when the renderer is unavailable."""
+        ...
+
+    @abstractmethod
     async def render_mermaid(self, mermaid_code: str) -> RenderResult:
         """Render Mermaid code to SVG and PNG."""
         ...

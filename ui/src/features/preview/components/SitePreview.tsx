@@ -98,11 +98,24 @@ const components: Components = {
   },
   pre: ({ children }) => <>{children}</>,
   // eslint-disable-next-line @next/next/no-img-element -- mirrors the site, which renders plain <img> for content images
-  img: ({ src, alt }) => <img className="my-4 rounded-md" src={typeof src === "string" ? src : ""} alt={alt ?? ""} />,
+  img: ({ src, alt }) => {
+    let resolvedSrc = typeof src === "string" ? src : "";
+    if (resolvedSrc.startsWith("asset://")) {
+      const assetId = resolvedSrc.replace("asset://", "").trim();
+      resolvedSrc = `/api/agent/assets/${assetId}?type=svg`;
+    }
+    return <img className="my-4 rounded-md max-w-full h-auto" src={resolvedSrc} alt={alt ?? ""} />;
+  },
   blockquote: ({ children }) => (
     <blockquote className="my-4 border-l-4 border-black/20 pl-4 italic dark:border-white/25">{children}</blockquote>
   ),
 };
+
+function resolveAssetUrls(content: string): string {
+  return content.replace(/asset:\/\/([0-9a-fA-F-]+)(?:\?type=(\w+))?/g, (_, id, type) => {
+    return `/api/agent/assets/${id}?type=${type || "svg"}`;
+  });
+}
 
 const remarkPlugins: PluggableList = [remarkGfm, remarkMath];
 const rehypePlugins: PluggableList = [rehypeRaw, [rehypeSanitize, previewSanitizeSchema], rehypeKatex, rehypeSlug];
@@ -118,7 +131,8 @@ type SitePreviewProps = {
 /** Renders a draft the way leon-pham.vercel.app/posts/<slug> does: post header (title + cover) and the
  *  Markdown body inside `.prose-post`, on the site's dark surface regardless of the dashboard theme. */
 export function SitePreview({ markdown, title, coverUrl, containerRef, className }: SitePreviewProps) {
-  const normalized = useMemo(() => normalizeMarkdown(markdown), [markdown]);
+  const resolvedMarkdown = useMemo(() => resolveAssetUrls(markdown), [markdown]);
+  const normalized = useMemo(() => normalizeMarkdown(resolvedMarkdown), [resolvedMarkdown]);
   const report = useMemo(() => getSanitizeReport(normalized), [normalized]);
   const sanitized = report.removedElements.length > 0 || report.removedAttributes > 0;
   // Client-only body: like the site, long inline code renders as <pre> inside <p>, which the HTML parser

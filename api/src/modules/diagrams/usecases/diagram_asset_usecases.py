@@ -8,9 +8,8 @@ import uuid
 
 from src.configs.config import config
 from src.libs.exceptions import BadRequestException, NotFoundException
-from src.modules.diagrams.domain.drawio_generator import generate_drawio_xml
+from src.modules.diagrams.domain.diagram_builder import build_diagram
 from src.modules.diagrams.domain.drawio_validator import validate_drawio_xml
-from src.modules.diagrams.domain.layout import compute_layout
 from src.modules.diagrams.domain.mermaid_generator import generate_mermaid
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
 from src.modules.diagrams.domain.svg_sanitizer import sanitize_svg_content
@@ -78,22 +77,22 @@ class DiagramAssetUsecases:
             except Exception:
                 pass
         else:  # drawio
-            layout = compute_layout(spec)
-            xml_content = generate_drawio_xml(spec, layout)
+            built = build_diagram(spec)
             source_file = task_dir / f"{clean_slot}.drawio"
-            source_file.write_text(xml_content, encoding="utf-8")
+            source_file.write_text(built.drawio_xml, encoding="utf-8")
             asset.source_path = str(source_file)
             asset.format = "drawio"
 
-            render_out = await self.renderer.render_drawio(xml_content, embed_diagram=True)
+            svg_content = sanitize_svg_content(built.svg)
             svg_file = task_dir / f"{clean_slot}.svg"
-            svg_file.write_text(render_out.svg, encoding="utf-8")
+            svg_file.write_text(svg_content, encoding="utf-8")
             asset.svg_path = str(svg_file)
-            asset.sha256 = render_out.sha256 or hashlib.sha256(render_out.svg.encode("utf-8")).hexdigest()
+            asset.sha256 = hashlib.sha256(svg_content.encode("utf-8")).hexdigest()
 
-            if render_out.png_bytes:
+            png_bytes = await self.renderer.render_png(svg_content)
+            if png_bytes:
                 png_file = task_dir / f"{clean_slot}.png"
-                png_file.write_bytes(render_out.png_bytes)
+                png_file.write_bytes(png_bytes)
                 asset.png_path = str(png_file)
 
         return self.repository.update(asset)

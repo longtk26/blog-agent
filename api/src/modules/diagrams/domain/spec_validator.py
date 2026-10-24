@@ -1,5 +1,6 @@
 """Validator for DiagramSpec ensuring model output correctness before XML or layout generation (E7-S1)."""
 
+from src.modules.diagrams.domain.icons import ICONS
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
 
 
@@ -15,6 +16,9 @@ def validate_spec(spec: DiagramSpec) -> list[str]:
         return _validate_sequence_spec(spec)
 
     # 2. Flowchart and Architecture diagrams validation
+    if not spec.nodes:
+        errors.append("Flowchart and architecture diagrams must define at least one node in 'nodes'")
+
     # Limits
     if len(spec.nodes) > 30:
         errors.append(f"Too many nodes: {len(spec.nodes)} (maximum is 30)")
@@ -63,6 +67,8 @@ def validate_spec(spec: DiagramSpec) -> list[str]:
     for node in spec.nodes:
         if node.group and node.group not in group_ids:
             errors.append(f"Node '{node.id}' references non-existent group '{node.group}'")
+        if node.icon and node.icon.strip().lower() not in ICONS and f"aws:{node.icon.strip().lower()}" not in ICONS:
+            errors.append(f"Node '{node.id}' has unknown icon '{node.icon}' (allowed: {', '.join(sorted(ICONS))})")
 
     parent_map: dict[str, str] = {}
     for group in spec.groups:

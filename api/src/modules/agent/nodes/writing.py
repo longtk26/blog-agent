@@ -47,6 +47,7 @@ from src.modules.shared.domain.entities import (
     ArticleDraftEntity,
     ArticleMetadata,
     ArticleRevisionEntity,
+    DiagramAssetEntity,
     DraftSection,
     EvaluationResultEntity,
     IssueSeverity,
@@ -476,12 +477,36 @@ class WritingNodes:
 
         from src.modules.diagrams.infrastructure.adapters.diagram_renderer_adapter import DiagramRendererAdapter
         from src.modules.diagrams.infrastructure.persistence.diagram_asset_repository import DiagramAssetRepository
+        from src.modules.diagrams.ports.output.diagram_repository import IDiagramAssetRepository
         from src.modules.diagrams.usecases.generate_diagram_usecase import GenerateDiagramUsecase
-        from src.libs.database import arun_in_session
+        from src.libs.database import run_in_session
+
+        class SessionBoundDiagramRepo(IDiagramAssetRepository):
+            def create(self, asset: DiagramAssetEntity) -> DiagramAssetEntity:
+                return run_in_session(lambda s: DiagramAssetRepository(s).create(asset))
+
+            def get(self, asset_id: uuid.UUID) -> DiagramAssetEntity | None:
+                return run_in_session(lambda s: DiagramAssetRepository(s).get(asset_id))
+
+            def get_by_slot(self, task_id: uuid.UUID, slot_id: str) -> DiagramAssetEntity | None:
+                return run_in_session(lambda s: DiagramAssetRepository(s).get_by_slot(task_id, slot_id))
+
+            def list_by_task(self, task_id: uuid.UUID) -> list[DiagramAssetEntity]:
+                return run_in_session(lambda s: DiagramAssetRepository(s).list_by_task(task_id))
+
+            def list_by_revision(self, revision_id: uuid.UUID) -> list[DiagramAssetEntity]:
+                return run_in_session(lambda s: DiagramAssetRepository(s).list_by_revision(revision_id))
+
+            def update(self, asset: DiagramAssetEntity) -> DiagramAssetEntity:
+                return run_in_session(lambda s: DiagramAssetRepository(s).update(asset))
+
+            def delete(self, asset_id: uuid.UUID) -> None:
+                return run_in_session(lambda s: DiagramAssetRepository(s).delete(asset_id))
 
         renderer = self.deps.renderer or DiagramRendererAdapter()
         sec_map = {s.key: s for s in draft.sections}
         diagram_asset_ids = list(state.get("diagram_asset_ids") or [])
+        uc = GenerateDiagramUsecase(self.deps.models, renderer, SessionBoundDiagramRepo())
 
         for sec_key, sec_spec in slots:
             slot_id = f"diagram_{sec_key}"
@@ -493,10 +518,6 @@ class WritingNodes:
             claims_text = evidence.lines(sec_spec.get("claim_ids"), limit=10)
 
             try:
-                def make_uc(session):
-                    return GenerateDiagramUsecase(self.deps.models, renderer, DiagramAssetRepository(session))
-
-                uc = await arun_in_session(make_uc)
                 asset, markdown_snippet = await uc.execute(
                     task=task,
                     slot_id=slot_id,

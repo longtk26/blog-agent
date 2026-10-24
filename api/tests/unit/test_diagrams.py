@@ -3,9 +3,10 @@
 from pathlib import Path
 import pytest
 
+from src.modules.diagrams.domain.diagram_builder import build_diagram
 from src.modules.diagrams.domain.drawio_generator import generate_drawio_xml
 from src.modules.diagrams.domain.drawio_validator import validate_drawio_xml
-from src.modules.diagrams.domain.layout import compute_layout
+from src.modules.diagrams.domain.geometry import Rect, build_geometry
 from src.modules.diagrams.domain.mermaid_generator import (
     choose_diagram_format,
     generate_mermaid,
@@ -60,6 +61,12 @@ def test_spec_validation_errors():
     assert any("Orphan node" in e for e in errors)
 
 
+def test_spec_validation_empty_nodes():
+    spec = DiagramSpec(type="flowchart", nodes=[], edges=[])
+    errors = validate_spec(spec)
+    assert any("at least one node" in e for e in errors)
+
+
 def test_spec_validation_group_cycle():
     spec = DiagramSpec(
         type="flowchart",
@@ -105,13 +112,11 @@ def test_deterministic_layout():
         ],
         edges=[DiagramEdge(from_node="a", to_node="b")],
     )
-    layout1 = compute_layout(spec)
-    layout2 = compute_layout(spec)
-    assert layout1.nodes["a"].x == layout2.nodes["a"].x
-    assert layout1.nodes["a"].y == layout2.nodes["a"].y
-    assert layout1.nodes["b"].x == layout2.nodes["b"].x
-    assert layout1.nodes["b"].y == layout2.nodes["b"].y
-    assert layout1.nodes["a"].x < layout1.nodes["b"].x
+    first, second = build_geometry(spec), build_geometry(spec)
+    assert first.nodes["a"].body == second.nodes["a"].body
+    assert first.edges[0].points == second.edges[0].points
+    assert first.nodes["a"].body.x2 < first.nodes["b"].body.x
+    assert build_diagram(spec).drawio_xml == build_diagram(spec).drawio_xml
 
 
 def test_drawio_xml_generation_and_roundtrip():
@@ -178,6 +183,16 @@ def test_choose_diagram_format():
     )
     assert choose_diagram_format(complex_spec, "auto") == "drawio"
     assert choose_diagram_format(complex_spec, "mermaid") == "mermaid"
+
+    aws_spec = DiagramSpec(
+        title="AWS VPC Architecture",
+        nodes=[
+            DiagramNode(id="ec2", label="EC2 Instance"),
+            DiagramNode(id="s3", label="S3 Bucket"),
+        ],
+        edges=[DiagramEdge(from_node="ec2", to_node="s3")],
+    )
+    assert choose_diagram_format(aws_spec, "auto") == "drawio"
 
 
 def test_svg_sanitizer():

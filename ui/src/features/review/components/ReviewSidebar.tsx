@@ -31,13 +31,13 @@ export function ReviewSidebar({ task, revision, sources, approvals, publications
 
   return (
     <Tabs value={tab} onValueChange={(value) => setTab(value as TSidebarTab)} className="lg:sticky lg:top-16 lg:self-start">
-      <TabsList className="w-full">
-        <TabsTrigger value="issues">Issues{blockers ? ` (${blockers})` : ""}</TabsTrigger>
-        <TabsTrigger value="claims">Claims</TabsTrigger>
-        <TabsTrigger value="sources">Sources</TabsTrigger>
-        <TabsTrigger value="metadata">Metadata</TabsTrigger>
-        <TabsTrigger value="diagrams">Diagrams</TabsTrigger>
-        <TabsTrigger value="publish">Publish{isPublished ? " ✓" : ""}</TabsTrigger>
+      <TabsList className="grid w-full grid-cols-6 h-9 p-1">
+        <TabsTrigger value="issues" className="px-1 text-xs">Issues{blockers ? ` (${blockers})` : ""}</TabsTrigger>
+        <TabsTrigger value="claims" className="px-1 text-xs">Claims</TabsTrigger>
+        <TabsTrigger value="sources" className="px-1 text-xs">Sources</TabsTrigger>
+        <TabsTrigger value="metadata" className="px-1 text-xs">Metadata</TabsTrigger>
+        <TabsTrigger value="diagrams" className="px-1 text-xs">Diagrams</TabsTrigger>
+        <TabsTrigger value="publish" className="px-1 text-xs">Publish{isPublished ? " ✓" : ""}</TabsTrigger>
       </TabsList>
       <Card className="mt-3">
         <CardContent className="max-h-[75vh] overflow-y-auto">

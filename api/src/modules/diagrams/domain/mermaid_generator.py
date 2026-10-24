@@ -135,13 +135,25 @@ def _generate_sequence_mermaid(spec: DiagramSpec) -> str:
 
 
 def choose_diagram_format(spec: DiagramSpec, task_override: str = "auto") -> str:
-    """Decide between 'mermaid' and 'drawio' based on node count and nesting (E7-S5)."""
+    """Decide between 'mermaid' and 'drawio' based on node count, nesting, or cloud keywords (E7-S5)."""
     if task_override in ("mermaid", "drawio"):
         return task_override
 
     # Sequence diagrams work great in Mermaid
     if spec.type == "sequence":
         return "mermaid"
+
+    # Cloud / AWS architecture diagrams look much better in draw.io
+    cloud_keywords = {"aws", "vpc", "subnet", "ec2", "cloudfront", "s3", "rds", "lambda", "cloud"}
+    all_text = (
+        (spec.title or "").lower()
+        + " "
+        + " ".join(n.label.lower() for n in spec.nodes)
+        + " "
+        + " ".join(g.label.lower() for g in spec.groups)
+    )
+    if any(k in all_text for k in cloud_keywords):
+        return "drawio"
 
     # If > 12 nodes or nested groups, prefer draw.io
     has_nested_groups = any(g.parent for g in spec.groups)

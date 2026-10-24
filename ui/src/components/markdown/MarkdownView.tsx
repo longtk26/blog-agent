@@ -27,6 +27,14 @@ const components: Components = {
   td: ({ children }) => <td className="border-b px-2 py-1.5 align-top">{children}</td>,
   hr: () => <hr className="my-6 border-border" />,
   em: ({ children }) => <em className="text-muted-foreground">{children}</em>,
+  img: ({ src, alt }) => {
+    let resolvedSrc = typeof src === "string" ? src : "";
+    if (resolvedSrc.startsWith("asset://")) {
+      const assetId = resolvedSrc.replace("asset://", "").trim();
+      resolvedSrc = `/api/agent/assets/${assetId}?type=svg`;
+    }
+    return <img className="my-3 rounded-md max-w-full h-auto" src={resolvedSrc} alt={alt ?? ""} />;
+  },
 };
 
 type MarkdownViewProps = {

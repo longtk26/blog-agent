@@ -156,7 +156,7 @@ export function ReviewPage() {
           </div>
         </div>
         <StatusNote task={task} />
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
           <ReviewMain
             taskId={taskId}
             revision={revision}

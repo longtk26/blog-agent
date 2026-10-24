@@ -11,12 +11,12 @@ from src.configs.config import config
 from src.configs.logger import get_logger
 from src.modules.agent.ports.output.model_factory import IModelFactory, ModelRole
 from src.modules.agent.prompts.diagram import diagram_messages
-from src.modules.diagrams.domain.drawio_generator import generate_drawio_xml
+from src.modules.diagrams.domain.diagram_builder import build_diagram
 from src.modules.diagrams.domain.drawio_validator import validate_drawio_xml
-from src.modules.diagrams.domain.layout import compute_layout
 from src.modules.diagrams.domain.mermaid_generator import choose_diagram_format, generate_mermaid
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
 from src.modules.diagrams.domain.spec_validator import validate_spec
+from src.modules.diagrams.domain.svg_sanitizer import sanitize_svg_content
 from src.modules.diagrams.ports.output.diagram_renderer import IDiagramRenderer
 from src.modules.diagrams.ports.output.diagram_repository import IDiagramAssetRepository
 from src.modules.shared.domain.entities.diagram_entity import DiagramAssetEntity
@@ -106,17 +106,15 @@ class GenerateDiagramUsecase:
             markdown_snippet = f"\n```mermaid\n{mmd_code}\n```\n"
 
         else:  # drawio
-            layout = compute_layout(spec)
-            xml_content = generate_drawio_xml(spec, layout)
+            # Layout, routing and SVG happen in Python from one geometry; the renderer only rasterises.
+            built = build_diagram(spec)
             source_file = task_dir / f"{clean_slot}.drawio"
-            source_file.write_text(xml_content, encoding="utf-8")
+            source_file.write_text(built.drawio_xml, encoding="utf-8")
             source_path = str(source_file)
 
-            # Render draw.io with embedded diagram
-            render_out = await self.renderer.render_drawio(xml_content, embed_diagram=True)
-            svg_content = render_out.svg
-            png_bytes = render_out.png_bytes
-            sha256_hash = render_out.sha256 or hashlib.sha256(svg_content.encode("utf-8")).hexdigest()
+            svg_content = sanitize_svg_content(built.svg)
+            png_bytes = await self.renderer.render_png(svg_content)
+            sha256_hash = hashlib.sha256(svg_content.encode("utf-8")).hexdigest()
 
             svg_file = task_dir / f"{clean_slot}.svg"
             svg_file.write_text(svg_content, encoding="utf-8")
