@@ -23,6 +23,13 @@ from .article_entity import (
 )
 from .approval_entity import ApprovalEntity, ApprovalDecision
 from .publication_entity import PublicationEntity, PublicationStatus
+from .knowledge_entity import (
+    OwnerNoteEntity,
+    SampleChunkEntity,
+    StyleProfileData,
+    StyleProfileEntity,
+    WritingSampleEntity,
+)
 from .research_entity import (
     ResearchSourceEntity,
     ResearchClaimEntity,
@@ -61,4 +68,9 @@ __all__ = [
     "ApprovalDecision",
     "PublicationEntity",
     "PublicationStatus",
+    "WritingSampleEntity",
+    "SampleChunkEntity",
+    "StyleProfileData",
+    "StyleProfileEntity",
+    "OwnerNoteEntity",
 ]

@@ -8,7 +8,7 @@ from src.libs.exceptions import NotFoundException
 from src.modules.agent.ports.output.workflow_store import IWorkflowStore
 from src.modules.articles.infrastructure.persistence import DraftRepository, EvaluationRepository, RevisionRepository
 from src.modules.research.infrastructure.persistence import BriefRepository, ClaimRepository, SourceRepository
-from src.modules.styles.infrastructure.persistence import StyleGuideRepository
+from src.modules.styles.infrastructure.persistence import StyleGuideRepository, StyleProfileRepository
 from src.modules.styles.domain.active_style import resolve_active_style
 from src.modules.shared.domain.entities import (
     ArticleDraftEntity,
@@ -162,5 +162,17 @@ class WorkflowStore(IWorkflowStore):
         return await arun_in_session(run)
 
     async def style_guide(self) -> tuple[str, str]:
-        guide = resolve_active_style(await arun_in_session(lambda s: StyleGuideRepository(s).latest()))
+        def run(session):
+            active_profile = StyleProfileRepository(session).get_active()
+            latest_guide = StyleGuideRepository(session).latest()
+            return resolve_active_style(latest_guide=latest_guide, active_profile=active_profile)
+
+        guide = await arun_in_session(run)
         return guide.version, guide.content
+
+    async def get_valid_post_ids(self) -> set[str]:
+        def run(session):
+            from src.modules.styles.infrastructure.persistence.writing_sample_repository import WritingSampleRepository
+            return WritingSampleRepository(session).get_sanity_post_ids()
+
+        return await arun_in_session(run)

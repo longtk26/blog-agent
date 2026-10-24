@@ -40,8 +40,9 @@ from src.modules.articles.domain.markdown_tools import (
     strip_heading_number,
     tidy_markdown,
 )
+from src.modules.articles.domain.copy_detector import check_copy_overlap
 from src.modules.articles.domain.validators import ValidationContext, has_blockers, validate_article
-from src.modules.research.infrastructure.adapters.url_tools import canonicalize_url
+from src.modules.research.infrastructure.adapters.url_tools import canonicalize_url, is_http_url
 from src.modules.shared.domain.entities import (
     ArticleDraftEntity,
     ArticleMetadata,
@@ -87,10 +88,16 @@ class Evidence:
             quality = f"{source.quality_score:.2f}" if source.quality_score is not None else "?"
             flag = "" if claim.quote_verified else " [unverified quote]"
             low = " [low-quality source]" if source.status == SourceStatus.LOW_QUALITY else ""
-            rows.append(
-                f"- {self.ref_of[claim.id]}: {claim.text} — source: [{source.title or source.publisher or 'source'}]"
-                f"({source.canonical_url}) ({source.source_type or 'other'}, quality {quality}){flag}{low}"
-            )
+            if source.source_type == "owner_note" and not is_http_url(source.canonical_url):
+                rows.append(
+                    f"- {self.ref_of[claim.id]}: {claim.text} — source: [{source.title}] "
+                    f"(owner note — internal reference, do not cite URL, quality {quality}){flag}"
+                )
+            else:
+                rows.append(
+                    f"- {self.ref_of[claim.id]}: {claim.text} — source: [{source.title or source.publisher or 'source'}]"
+                    f"({source.canonical_url}) ({source.source_type or 'other'}, quality {quality}){flag}{low}"
+                )
             if len(rows) >= limit:
                 break
         return "\n".join(rows)
@@ -188,6 +195,8 @@ class WritingNodes:
         self, task, outline: dict, spec: dict | None, evidence: Evidence, previous_tail: str, style: str, contract: str,
         current: str | None = None, feedback: str | None = None, owner_feedback: str | None = None,
         extra_claim_ids: list[str] | None = None,
+        sample_sections: str | None = None,
+        internal_links: str | None = None,
     ) -> SectionDraftOut:
         heading = None if spec is None else spec["heading"]
         brief = f"Goal: {outline['intro_goal']}" if spec is None else self._section_brief(spec)
@@ -209,6 +218,8 @@ class WritingNodes:
             current_markdown=current,
             feedback=feedback,
             owner_feedback=owner_feedback,
+            sample_sections=sample_sections,
+            internal_links=internal_links,
         )
         return await invoke_structured(self.deps.models.get(ModelRole.WRITER), SectionDraftOut, messages)
 
@@ -235,6 +246,23 @@ class WritingNodes:
         must_cover = [*plan.get("must_cover", [])]
         settings = self.deps.settings
 
+        sample_outlines = None
+        retrieved_chunk_ids = []
+        if getattr(task, "use_style_examples", True) and self.deps.vector_store and self.deps.embeddings:
+            try:
+                query_vec = await self.deps.embeddings.embed_query(f"{task.topic} {task.angle or ''}")
+                results = await self.deps.vector_store.similarity_search(
+                    query_vec, k=3, chunk_type="outline", sample_approved_only=True
+                )
+                if results:
+                    sample_outlines = "\n\n".join(
+                        f"### Sample Outline: {r.sample_title or 'Untitled'}\n{r.chunk.content}"
+                        for r in results
+                    )
+                    retrieved_chunk_ids = [str(r.chunk.id) for r in results]
+            except Exception as e:
+                logger.warning(f"Failed to retrieve sample outlines: {e}")
+
         owner_feedback = state.get("review_feedback") if state.get("review_target") == "outline" else None
         current_outline = self._outline_overview(state["outline"]) if owner_feedback and state.get("outline") else None
         feedback = None
@@ -252,6 +280,7 @@ class WritingNodes:
                     feedback,
                     owner_feedback,
                     current_outline,
+                    sample_outlines=sample_outlines,
                 ),
             )
             out = normalize_outline(out, settings.draft_max_sections)
@@ -291,7 +320,11 @@ class WritingNodes:
         }
         await self.deps.store.update_task(task_id, outline=outline, angle=outline["angle"])
         emit("outline_ready", sections=len(outline["sections"]), title=outline["title"])
-        return {"outline": outline, "review_outline": task.review_outline}
+        return {
+            "outline": outline,
+            "review_outline": task.review_outline,
+            "retrieved_style_chunk_ids": retrieved_chunk_ids,
+        }
 
     @staticmethod
     def route_after_outline(state: BlogState) -> str:
@@ -324,11 +357,59 @@ class WritingNodes:
         specs = [("intro", None)] + [(spec["key"], spec) for spec in outline["sections"]]
         draft = ArticleDraftEntity(task_id=task_id, sections=[])
         previous_tail = ""
+        retrieved_chunk_ids = list(state.get("retrieved_style_chunk_ids") or [])
+        max_chars = self.deps.settings.style_sample_max_tokens * 4
+
         for key, spec in specs:
             if key in done:
                 section = done[key]
             else:
-                out = await self._write_section(task, outline, spec, evidence, previous_tail, style, contract)
+                sample_sections = None
+                internal_links = None
+                heading = None if spec is None else spec["heading"]
+                brief = f"Goal: {outline['intro_goal']}" if spec is None else self._section_brief(spec)
+
+                if getattr(task, "use_style_examples", True) and self.deps.vector_store and self.deps.embeddings:
+                    try:
+                        section_query = f"{outline['title']} - {heading or 'Introduction'}: {brief}"
+                        sec_vec = await self.deps.embeddings.embed_query(section_query)
+                        # Retrieve top-2 sample sections
+                        sec_results = await self.deps.vector_store.similarity_search(
+                            sec_vec, k=2, chunk_type="section", sample_approved_only=True
+                        )
+                        if sec_results:
+                            parts = []
+                            cur_len = 0
+                            for r in sec_results:
+                                title = r.sample_title or "Writing Sample"
+                                content = r.chunk.content
+                                rem = max_chars - cur_len
+                                if rem <= 100:
+                                    break
+                                if len(content) > rem:
+                                    content = content[:rem] + "..."
+                                parts.append(f"### Sample Section from '{title}':\n{content}")
+                                cur_len += len(content)
+                                retrieved_chunk_ids.append(str(r.chunk.id))
+                            sample_sections = "\n\n".join(parts) if parts else None
+
+                        # Internal link suggestions: top-3 published post outlines
+                        link_results = await self.deps.vector_store.similarity_search(
+                            sec_vec, k=3, chunk_type="outline", sample_approved_only=True
+                        )
+                        links = []
+                        for r in link_results:
+                            if r.remote_id and r.origin == "sanity":
+                                post_url = f"https://leon-pham.vercel.app/posts/{r.remote_id}"
+                                links.append(f"- [{r.sample_title or 'Related Article'}]({post_url})")
+                        internal_links = "\n".join(links) if links else None
+                    except Exception as e:
+                        logger.warning(f"Failed to retrieve sample sections/links for {key}: {e}")
+
+                out = await self._write_section(
+                    task, outline, spec, evidence, previous_tail, style, contract,
+                    sample_sections=sample_sections, internal_links=internal_links,
+                )
                 section = DraftSection(
                     key=key,
                     heading=None if spec is None else spec["heading"],
@@ -354,7 +435,7 @@ class WritingNodes:
         await self._assemble(draft, evidence)
         await self.deps.store.save_draft(draft)
         emit("draft_assembled", words=len(draft.markdown.split()), title=draft.metadata.title)
-        return {}
+        return {"retrieved_style_chunk_ids": list(dict.fromkeys(retrieved_chunk_ids))}
 
     async def _unique_metadata(self, meta: MetadataOut, task_id: uuid.UUID) -> ArticleMetadata:
         slug, suffix = meta.slug, 2
@@ -372,6 +453,7 @@ class WritingNodes:
         draft = await self.deps.store.get_draft(task_id)
         evidence = await self._evidence(task_id)
         outline = state["outline"]
+        valid_post_ids = await self.deps.store.get_valid_post_ids()
         issues = validate_article(
             draft.markdown,
             ValidationContext(
@@ -381,8 +463,53 @@ class WritingNodes:
                 must_cover=outline.get("must_cover", []),
                 covered_requirements=set(outline.get("covered_requirements", [])),
                 expected_words=sum(s["est_words"] for s in outline["sections"]) + 250,
+                valid_post_ids=valid_post_ids,
             ),
         )
+
+        # Copy-detection validator against retrieved samples and extracted sources (Epic 6)
+        settings = self.deps.settings
+        retrieved_ids = state.get("retrieved_style_chunk_ids") or []
+        sample_texts: list[str] = []
+        if retrieved_ids and self.deps.vector_store:
+            try:
+                uuids = [uuid.UUID(cid) for cid in retrieved_ids if cid]
+                chunks = await self.deps.vector_store.get_chunks_by_ids(uuids)
+                sample_texts = [c.content for c in chunks if c.content]
+            except Exception as e:
+                logger.warning(f"Failed to fetch chunks for copy detection: {e}")
+
+        source_texts = [s.content_text for s in evidence.sources.values() if s.content_text]
+
+        for section in draft.sections:
+            s_name = section.heading or INTRO
+            if sample_texts:
+                issues.extend(
+                    check_copy_overlap(
+                        section.markdown,
+                        sample_texts,
+                        reference_type="sample",
+                        section_name=s_name,
+                        ngram_size=settings.copy_detection_ngram,
+                        warn_threshold=settings.copy_detection_warn_threshold,
+                        block_threshold=settings.copy_detection_block_threshold,
+                        max_run_words=settings.copy_detection_run_words,
+                    )
+                )
+            if source_texts:
+                issues.extend(
+                    check_copy_overlap(
+                        section.markdown,
+                        source_texts,
+                        reference_type="source",
+                        section_name=s_name,
+                        ngram_size=settings.copy_detection_ngram,
+                        warn_threshold=settings.copy_detection_warn_threshold,
+                        block_threshold=settings.copy_detection_block_threshold,
+                        max_run_words=settings.copy_detection_run_words,
+                    )
+                )
+
         draft.issues = issues
         await self.deps.store.save_draft(draft)
         emit(
@@ -529,6 +656,8 @@ class WritingNodes:
                 "self_revisions": draft.self_revisions,
                 "history": draft.history,
                 "style_guide_version": style_version,
+                "style_profile_version": style_version,
+                "retrieved_style_chunk_ids": state.get("retrieved_style_chunk_ids", []),
                 "render_contract_version": contract_version,
                 "prompt_version": PROMPT_VERSION,
                 "models": self.deps.models.describe(),

@@ -24,3 +24,4 @@ class BlogState(TypedDict, total=False):
     research_window: dict       # follow-up research budget: base counters + limits (see ResearchNodes._limits)
     focus_questions: list[str]  # question ids follow-up research must cover
     publish: dict | None        # owner input on resume from awaiting_publish (Epic 5)
+    retrieved_style_chunk_ids: list[str]  # chunk IDs retrieved during outlining & drafting (Epic 6)

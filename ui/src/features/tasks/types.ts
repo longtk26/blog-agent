@@ -86,6 +86,7 @@ export type TTask = {
   angle: string | null;
   include_diagram: TIncludeDiagram;
   review_outline: boolean;
+  use_style_examples?: boolean;
   publication_targets: TPublicationTarget[];
   budgets: TTaskBudgets;
   status: TTaskStatus;
@@ -128,6 +129,7 @@ export type TCreateTaskPayload = {
   requirements?: string;
   include_diagram: TIncludeDiagram;
   review_outline: boolean;
+  use_style_examples?: boolean;
   publication_targets: TPublicationTarget[];
   series?: { name: string; part?: number };
   budgets?: Partial<TTaskBudgets>;

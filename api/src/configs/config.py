@@ -96,6 +96,15 @@ class Config(BaseSettings):
     blogs_export_enabled: bool = False
     blogs_dir: str = "../blogs"
 
+    # Style & Knowledge (Epic 6)
+    embedding_model: str = "google_genai:gemini-embedding-001"
+    embedding_dim: int = 768
+    style_sample_max_tokens: int = 1500
+    copy_detection_ngram: int = 8
+    copy_detection_warn_threshold: float = 0.15
+    copy_detection_block_threshold: float = 0.30
+    copy_detection_run_words: int = 40
+
     langsmith_tracing: bool = False
     langsmith_api_key: SecretStr | None = None
     langsmith_project: str = "blog-agent-local"
@@ -148,6 +157,21 @@ class Config(BaseSettings):
     def validate_search_provider(cls, value: str) -> str:
         if value not in ("auto", "tavily", "duckduckgo"):
             raise ValueError("must be one of: auto, tavily, duckduckgo")
+        return value
+
+    @field_validator("embedding_model")
+    @classmethod
+    def validate_embedding_model(cls, value: str) -> str:
+        provider, sep, model = str(value).partition(":")
+        if not sep or not provider or not model:
+            raise ValueError("must look like '<provider>:<model>', e.g. 'google_genai:gemini-embedding-001'")
+        return value
+
+    @field_validator("embedding_dim")
+    @classmethod
+    def validate_embedding_dim(cls, value: int) -> int:
+        if value <= 0 or value > 2000:
+            raise ValueError("embedding_dim must be between 1 and 2000 (HNSW pgvector index limit)")
         return value
 
     @property

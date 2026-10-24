@@ -5,7 +5,7 @@ from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 from src.modules.agent.prompts.research import describe_task
 from src.modules.shared.domain.entities import WritingTaskEntity
 
-PROMPT_VERSION = "writing-v2"
+PROMPT_VERSION = "writing-v3"
 
 FORMAT_TEMPLATES = {
     "concept": (
@@ -49,6 +49,7 @@ def outline_messages(
     feedback: str | None = None,
     owner_feedback: str | None = None,
     current_outline: str | None = None,
+    sample_outlines: str | None = None,
 ) -> list[BaseMessage]:
     diagram_rule = {
         "yes": "Include at least one diagram (needs: diagram).",
@@ -71,6 +72,14 @@ def outline_messages(
         f"{describe_task(task)}\n\nMust-cover requirements:\n{requirements}\n\n"
         f"Research summary:\n{brief_summary}\n\nEvidence:\n{evidence}\n\n<style_guide>\n{style_guide}\n</style_guide>"
     )
+    if sample_outlines:
+        human += (
+            f"\n\n<style_reference_do_not_copy>\n"
+            f"The following are approved past outlines from the author's blog for this format ({task.format}). "
+            "Use them ONLY as structural inspiration — do NOT copy headings or wording verbatim:\n"
+            f"{sample_outlines}\n"
+            "</style_reference_do_not_copy>"
+        )
     if owner_feedback:
         human += (
             "\n\nThe owner reviewed the article built from the current outline and asked for a structural change. "
@@ -96,6 +105,8 @@ def section_messages(
     current_markdown: str | None = None,
     feedback: str | None = None,
     owner_feedback: str | None = None,
+    sample_sections: str | None = None,
+    internal_links: str | None = None,
 ) -> list[BaseMessage]:
     part = "the INTRODUCTION (1-2 framing paragraphs, no heading)" if section_heading is None else f"the section '{section_heading}'"
     system = (
@@ -115,6 +126,22 @@ def section_messages(
         f"Write: {part}\n{section_brief}\n\nEvidence for this part:\n{evidence or '- (no direct evidence; keep factual claims minimal)'}\n\n"
         f"End of the previous part (for flow):\n{previous_tail or '(start of article)'}\n\n{_context(style_guide, render_contract)}"
     )
+    if sample_sections:
+        human += (
+            f"\n\n<style_reference_do_not_copy>\n"
+            "The following are approved past sections from the author's blog on similar topics. "
+            "Use them ONLY for tone, explanation depth, and structure — DO NOT copy sentences, paragraphs, or wording verbatim:\n"
+            f"{sample_sections}\n"
+            "</style_reference_do_not_copy>"
+        )
+    if internal_links:
+        human += (
+            f"\n\n<internal_links>\n"
+            "The author has previously published the following related articles. "
+            "If directly relevant to this section, you may link to them using their exact absolute URL (e.g. [our LoRA guide](https://leon-pham.vercel.app/posts/...)):\n"
+            f"{internal_links}\n"
+            "</internal_links>"
+        )
     if current_markdown is not None and owner_feedback:
         human += (
             "\n\nOWNER REVISION: the owner reviewed this part and asked for the change below. Apply it faithfully, "

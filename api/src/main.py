@@ -42,12 +42,16 @@ async def lifespan(app: FastAPI):
 
     event_broker.bind_loop(asyncio.get_running_loop())
     store = WorkflowStore(event_broker)
+    from src.modules.styles.infrastructure.adapters import PgVectorStore, get_embedding_service
+
     deps = WorkflowDeps(
         store=store,
         models=get_model_factory(),
         search=get_search_provider(),
         extractor=get_page_extractor(),
         settings=config,
+        vector_store=PgVectorStore(),
+        embeddings=get_embedding_service(),
     )
     runner = LangGraphWorkflowRunner(
         build_blog_graph(deps, checkpointer_manager.saver),

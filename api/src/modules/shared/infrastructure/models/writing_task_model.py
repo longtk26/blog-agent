@@ -22,6 +22,7 @@ class WritingTaskModel(SQLModel, table=True):
     angle: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     include_diagram: str = Field(default="auto", max_length=16)
     review_outline: bool = False
+    use_style_examples: bool = True
     publication_targets: list = Field(default_factory=list, sa_column=jsonb_column())
     budgets: dict = Field(default_factory=dict, sa_column=jsonb_column())
 

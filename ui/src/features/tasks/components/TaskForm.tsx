@@ -226,6 +226,19 @@ export function TaskForm() {
               )}
             />
 
+            <Controller
+              name="useStyleExamples"
+              control={control}
+              render={({ field }) => (
+                <Field orientation="horizontal">
+                  <Checkbox id="task-useStyleExamples" checked={field.value} onCheckedChange={(value) => field.onChange(value === true)} />
+                  <FieldLabel htmlFor="task-useStyleExamples" className="font-normal">
+                    Use approved writing samples as style references
+                  </FieldLabel>
+                </Field>
+              )}
+            />
+
             <FieldSet>
               <FieldLegend variant="label">Publish to (after your approval)</FieldLegend>
               <div className="flex gap-6">

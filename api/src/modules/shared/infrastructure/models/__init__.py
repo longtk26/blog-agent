@@ -4,6 +4,12 @@ from .research_models import ResearchSourceModel, ResearchClaimModel, ResearchBr
 from .article_models import ArticleDraftModel, ArticleRevisionModel, EvaluationResultModel, StyleGuideModel
 from .approval_model import ApprovalModel
 from .publication_model import PublicationModel
+from .knowledge_models import (
+    WritingSampleModel,
+    SampleChunkModel,
+    StyleProfileModel,
+    OwnerNoteModel,
+)
 
 __all__ = [
     "WritingTaskModel",
@@ -17,4 +23,8 @@ __all__ = [
     "StyleGuideModel",
     "ApprovalModel",
     "PublicationModel",
+    "WritingSampleModel",
+    "SampleChunkModel",
+    "StyleProfileModel",
+    "OwnerNoteModel",
 ]

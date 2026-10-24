@@ -184,6 +184,47 @@ class ResearchNodes:
                     )
                 )
 
+        # In round 1, retrieve relevant owner notes from the knowledge base (Epic 6)
+        if state.get("round", 1) == 1 and self.deps.vector_store and self.deps.embeddings:
+            try:
+                note_query = f"{task.topic} {task.angle or ''}"
+                note_vec = await self.deps.embeddings.embed_query(note_query)
+                note_results = await self.deps.vector_store.similarity_search(
+                    note_vec, k=5, chunk_type="note", origin="owner_note"
+                )
+                note_candidates = []
+                for nr in note_results:
+                    note_url = nr.citable_url or f"note://{nr.chunk.note_id or nr.chunk.id}"
+                    canonical_note_url = canonicalize_url(note_url) if nr.citable_url else note_url
+                    if canonical_note_url in seen:
+                        continue
+                    seen.add(canonical_note_url)
+                    note_candidates.append(
+                        ResearchSourceEntity(
+                            task_id=task_id,
+                            url=note_url,
+                            canonical_url=canonical_note_url,
+                            title=nr.sample_title or nr.chunk.heading_path or "Owner Note",
+                            snippet=nr.chunk.content[:1000],
+                            content_text=nr.chunk.content[:MAX_STORED_CHARS],
+                            content_hash=hashlib.sha256(nr.chunk.content.encode()).hexdigest(),
+                            publisher="Owner Notes",
+                            published_at=None,
+                            retrieved_at=datetime.now(timezone.utc),
+                            query="owner_note",
+                            round=state.get("round", 1),
+                            source_type="owner_note",
+                            quality_score=nr.quality_score if nr.quality_score is not None else 1.0,
+                            status=SourceStatus.EXTRACTED,
+                        )
+                    )
+                if note_candidates:
+                    inserted_notes = await self.deps.store.add_sources(note_candidates)
+                    for n_src in inserted_notes:
+                        emit("source_found", source_id=str(n_src.id), title=n_src.title, url=n_src.url)
+            except Exception as e:
+                logger.warning(f"Failed to retrieve owner notes for task {task_id}: {e}")
+
         inserted = await self.deps.store.add_sources(candidates[:remaining_sources])
         for source in inserted:
             emit("source_found", source_id=str(source.id), title=source.title, url=source.url)
@@ -277,9 +318,11 @@ class ResearchNodes:
                 )
                 for claim in assessment.claims
             ]
-            low_quality = assessment.quality_score < settings.research_quality_threshold
-            source.source_type = assessment.source_type
-            source.quality_score = assessment.quality_score
+            is_note = source.source_type == "owner_note"
+            effective_quality = max(source.quality_score or 1.0, assessment.quality_score) if is_note else assessment.quality_score
+            low_quality = effective_quality < settings.research_quality_threshold
+            source.source_type = "owner_note" if is_note else assessment.source_type
+            source.quality_score = effective_quality
             source.quality_rationale = assessment.quality_rationale
             source.relevance = assessment.relevance
             source.notes = assessment.notes

@@ -37,6 +37,7 @@ class ValidationContext:
     covered_requirements: set[str] = field(default_factory=set)
     expected_words: int | None = None
     site_url_prefix: str = "https://leon-pham.vercel.app/"
+    valid_post_ids: set[str] = field(default_factory=set)
 
 
 def _issue(rule: str, severity: IssueSeverity, message: str, line: int | None = None, section: str | None = None) -> ValidationIssue:
@@ -158,7 +159,13 @@ def check_links(markdown: str, ctx: ValidationContext) -> list[ValidationIssue]:
                 continue
             if not re.match(r"^https?://", target):
                 issues.append(_issue("LINK_RELATIVE", B, f"Link '{target}' is not absolute (posts are routed by id; use https:// URLs)", number))
-            elif not target.startswith(ctx.site_url_prefix) and _normalize_url(target) not in sources:
+            elif target.startswith(ctx.site_url_prefix):
+                path = target[len(ctx.site_url_prefix):].lstrip("/")
+                if path.startswith("posts/"):
+                    doc_id = path[len("posts/"):].split("#")[0].split("?")[0].strip("/")
+                    if ctx.valid_post_ids and doc_id not in ctx.valid_post_ids:
+                        issues.append(_issue("INTERNAL_LINK_INVALID", W, f"Internal link '{target}' points to unknown post id '{doc_id}'", number))
+            elif _normalize_url(target) not in sources:
                 issues.append(_issue("LINK_NOT_SOURCE", W, f"Link {target} is not one of the research sources", number))
         for target in _IMAGE.findall(line):
             if not re.match(r"^(https://|asset://)", target):

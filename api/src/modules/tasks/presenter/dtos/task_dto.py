@@ -50,6 +50,7 @@ class CreateTaskRequestDto(BaseModel):
     requirements: str | None = Field(default=None, max_length=4000)
     include_diagram: IncludeDiagram = IncludeDiagram.AUTO
     review_outline: bool = False
+    use_style_examples: bool = True
     publication_targets: list[PublicationTarget] = Field(default_factory=list)
     budgets: TaskBudgetsDto | None = None
     # Clone (E4-S8): the UI prefills the form from this task; reuse_sources copies its assessed sources and claims.
@@ -82,6 +83,7 @@ class CreateTaskRequestDto(BaseModel):
             requirements=self.requirements,
             include_diagram=self.include_diagram,
             review_outline=self.review_outline,
+            use_style_examples=self.use_style_examples,
             publication_targets=self.publication_targets,
             budgets=TaskBudgets(**overrides),
             status=TaskStatus.QUEUED,
@@ -139,6 +141,7 @@ class TaskResponseDto(BaseModel):
     angle: str | None
     include_diagram: IncludeDiagram
     review_outline: bool
+    use_style_examples: bool = True
     publication_targets: list[PublicationTarget]
     budgets: TaskBudgets
     status: TaskStatus

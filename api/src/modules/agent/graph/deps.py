@@ -4,6 +4,7 @@ from src.configs.config import Config
 from src.modules.agent.ports.output.model_factory import IModelFactory
 from src.modules.agent.ports.output.workflow_store import IWorkflowStore
 from src.modules.research.ports.output import IPageExtractor, ISearchProvider
+from src.modules.styles.ports.output import IEmbeddingService, IVectorStore
 
 
 @dataclass(frozen=True)
@@ -13,3 +14,5 @@ class WorkflowDeps:
     search: ISearchProvider
     extractor: IPageExtractor
     settings: Config
+    vector_store: IVectorStore | None = None
+    embeddings: IEmbeddingService | None = None

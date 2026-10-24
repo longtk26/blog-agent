@@ -122,3 +122,8 @@ class IWorkflowStore(ABC):
     async def style_guide(self) -> tuple[str, str]:
         """(version, content) of the active style guide."""
         pass
+
+    @abstractmethod
+    async def get_valid_post_ids(self) -> set[str]:
+        """Known published Sanity post IDs for internal link validation."""
+        pass

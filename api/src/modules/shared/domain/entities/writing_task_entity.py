@@ -71,6 +71,7 @@ class WritingTaskEntity(BaseModel):
     angle: str | None = None
     include_diagram: IncludeDiagram = IncludeDiagram.AUTO
     review_outline: bool = False
+    use_style_examples: bool = True
     publication_targets: list[PublicationTarget] = Field(default_factory=list)
     budgets: TaskBudgets = Field(default_factory=TaskBudgets)
 
