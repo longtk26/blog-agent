@@ -1,13 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   CheckIcon,
-  CopyIcon,
-  FlameIcon,
-  HistoryIcon,
   Loader2Icon,
-  RefreshCwIcon,
   SaveIcon,
   SparklesIcon,
 } from "lucide-react";
@@ -42,31 +38,31 @@ export function StyleProfileCard() {
   const activateMutation = useActivateStyleProfile();
 
   const [selectedProfileId, setSelectedProfileId] = useState<string | null>(null);
-  const [markdownEdit, setMarkdownEdit] = useState("");
-  const [jsonEdit, setJsonEdit] = useState("");
-  const [jsonError, setJsonError] = useState<string | null>(null);
 
   // Sync state when active profile loads or changes
+  const effectiveProfileId = selectedProfileId || activeProfile?.id || null;
   const currentProfile: TStyleProfile | undefined =
-    profiles?.find((p) => p.id === selectedProfileId) || activeProfile;
+    profiles?.find((p) => p.id === effectiveProfileId) || activeProfile;
 
-  useEffect(() => {
-    if (activeProfile && !selectedProfileId) {
-      if (activeProfile.id) {
-        setSelectedProfileId(activeProfile.id);
-      }
-    }
-  }, [activeProfile, selectedProfileId]);
+  const [markdownEdit, setMarkdownEdit] = useState(currentProfile?.markdown_content || "");
+  const [jsonEdit, setJsonEdit] = useState(JSON.stringify(currentProfile?.profile_data || {}, null, 2));
+  const [jsonError, setJsonError] = useState<string | null>(null);
 
+  // Sync edit buffers when profile selection changes
+  const lastLoadedIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (currentProfile) {
-      setMarkdownEdit(currentProfile.markdown_content || "");
-      try {
-        setJsonEdit(JSON.stringify(currentProfile.profile_data || {}, null, 2));
-        setJsonError(null);
-      } catch {
-        setJsonEdit("{}");
-      }
+    if (currentProfile && currentProfile.id !== lastLoadedIdRef.current) {
+      lastLoadedIdRef.current = currentProfile.id;
+      const timer = setTimeout(() => {
+        setMarkdownEdit(currentProfile.markdown_content || "");
+        try {
+          setJsonEdit(JSON.stringify(currentProfile.profile_data || {}, null, 2));
+          setJsonError(null);
+        } catch {
+          setJsonEdit("{}");
+        }
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [currentProfile]);
 
@@ -75,8 +71,8 @@ export function StyleProfileCard() {
     try {
       JSON.parse(val);
       setJsonError(null);
-    } catch (e: any) {
-      setJsonError(e.message);
+    } catch (e: unknown) {
+      setJsonError(e instanceof Error ? e.message : "Invalid JSON");
     }
   };
 
@@ -224,7 +220,7 @@ export function StyleProfileCard() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
-                  Key Guidelines (Do's & Don'ts)
+                  Key Guidelines (Do&apos;s &amp; Don&apos;ts)
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -244,7 +240,7 @@ export function StyleProfileCard() {
                   </ul>
                 </div>
                 <div>
-                  <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase">Anti-Patterns (Don't)</span>
+                  <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase">Anti-Patterns (Don&apos;t)</span>
                   <ul className="text-xs space-y-1 mt-1 text-muted-foreground">
                     {(pData.dont || [
                       "Never invent benchmark numbers or library versions",

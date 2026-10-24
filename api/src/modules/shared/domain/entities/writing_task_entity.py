@@ -70,6 +70,7 @@ class WritingTaskEntity(BaseModel):
     requirements: str | None = None
     angle: str | None = None
     include_diagram: IncludeDiagram = IncludeDiagram.AUTO
+    diagram_format: str = "auto"
     review_outline: bool = False
     use_style_examples: bool = True
     publication_targets: list[PublicationTarget] = Field(default_factory=list)

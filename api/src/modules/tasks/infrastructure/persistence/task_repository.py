@@ -83,6 +83,7 @@ class TaskRepository(ITaskRepository):
             requirements=model.requirements,
             angle=model.angle,
             include_diagram=model.include_diagram,
+            diagram_format=getattr(model, "diagram_format", "auto"),
             review_outline=model.review_outline,
             use_style_examples=getattr(model, "use_style_examples", True),
             publication_targets=model.publication_targets or [],

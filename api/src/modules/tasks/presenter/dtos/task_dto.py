@@ -49,6 +49,7 @@ class CreateTaskRequestDto(BaseModel):
     series: SeriesDto | None = None
     requirements: str | None = Field(default=None, max_length=4000)
     include_diagram: IncludeDiagram = IncludeDiagram.AUTO
+    diagram_format: str = "auto"
     review_outline: bool = False
     use_style_examples: bool = True
     publication_targets: list[PublicationTarget] = Field(default_factory=list)
@@ -82,6 +83,7 @@ class CreateTaskRequestDto(BaseModel):
             series=SeriesInfo(**self.series.model_dump()) if self.series else None,
             requirements=self.requirements,
             include_diagram=self.include_diagram,
+            diagram_format=self.diagram_format,
             review_outline=self.review_outline,
             use_style_examples=self.use_style_examples,
             publication_targets=self.publication_targets,
@@ -140,6 +142,7 @@ class TaskResponseDto(BaseModel):
     requirements: str | None
     angle: str | None
     include_diagram: IncludeDiagram
+    diagram_format: str = "auto"
     review_outline: bool
     use_style_examples: bool = True
     publication_targets: list[PublicationTarget]

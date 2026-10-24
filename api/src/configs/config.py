@@ -107,6 +107,11 @@ class Config(BaseSettings):
 
     langsmith_tracing: bool = False
     langsmith_api_key: SecretStr | None = None
+    # Editable Diagrams (Epic 7)
+    diagram_renderer_url: str = "http://renderer:8080"
+    diagram_render_timeout: float = 30.0
+    diagram_max_concurrent_renders: int = 2
+
     langsmith_project: str = "blog-agent-local"
     langsmith_endpoint: str = "https://api.smith.langchain.com"
     langsmith_hide_inputs: bool = False

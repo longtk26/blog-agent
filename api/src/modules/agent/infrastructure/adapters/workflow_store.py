@@ -176,3 +176,28 @@ class WorkflowStore(IWorkflowStore):
             return WritingSampleRepository(session).get_sanity_post_ids()
 
         return await arun_in_session(run)
+
+    async def save_diagram_asset(self, asset: Any) -> Any:
+        from src.modules.diagrams.infrastructure.persistence.diagram_asset_repository import DiagramAssetRepository
+        return await arun_in_session(lambda s: DiagramAssetRepository(s).create(asset))
+
+    async def get_diagram_asset(self, asset_id: uuid.UUID) -> Any | None:
+        from src.modules.diagrams.infrastructure.persistence.diagram_asset_repository import DiagramAssetRepository
+        return await arun_in_session(lambda s: DiagramAssetRepository(s).get(asset_id))
+
+    async def list_diagram_assets(self, task_id: uuid.UUID) -> list[Any]:
+        from src.modules.diagrams.infrastructure.persistence.diagram_asset_repository import DiagramAssetRepository
+        return await arun_in_session(lambda s: DiagramAssetRepository(s).list_by_task(task_id))
+
+    async def link_diagram_assets_to_revision(
+        self, task_id: uuid.UUID, revision_id: uuid.UUID, asset_ids: list[uuid.UUID]
+    ) -> None:
+        from src.modules.diagrams.infrastructure.persistence.diagram_asset_repository import DiagramAssetRepository
+        def run(session):
+            repo = DiagramAssetRepository(session)
+            for aid in asset_ids:
+                asset = repo.get(aid)
+                if asset:
+                    asset.article_revision_id = revision_id
+                    repo.update(asset)
+        await arun_in_session(run)

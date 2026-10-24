@@ -58,4 +58,32 @@ export type TPublication = {
 };
 
 export type TReviewMode = "preview" | "edit" | "split" | "diff";
-export type TSidebarTab = "issues" | "claims" | "sources" | "metadata" | "publish";
+export type TSidebarTab = "issues" | "claims" | "sources" | "metadata" | "diagrams" | "publish";
+
+export type TDiagramAsset = {
+  id: string;
+  task_id: string;
+  article_revision_id: string | null;
+  slot_id: string;
+  format: "drawio" | "mermaid";
+  spec: {
+    type?: string;
+    title?: string;
+    direction?: string;
+    nodes?: Array<{ id: string; label: string; kind?: string }>;
+    groups?: Array<{ id: string; label: string }>;
+    edges?: Array<{ from: string; to: string; label?: string }>;
+    participants?: Array<{ id: string; label: string }>;
+    messages?: Array<{ from: string; to: string; label?: string }>;
+    [key: string]: unknown;
+  };
+  source_path: string;
+  svg_path: string | null;
+  png_path: string | null;
+  sha256: string;
+  validation_status: string;
+  created_at: string;
+  source_url: string;
+  svg_url: string;
+  png_url: string | null;
+};

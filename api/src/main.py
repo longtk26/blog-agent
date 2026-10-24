@@ -42,6 +42,7 @@ async def lifespan(app: FastAPI):
 
     event_broker.bind_loop(asyncio.get_running_loop())
     store = WorkflowStore(event_broker)
+    from src.modules.diagrams.infrastructure.adapters.diagram_renderer_adapter import DiagramRendererAdapter
     from src.modules.styles.infrastructure.adapters import PgVectorStore, get_embedding_service
 
     deps = WorkflowDeps(
@@ -52,6 +53,7 @@ async def lifespan(app: FastAPI):
         settings=config,
         vector_store=PgVectorStore(),
         embeddings=get_embedding_service(),
+        renderer=DiagramRendererAdapter(),
     )
     runner = LangGraphWorkflowRunner(
         build_blog_graph(deps, checkpointer_manager.saver),
@@ -87,7 +89,7 @@ def create_app() -> FastAPI:
 
     # Starlette runs the last-added middleware first: RequestContext -> CORS -> ApiKey -> ContentType -> RateLimit
     app.add_middleware(SlowAPIMiddleware)
-    app.add_middleware(JsonContentTypeMiddleware)
+    app.add_middleware(JsonContentTypeMiddleware, multipart_path_prefixes=("/tasks/",))
     app.add_middleware(
         ApiKeyMiddleware,
         api_key=config.agent_api_key.get_secret_value() if config.agent_api_key else None,

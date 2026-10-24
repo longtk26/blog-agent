@@ -127,3 +127,21 @@ class IWorkflowStore(ABC):
     async def get_valid_post_ids(self) -> set[str]:
         """Known published Sanity post IDs for internal link validation."""
         pass
+
+    @abstractmethod
+    async def save_diagram_asset(self, asset: Any) -> Any:
+        pass
+
+    @abstractmethod
+    async def get_diagram_asset(self, asset_id: uuid.UUID) -> Any | None:
+        pass
+
+    @abstractmethod
+    async def list_diagram_assets(self, task_id: uuid.UUID) -> list[Any]:
+        pass
+
+    @abstractmethod
+    async def link_diagram_assets_to_revision(
+        self, task_id: uuid.UUID, revision_id: uuid.UUID, asset_ids: list[uuid.UUID]
+    ) -> None:
+        pass

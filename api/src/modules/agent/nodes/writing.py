@@ -444,6 +444,85 @@ class WritingNodes:
             suffix += 1
         return ArticleMetadata(title=meta.title, slug=slug, description=meta.description, tags=meta.tags)
 
+    # --- diagrams -----------------------------------------------------------------------------
+
+    @workflow_node("generate_diagrams", TaskStatus.GENERATING_DIAGRAM, timeout_seconds=600)
+    async def generate_diagrams(self, state: BlogState) -> dict:
+        task_id = _task_id(state)
+        task = await self.deps.store.get_task(task_id)
+        outline = state.get("outline") or {}
+        draft = await self.deps.store.get_draft(task_id)
+        evidence = await self._evidence(task_id)
+
+        if not draft or str(task.include_diagram).lower() == "no":
+            return {}
+
+        slots = []
+        for s in outline.get("sections", []):
+            if "diagram" in s.get("needs", []):
+                slots.append((s["key"], s))
+
+        if not slots and str(task.include_diagram).lower() == "yes":
+            for s in outline.get("sections", []):
+                heading = s.get("heading", "").lower()
+                if any(w in heading for w in ("architecture", "flow", "lifecycle", "mechanism", "pipeline", "how")):
+                    slots.append((s["key"], s))
+                    break
+            if not slots and outline.get("sections"):
+                slots.append((outline["sections"][0]["key"], outline["sections"][0]))
+
+        target_slot = state.get("diagram_slot_id")
+        owner_feedback = state.get("review_feedback") if state.get("review_target") == "diagram" else None
+
+        from src.modules.diagrams.infrastructure.adapters.diagram_renderer_adapter import DiagramRendererAdapter
+        from src.modules.diagrams.infrastructure.persistence.diagram_asset_repository import DiagramAssetRepository
+        from src.modules.diagrams.usecases.generate_diagram_usecase import GenerateDiagramUsecase
+        from src.libs.database import arun_in_session
+
+        renderer = self.deps.renderer or DiagramRendererAdapter()
+        sec_map = {s.key: s for s in draft.sections}
+        diagram_asset_ids = list(state.get("diagram_asset_ids") or [])
+
+        for sec_key, sec_spec in slots:
+            slot_id = f"diagram_{sec_key}"
+            if target_slot and target_slot != slot_id:
+                continue
+
+            sec_draft = sec_map.get(sec_key)
+            sec_text = sec_draft.markdown if sec_draft else None
+            claims_text = evidence.lines(sec_spec.get("claim_ids"), limit=10)
+
+            try:
+                def make_uc(session):
+                    return GenerateDiagramUsecase(self.deps.models, renderer, DiagramAssetRepository(session))
+
+                uc = await arun_in_session(make_uc)
+                asset, markdown_snippet = await uc.execute(
+                    task=task,
+                    slot_id=slot_id,
+                    section_heading=sec_spec["heading"],
+                    section_goal=sec_spec["goal"],
+                    section_text=sec_text,
+                    claims_text=claims_text,
+                    feedback=owner_feedback,
+                )
+                diagram_asset_ids.append(str(asset.id))
+
+                if sec_draft:
+                    clean_md = re.sub(r"```mermaid[\s\S]*?```", "", sec_draft.markdown)
+                    clean_md = re.sub(r"!\[.*?\]\(asset://.*?\)", "", clean_md).strip()
+                    sec_draft.markdown = f"{clean_md}\n\n{markdown_snippet}\n"
+                    sec_map[sec_key] = sec_draft
+
+                emit("diagram_generated", slot_id=slot_id, format=asset.format, asset_id=str(asset.id))
+            except Exception as exc:
+                logger.warning(f"Failed to generate diagram for slot {slot_id}: {exc}")
+
+        await self._assemble(draft, evidence)
+        await self.deps.store.save_draft(draft)
+
+        return {"diagram_asset_ids": list(dict.fromkeys(diagram_asset_ids))}
+
     # --- validate + judge ---------------------------------------------------------------------
 
     @workflow_node("validate_draft", TaskStatus.VALIDATING, timeout_seconds=120)
@@ -636,6 +715,9 @@ class WritingNodes:
         changed = changed_sections(previous.markdown, draft.markdown) if previous else []
         review_info = self._review_info(state, draft, changed)
 
+        diagram_assets = await self.deps.store.list_diagram_assets(task_id)
+        diagram_hashes = sorted([a.sha256 for a in diagram_assets if a.sha256])
+
         revision = ArticleRevisionEntity(
             task_id=task_id,
             revision_number=(previous.revision_number + 1) if previous else 1,
@@ -647,7 +729,12 @@ class WritingNodes:
             markdown=draft.markdown,
             created_by=RevisionAuthor.AI,
             content_hash=compute_content_hash(
-                title=meta.title, slug=meta.slug, description=meta.description, tags=meta.tags, markdown=draft.markdown
+                title=meta.title,
+                slug=meta.slug,
+                description=meta.description,
+                tags=meta.tags,
+                markdown=draft.markdown,
+                diagram_asset_hashes=diagram_hashes,
             ),
             metadata={
                 "outline": state["outline"],
@@ -658,6 +745,8 @@ class WritingNodes:
                 "style_guide_version": style_version,
                 "style_profile_version": style_version,
                 "retrieved_style_chunk_ids": state.get("retrieved_style_chunk_ids", []),
+                "diagram_asset_hashes": diagram_hashes,
+                "diagram_asset_ids": [str(a.id) for a in diagram_assets],
                 "render_contract_version": contract_version,
                 "prompt_version": PROMPT_VERSION,
                 "models": self.deps.models.describe(),
@@ -686,6 +775,8 @@ class WritingNodes:
             ),
         ]
         saved = await self.deps.store.create_revision(revision, evaluations)
+        if diagram_assets:
+            await self.deps.store.link_diagram_assets_to_revision(task_id, saved.id, [a.id for a in diagram_assets])
         emit("revision_saved", revision_id=str(saved.id), revision_number=saved.revision_number, content_hash=saved.content_hash[:12])
         return {"revision_id": str(saved.id)}
 
@@ -758,12 +849,14 @@ class WritingNodes:
                 # Classification is a convenience: fall back to rewriting rather than failing the round.
                 logger.warning("Feedback classification failed", extra={"context": {"error": type(exc).__name__}})
                 target, reason = "draft", "classification failed; rewriting the scoped sections"
-        if target == "diagram":
-            target = "draft"  # until Epic 7 adds a diagram stage, the section holding the diagram is rewritten
-
         key_of = {name.lower(): key for key, name in names.items()}
         keys = list(dict.fromkeys(key_of[n.lower()] for n in scoped if n.lower() in key_of))
-        if target == "metadata":
+        diagram_slot_id = review.get("diagram_slot_id") or (review.get("scope") or {}).get("diagram_slot_id")
+        if target == "diagram":
+            if not diagram_slot_id and keys:
+                diagram_slot_id = f"diagram_{keys[0]}"
+            keys = []
+        elif target == "metadata":
             keys = []
         elif target in ("draft", "research") and not keys:
             keys = list(names)
@@ -779,6 +872,7 @@ class WritingNodes:
             "review_target": target,
             "review_feedback": feedback,
             "revise_keys": keys,
+            "diagram_slot_id": diagram_slot_id,
             "research_window": None,
             "focus_questions": None,
         }
@@ -789,6 +883,7 @@ class WritingNodes:
             "research": "plan_review_research",
             "outline": "outline",
             "metadata": "revise_metadata",
+            "diagram": "generate_diagrams",
         }.get(state.get("review_target"), "revise_sections")
 
     @workflow_node("revise_sections", TaskStatus.DRAFTING, timeout_seconds=1800)

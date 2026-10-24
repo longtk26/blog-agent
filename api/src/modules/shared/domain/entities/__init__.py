@@ -38,6 +38,8 @@ from .research_entity import (
     SourceStatus,
 )
 
+from .diagram_entity import DiagramAssetEntity
+
 __all__ = [
     "WritingTaskEntity",
     "TaskMode",
@@ -73,4 +75,5 @@ __all__ = [
     "StyleProfileData",
     "StyleProfileEntity",
     "OwnerNoteEntity",
+    "DiagramAssetEntity",
 ]

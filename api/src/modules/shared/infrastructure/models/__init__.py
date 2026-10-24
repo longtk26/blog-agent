@@ -11,6 +11,8 @@ from .knowledge_models import (
     OwnerNoteModel,
 )
 
+from .diagram_models import DiagramAssetModel
+
 __all__ = [
     "WritingTaskModel",
     "TaskEventModel",
@@ -27,4 +29,5 @@ __all__ = [
     "SampleChunkModel",
     "StyleProfileModel",
     "OwnerNoteModel",
+    "DiagramAssetModel",
 ]

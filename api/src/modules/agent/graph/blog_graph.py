@@ -31,6 +31,7 @@ def build_blog_graph(deps: WorkflowDeps, checkpointer: BaseCheckpointSaver | Non
     builder.add_node("outline", writing.outline)
     builder.add_node("review_outline", writing.review_outline)
     builder.add_node("draft_article", writing.draft_article)
+    builder.add_node("generate_diagrams", writing.generate_diagrams)
     builder.add_node("validate_draft", writing.validate_draft)
     builder.add_node("judge_draft", writing.judge_draft)
     builder.add_node("self_revise", writing.self_revise)
@@ -55,7 +56,8 @@ def build_blog_graph(deps: WorkflowDeps, checkpointer: BaseCheckpointSaver | Non
 
     builder.add_conditional_edges("outline", writing.route_after_outline, ["review_outline", "draft_article"])
     builder.add_edge("review_outline", "draft_article")
-    builder.add_edge("draft_article", "validate_draft")
+    builder.add_edge("draft_article", "generate_diagrams")
+    builder.add_edge("generate_diagrams", "validate_draft")
     builder.add_edge("validate_draft", "judge_draft")
     builder.add_conditional_edges("judge_draft", writing.route_after_judge, ["self_revise", "save_revision"])
     builder.add_edge("self_revise", "validate_draft")
@@ -64,7 +66,7 @@ def build_blog_graph(deps: WorkflowDeps, checkpointer: BaseCheckpointSaver | Non
     builder.add_conditional_edges(
         "route_feedback",
         writing.route_after_feedback,
-        ["plan_review_research", "outline", "revise_sections", "revise_metadata"],
+        ["plan_review_research", "outline", "revise_sections", "revise_metadata", "generate_diagrams"],
     )
     builder.add_edge("plan_review_research", "search")
     builder.add_edge("revise_sections", "validate_draft")

@@ -37,15 +37,18 @@ async function toApiError(response: Response): Promise<ApiError> {
 async function request<TData>(method: string, path: string, body?: unknown, init?: RequestInit): Promise<TData> {
   const headers = new Headers(init?.headers);
   headers.set("Accept", "application/json");
-  // The API rejects non-JSON state-changing requests (CSRF guard), so always send the header.
-  if (method !== "GET") headers.set("Content-Type", "application/json");
+  const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+  // The API rejects non-JSON state-changing requests (CSRF guard), so always send the header unless sending FormData.
+  if (method !== "GET" && !isFormData && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
 
   const response = await fetch(`${API_PREFIX}${path}`, {
     ...init,
     method,
     headers,
     credentials: "same-origin",
-    body: body === undefined ? (method === "GET" ? undefined : "{}") : JSON.stringify(body),
+    body: body === undefined ? (method === "GET" ? undefined : "{}") : isFormData ? body : JSON.stringify(body),
   });
 
   if (!response.ok) throw await toApiError(response);

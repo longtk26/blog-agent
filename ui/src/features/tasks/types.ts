@@ -22,6 +22,7 @@ export type TTaskMode = "research_only" | "article";
 export type TTaskDepth = "intro" | "intermediate" | "deep_dive";
 export type TTaskFormat = "concept" | "tutorial" | "comparison" | "series_part";
 export type TIncludeDiagram = "auto" | "yes" | "no";
+export type TDiagramFormat = "auto" | "mermaid" | "drawio";
 export type TPublicationTarget = "sanity" | "devto";
 
 export type TTaskBudgets = {
@@ -85,6 +86,7 @@ export type TTask = {
   requirements: string | null;
   angle: string | null;
   include_diagram: TIncludeDiagram;
+  diagram_format?: TDiagramFormat;
   review_outline: boolean;
   use_style_examples?: boolean;
   publication_targets: TPublicationTarget[];
@@ -128,6 +130,7 @@ export type TCreateTaskPayload = {
   format: TTaskFormat;
   requirements?: string;
   include_diagram: TIncludeDiagram;
+  diagram_format?: TDiagramFormat;
   review_outline: boolean;
   use_style_examples?: boolean;
   publication_targets: TPublicationTarget[];

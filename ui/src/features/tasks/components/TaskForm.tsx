@@ -48,7 +48,7 @@ function TextField({ control, name, label, placeholder, description }: TextField
 
 type SelectFieldProps = {
   control: Control<TCreateTaskFormValues>;
-  name: "depth" | "format" | "includeDiagram";
+  name: "depth" | "format" | "includeDiagram" | "diagramFormat";
   label: string;
   options: { value: string; label: string }[];
 };
@@ -161,7 +161,7 @@ export function TaskForm() {
 
             <TextField control={control} name="audience" label="Audience" placeholder="software engineers new to LLM fine-tuning" />
 
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
               <SelectField
                 control={control}
                 name="depth"
@@ -191,6 +191,16 @@ export function TaskForm() {
                   { value: "auto", label: "When useful" },
                   { value: "yes", label: "Always" },
                   { value: "no", label: "Never" },
+                ]}
+              />
+              <SelectField
+                control={control}
+                name="diagramFormat"
+                label="Diagram Format"
+                options={[
+                  { value: "auto", label: "Auto" },
+                  { value: "mermaid", label: "Mermaid" },
+                  { value: "drawio", label: "Draw.io" },
                 ]}
               />
             </div>

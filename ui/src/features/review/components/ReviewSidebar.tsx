@@ -6,6 +6,7 @@ import type { TRevision, TSource, TTask } from "@/features/tasks/types";
 import { useReviewStore } from "@/store/review-store";
 import type { TApproval, TPublication, TSidebarTab } from "../types";
 import { ClaimsPanel } from "./ClaimsPanel";
+import { DiagramsPanel } from "./DiagramsPanel";
 import { IssuesPanel } from "./IssuesPanel";
 import { MetadataPanel } from "./MetadataPanel";
 import { PublicationPanel } from "./PublicationPanel";
@@ -35,6 +36,7 @@ export function ReviewSidebar({ task, revision, sources, approvals, publications
         <TabsTrigger value="claims">Claims</TabsTrigger>
         <TabsTrigger value="sources">Sources</TabsTrigger>
         <TabsTrigger value="metadata">Metadata</TabsTrigger>
+        <TabsTrigger value="diagrams">Diagrams</TabsTrigger>
         <TabsTrigger value="publish">Publish{isPublished ? " ✓" : ""}</TabsTrigger>
       </TabsList>
       <Card className="mt-3">
@@ -50,6 +52,9 @@ export function ReviewSidebar({ task, revision, sources, approvals, publications
           </TabsContent>
           <TabsContent value="metadata">
             <MetadataPanel revision={revision} approvals={approvals} canEdit={canEdit} />
+          </TabsContent>
+          <TabsContent value="diagrams">
+            <DiagramsPanel taskId={task.id} canEdit={canEdit} />
           </TabsContent>
           <TabsContent value="publish">
             <PublicationPanel task={task} revision={revision} publications={publications} />
