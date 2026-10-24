@@ -190,61 +190,25 @@ async def render_for_devto(
     # 1. Remove leading H1 because title is passed as a separate API field
     cleaned_md = re.sub(r"^\s*#\s+[^\n]+\n*", "", markdown)
 
-    # 2. Replace Mermaid fences with rendered SVG/PNG image uploads
-    # Find all ```mermaid ... ``` fences
-    mermaid_pattern = re.compile(r"```mermaid[\s\r\n]+([\s\S]*?)```", re.IGNORECASE)
-    mermaid_matches = list(mermaid_pattern.finditer(cleaned_md))
-
-    mermaid_replacements: dict[str, str] = {}
-    for idx, match in enumerate(mermaid_matches):
-        raw_fence = match.group(0)
-        code = match.group(1).strip()
-        caption = f"Diagram {idx + 1}"
-
-        # Check if diagram assets provide a pre-rendered image (prefer PNG for Dev.to, then SVG)
-        asset_match = next(
-            (a for a in (diagram_assets or []) if a.format == "mermaid" and (a.png_path or a.svg_path)),
-            None,
+    # 2. Mermaid diagrams are written directly as native Mermaid code blocks
+    # Dev.to (Forem) natively renders ```mermaid ... ``` code blocks with Mermaid.js.
+    # Preserve them directly in markdown.
+    if uploader:
+        asset_img_pattern = re.compile(
+            r"!\[([^\]]*)\]\((asset://[^\s)]+|/[^\s)]+\.(?:png|jpe?g|svg|webp))(?:\s+[\"']([^\"']*)[\"'])?\)"
         )
-
-        cdn_url: str | None = None
-        img_path = (
-            asset_match.png_path
-            if (asset_match and asset_match.png_path)
-            else (asset_match.svg_path if asset_match else None)
-        )
-        if img_path and uploader:
+        for m in list(asset_img_pattern.finditer(cleaned_md)):
+            full_match = m.group(0)
+            alt = m.group(1)
+            src = m.group(2)
+            title = m.group(3) or alt
             try:
-                _, cdn_url = await uploader.upload_asset(img_path, alt=caption, title=caption)
+                _, cdn_url = await uploader.upload_asset(src, alt=alt, title=title)
                 if on_asset_uploaded:
-                    on_asset_uploaded(img_path, _, cdn_url)
+                    on_asset_uploaded(src, _, cdn_url)
+                cleaned_md = cleaned_md.replace(full_match, f'![{alt}]({cdn_url} "{title}")')
             except Exception as exc:
-                logger.warning(f"Failed to upload pre-rendered diagram asset {img_path}: {exc}")
-                cdn_url = None
-
-        if not cdn_url and diagram_renderer and uploader:
-            try:
-                render_res = await diagram_renderer.render_mermaid(code)
-                raw_bytes = render_res.png_bytes or render_res.svg_bytes
-                mime = "image/png" if render_res.png_bytes else "image/svg+xml"
-                if raw_bytes:
-                    data_uri = f"data:{mime};base64,{base64.b64encode(raw_bytes).decode('ascii')}"
-                    _, cdn_url = await uploader.upload_asset(data_uri, alt=caption, title=caption)
-                    if on_asset_uploaded:
-                        on_asset_uploaded(f"mermaid://{idx}", _, cdn_url)
-            except Exception as exc:
-                logger.warning(f"Failed to render/upload mermaid diagram: {exc}")
-                cdn_url = None
-
-        if cdn_url:
-            mermaid_replacements[raw_fence] = f"![{caption}]({cdn_url} \"{caption}\")"
-        else:
-            # Fallback if no renderer/uploader is active: keep a placeholder image with the caption
-            fallback_url = f"https://cdn.sanity.io/images/fallback/diagram-{idx + 1}.png"
-            mermaid_replacements[raw_fence] = f"![{caption}]({fallback_url} \"{caption}\")"
-
-    for raw_fence, replacement in mermaid_replacements.items():
-        cleaned_md = cleaned_md.replace(raw_fence, replacement)
+                logger.warning(f"Failed to resolve asset image {src}: {exc}")
 
     # 3. If sanity_render provided rendered_markdown with CDN image URLs, map them
     if sanity_render and sanity_render.rendered_markdown:

@@ -27,6 +27,11 @@ def migrated_db():
 @pytest.fixture(autouse=True)
 def clean_tables(migrated_db):
     if TEST_DB_URL:
+        if not TEST_DB_URL.rstrip("/").endswith("_test"):
+            raise RuntimeError(
+                f"Refusing to run clean_tables on non-test DB: {TEST_DB_URL}. "
+                "Ensure TEST_DB_URL targets a test database ending with '_test' (e.g. blog_agent_test)."
+            )
         import psycopg
 
         with psycopg.connect(TEST_DB_URL, autocommit=True) as conn:

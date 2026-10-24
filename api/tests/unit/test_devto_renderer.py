@@ -102,9 +102,10 @@ flowchart TD
     # 3. Formats math
     assert "`E = mc^2`" in res.body_markdown
 
-    # 4. Replaces mermaid with image
-    assert "```mermaid" not in res.body_markdown
-    assert "![Diagram 1]" in res.body_markdown
+    # 4. Mermaid is preserved natively for Dev.to
+    assert "```mermaid" in res.body_markdown
+    assert "flowchart TD" in res.body_markdown
+    assert "A --> B" in res.body_markdown
 
     # 5. Adds canonical footer
     assert "*Originally published at [https://leon-pham.vercel.app/posts/the-real-title](https://leon-pham.vercel.app/posts/the-real-title)*" in res.body_markdown
@@ -141,8 +142,7 @@ async def test_golden_fine_tuning_posts():
 
     res1 = await render_for_devto(rev1, canonical_url="https://leon-pham.vercel.app/posts/fine-tuning-concepts")
     assert not res1.body_markdown.startswith("# LLM Fine-Tuning:")
-    assert "```mermaid" not in res1.body_markdown
-    assert "![Diagram" in res1.body_markdown
+    assert "```mermaid" in res1.body_markdown
     assert len(res1.tags) == 4
     assert res1.rendered_content_hash
 
