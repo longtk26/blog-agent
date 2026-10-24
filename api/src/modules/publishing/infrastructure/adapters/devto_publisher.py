@@ -8,6 +8,7 @@ from src.configs import config
 from src.configs.logger import get_logger
 from src.libs.exceptions import BadRequestException, ErrorCode
 from src.modules.diagrams.ports.output.diagram_renderer import IDiagramRenderer
+from src.modules.diagrams.ports.output.diagram_repository import IDiagramAssetRepository
 from src.modules.publishing.domain.devto_renderer import render_for_devto
 from src.modules.publishing.domain.sanity_renderer import IAssetUploader
 from src.modules.publishing.ports.output.publisher import IPublisher, PublishError, PublishOutcome
@@ -26,6 +27,7 @@ class DevtoPublisher(IPublisher):
         http_client: httpx.AsyncClient | None = None,
         asset_uploader: IAssetUploader | None = None,
         diagram_renderer: IDiagramRenderer | None = None,
+        diagram_repo: IDiagramAssetRepository | None = None,
     ):
         self._api_key = (
             api_key
@@ -36,6 +38,7 @@ class DevtoPublisher(IPublisher):
         self._client = http_client
         self._asset_uploader = asset_uploader
         self._diagram_renderer = diagram_renderer
+        self._diagram_repo = diagram_repo
 
     @property
     def destination(self) -> PublicationTarget:
@@ -167,6 +170,14 @@ class DevtoPublisher(IPublisher):
             mode = opts.get("mode") or opts.get("devto_mode") or "draft"
             is_published = (mode == "published")
 
+            # Query diagram assets if not explicitly passed
+            diagram_assets = opts.get("diagram_assets")
+            if diagram_assets is None and self._diagram_repo is not None:
+                try:
+                    diagram_assets = self._diagram_repo.list_by_revision(revision.id) or self._diagram_repo.list_by_task(task_id)
+                except Exception as exc:
+                    logger.warning(f"Could not load diagram assets: {exc}")
+
             # Deterministic render transform
             canonical_url = f"{config.sanity_site_base_url.rstrip('/')}/posts/{revision.slug}"
             render_res = await render_for_devto(
@@ -174,6 +185,7 @@ class DevtoPublisher(IPublisher):
                 canonical_url=canonical_url,
                 uploader=self._asset_uploader,
                 diagram_renderer=self._diagram_renderer,
+                diagram_assets=diagram_assets,
                 on_asset_uploaded=on_asset_uploaded,
             )
 

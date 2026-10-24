@@ -176,6 +176,8 @@ class SanityPublisher(IPublisher, IAssetUploader):
             blogs_dir / src.lstrip("/"),
             Path(config.data_dir) / src.lstrip("/"),
         ]
+        if src.startswith("/app/data/"):
+            candidate_paths.append(Path(config.data_dir) / src[len("/app/data/") :].lstrip("/"))
         for p in candidate_paths:
             if p.is_file():
                 content = p.read_bytes()

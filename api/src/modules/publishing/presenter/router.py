@@ -5,6 +5,7 @@ from fastapi import APIRouter, status
 from src.libs.exceptions import NotFoundException
 from src.modules.articles.ports.output import IRevisionRepoDep
 from src.modules.publishing.domain import render_for_devto
+from src.modules.publishing.infrastructure.adapters import DiagramAssetRepoDep
 from src.modules.publishing.presenter.dtos import (
     PublicationListResponseDto,
     PublishRequestDto,
@@ -28,11 +29,13 @@ publishing_router = APIRouter(tags=["publishing"])
 async def preview_devto_render(
     revision_id: uuid.UUID,
     revisions: IRevisionRepoDep,
+    diagram_repo: DiagramAssetRepoDep,
 ):
     rev = revisions.get(revision_id)
     if rev is None:
         raise NotFoundException(f"Revision '{revision_id}' not found")
-    res = await render_for_devto(rev)
+    diagram_assets = diagram_repo.list_by_revision(revision_id) or diagram_repo.list_by_task(rev.task_id)
+    res = await render_for_devto(rev, diagram_assets=diagram_assets)
     return {
         "title": res.title,
         "body_markdown": res.body_markdown,

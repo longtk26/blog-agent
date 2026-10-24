@@ -5,7 +5,10 @@ from dataclasses import dataclass
 from typing import Any, Callable
 
 from src.configs import config
+from src.configs.logger import get_logger
 from src.modules.diagrams.ports.output.diagram_renderer import IDiagramRenderer
+
+logger = get_logger(__name__)
 from src.modules.publishing.domain.sanity_renderer import IAssetUploader, RenderForSanityResult
 from src.modules.shared.domain.entities import ArticleRevisionEntity
 from src.modules.shared.domain.entities.diagram_entity import DiagramAssetEntity
@@ -198,32 +201,39 @@ async def render_for_devto(
         code = match.group(1).strip()
         caption = f"Diagram {idx + 1}"
 
-        # Check if diagram assets provide a pre-rendered image
+        # Check if diagram assets provide a pre-rendered image (prefer PNG for Dev.to, then SVG)
         asset_match = next(
-            (a for a in (diagram_assets or []) if a.format == "mermaid" and a.svg_path),
+            (a for a in (diagram_assets or []) if a.format == "mermaid" and (a.png_path or a.svg_path)),
             None,
         )
 
         cdn_url: str | None = None
-        if asset_match and asset_match.svg_path and uploader:
+        img_path = (
+            asset_match.png_path
+            if (asset_match and asset_match.png_path)
+            else (asset_match.svg_path if asset_match else None)
+        )
+        if img_path and uploader:
             try:
-                _, cdn_url = await uploader.upload_asset(asset_match.svg_path, alt=caption, title=caption)
+                _, cdn_url = await uploader.upload_asset(img_path, alt=caption, title=caption)
                 if on_asset_uploaded:
-                    on_asset_uploaded(asset_match.svg_path, _, cdn_url)
-            except Exception:
+                    on_asset_uploaded(img_path, _, cdn_url)
+            except Exception as exc:
+                logger.warning(f"Failed to upload pre-rendered diagram asset {img_path}: {exc}")
                 cdn_url = None
 
         if not cdn_url and diagram_renderer and uploader:
             try:
                 render_res = await diagram_renderer.render_mermaid(code)
-                raw_bytes = render_res.svg_bytes or render_res.png_bytes
-                mime = "image/svg+xml" if render_res.svg_bytes else "image/png"
+                raw_bytes = render_res.png_bytes or render_res.svg_bytes
+                mime = "image/png" if render_res.png_bytes else "image/svg+xml"
                 if raw_bytes:
                     data_uri = f"data:{mime};base64,{base64.b64encode(raw_bytes).decode('ascii')}"
                     _, cdn_url = await uploader.upload_asset(data_uri, alt=caption, title=caption)
                     if on_asset_uploaded:
                         on_asset_uploaded(f"mermaid://{idx}", _, cdn_url)
-            except Exception:
+            except Exception as exc:
+                logger.warning(f"Failed to render/upload mermaid diagram: {exc}")
                 cdn_url = None
 
         if cdn_url:
