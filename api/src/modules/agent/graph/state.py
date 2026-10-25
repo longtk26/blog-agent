@@ -25,3 +25,5 @@ class BlogState(TypedDict, total=False):
     focus_questions: list[str]  # question ids follow-up research must cover
     publish: dict | None        # owner input on resume from awaiting_publish (Epic 5)
     retrieved_style_chunk_ids: list[str]  # chunk IDs retrieved during outlining & drafting (Epic 6)
+    eval_mode: bool             # When true: run research + draft without interrupts, publishing disabled (Epic 9)
+

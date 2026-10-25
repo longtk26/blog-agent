@@ -1,0 +1,20 @@
+{
+  "experiment": "improved",
+  "git_sha": "b2c3d4e",
+  "metrics": {
+    "markdown_valid": 1.0,
+    "render_contract_violations": 0.0,
+    "citation_coverage": 0.90,
+    "source_quality_mix": 0.75,
+    "min_sources_met": 1.0,
+    "required_sections_present": 1.0,
+    "diagram_valid": 1.0,
+    "tool_error_rate": 0.0,
+    "cost_usd": 0.14,
+    "latency_s": 19.5,
+    "factual_support": 4.2,
+    "must_cover_coverage": 4.1,
+    "style_consistency": 4.0,
+    "audience_depth_fit": 4.0
+  }
+}

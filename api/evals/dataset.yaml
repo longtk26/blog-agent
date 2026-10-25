@@ -1,0 +1,383 @@
+# Evaluation Dataset for Blog Agent (Epic 9)
+# Source of truth for LangSmith dataset: blog-agent-eval
+# Run `make eval-sync` to push to LangSmith.
+
+examples:
+  - id: "eval-01-lora-fine-tuning"
+    inputs:
+      topic: "Low-Rank Adaptation (LoRA) Fine-Tuning: Concepts and Implementation"
+      mode: "article"
+      audience: "Machine learning engineers"
+      depth: "deep_dive"
+      format: "concept"
+      include_diagram: "yes"
+      requirements: "Explain mathematical foundation of rank decomposition W = W0 + B*A, scaling factor alpha / r, parameter efficiency, and VRAM reduction."
+    reference:
+      format: "concept"
+      diagram_expected: true
+      min_sources: 3
+      expected_source_types:
+        - "paper"
+        - "official_docs"
+      must_cover:
+        - "Matrix decomposition Delta W = B * A with rank r << min(d, k)"
+        - "Freezing base model weights W0 and training only low-rank matrices A and B"
+        - "Scaling factor alpha / r and its influence on learning rate"
+        - "VRAM memory reduction during training and lack of additional inference latency via weight merging"
+      expected_sections:
+        - "What is LoRA and Why Parameter Efficiency Matters"
+        - "Mathematical Architecture: Low-Rank Decomposition"
+        - "The Role of Rank r and Alpha Scaling"
+        - "Memory Profiling and Inference Weight Merging"
+      known_facts:
+        - "LoRA decomposes weight updates into two low-rank matrices A and B."
+        - "Matrix A is typically initialized with Gaussian distribution and matrix B with zeros."
+        - "At inference time, the adapter weights can be merged directly into W0 without adding latency."
+        - "LoRA reduces trainable parameter count often by over 99% compared to full fine-tuning."
+
+  - id: "eval-02-rag-vs-fine-tuning"
+    inputs:
+      topic: "RAG vs Fine-Tuning: Choosing the Right LLM Architecture for Domain Data"
+      mode: "article"
+      audience: "AI solution architects and software engineers"
+      depth: "intermediate"
+      format: "comparison"
+      include_diagram: "yes"
+      requirements: "Compare Retrieval-Augmented Generation and fine-tuning on cost, latency, update frequency, hallucinations, and custom style."
+    reference:
+      format: "comparison"
+      diagram_expected: true
+      min_sources: 3
+      expected_source_types:
+        - "official_docs"
+        - "blog"
+      must_cover:
+        - "Dynamic vs static knowledge: external retrieval vs internal model parametric memory"
+        - "Latency and cost comparison between embedding/vector lookup and model forward pass"
+        - "Trade-offs in citation provenance and hallucination mitigation"
+        - "Hybrid architectures combining RAG retrieval with fine-tuned domain models"
+      expected_sections:
+        - "Core Architectural Differences"
+        - "Knowledge Freshness and Data Updates"
+        - "Cost, Latency, and Operational Complexity"
+        - "Decision Framework: When to Use RAG, Fine-Tuning, or Both"
+      known_facts:
+        - "RAG retrieves relevant chunks at inference time, whereas fine-tuning alters model weights."
+        - "RAG allows real-time knowledge updates without retraining the model."
+        - "Fine-tuning is better for teaching stylistic nuances, formatting, and task-specific behaviors."
+        - "Combining RAG and fine-tuning offers verifiable citations along with domain jargon mastery."
+
+  - id: "eval-03-llm-inference-lifecycle"
+    inputs:
+      topic: "The LLM Inference Lifecycle: Prefill Phase, Decode Phase, and KV Cache"
+      mode: "article"
+      audience: "Backend engineers optimizing AI serving systems"
+      depth: "deep_dive"
+      format: "concept"
+      include_diagram: "yes"
+      requirements: "Break down the mechanics of the prefill stage vs token-by-token decode stage, explain KV cache memory footprint and compute bound vs memory bandwidth bound."
+    reference:
+      format: "concept"
+      diagram_expected: true
+      min_sources: 3
+      expected_source_types:
+        - "paper"
+        - "official_docs"
+      must_cover:
+        - "Prefill phase: parallel computation over prompt tokens (compute-bound)"
+        - "Decode phase: sequential auto-regressive generation (memory-bandwidth bound)"
+        - "KV cache mechanism: storing Key and Value projections across attention layers"
+        - "Memory sizing formulas for KV cache and paging solutions like PagedAttention"
+      expected_sections:
+        - "Two Phases of Inference: Prefill vs Decode"
+        - "Why Decoding is Memory-Bandwidth Bound"
+        - "KV Cache Architecture and Memory Overhead"
+        - "Modern Serving Optimizations: Continuous Batching and PagedAttention"
+      known_facts:
+        - "The prefill phase processes the entire prompt in parallel and is compute-bound."
+        - "The decode phase generates one token at a time and is memory-bandwidth bound."
+        - "The KV cache prevents redundant recalculation of key and value states of previous tokens."
+        - "KV cache memory grows linearly with batch size, context length, number of layers, and hidden dimensions."
+
+  - id: "eval-04-prometheus-grafana-monitoring"
+    inputs:
+      topic: "Prometheus and Grafana: Modern Metrics Collection and Dashboarding Basics"
+      mode: "article"
+      audience: "DevOps and Site Reliability Engineers"
+      depth: "intro"
+      format: "tutorial"
+      include_diagram: "yes"
+      requirements: "Cover Prometheus pull model, metric types (Counter, Gauge, Histogram, Summary), PromQL basics, and Grafana dashboard integration."
+    reference:
+      format: "tutorial"
+      diagram_expected: true
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "Pull-based scraping architecture via HTTP endpoints like /metrics"
+        - "Four fundamental metric types: Counter, Gauge, Histogram, Summary"
+        - "Basic PromQL rate() and histogram_quantile() functions"
+        - "Connecting Prometheus data source to Grafana panels and alert rules"
+      expected_sections:
+        - "Prometheus Architecture and the Pull Model"
+        - "Understanding Metric Types: Counter, Gauge, and Histogram"
+        - "Querying Time Series Data with PromQL"
+        - "Building Actionable Dashboards in Grafana"
+      known_facts:
+        - "Prometheus scrapes metrics from targets over HTTP using a pull model."
+        - "A Counter is a monotonically increasing metric that only resets on restart."
+        - "A Gauge represents a value that can go up or down."
+        - "The rate() function in PromQL calculates the per-second average rate of increase over a time range."
+
+  - id: "eval-05-subtitle-to-audio-tts"
+    inputs:
+      topic: "Building a Subtitle-to-Audio Pipeline with Modern Text-to-Speech (TTS)"
+      mode: "article"
+      audience: "Software developers working on media processing"
+      depth: "intermediate"
+      format: "tutorial"
+      include_diagram: "yes"
+      requirements: "Step-by-step guide to parsing SRT/VTT subtitles, handling timestamp alignment, voice synthesis with TTS models, and merging audio tracks with ffmpeg."
+    reference:
+      format: "tutorial"
+      diagram_expected: true
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+        - "github_repo"
+      must_cover:
+        - "Parsing subtitle formats (SRT/VTT) into structured timestamp cues"
+        - "Audio duration matching: speed adjustment (atempo) to match subtitle cue duration"
+        - "Generating synthesized speech segments using neural TTS APIs or local models"
+        - "Multiplexing final synced audio stream with video using FFmpeg commands"
+      expected_sections:
+        - "Subtitle Parsing and Cue Window Calculation"
+        - "TTS Audio Synthesis and Voice Cloning Options"
+        - "Duration Alignment and Pitch-Preserving Speed Adjustment"
+        - "Assembling the Audio Track with FFmpeg"
+      known_facts:
+        - "SRT files consist of subtitle counter, start/end timestamps, and subtitle text."
+        - "FFmpeg's atempo audio filter alters playback speed without changing pitch."
+        - "Synthesized speech often varies in length from original video dialogue requiring dynamic speed scaling."
+        - "Silent padding between subtitle cues is necessary to maintain timeline synchronization."
+
+  - id: "eval-06-vector-databases-indexing"
+    inputs:
+      topic: "Vector Databases: HNSW and IVF Indexing Algorithms Explained"
+      mode: "article"
+      audience: "Data engineers and backend developers"
+      depth: "deep_dive"
+      format: "concept"
+      include_diagram: "yes"
+      requirements: "Explain Approximate Nearest Neighbor (ANN) search, contrast Hierarchical Navigable Small World (HNSW) with Inverted File Index (IVF), and discuss recall vs latency trade-offs."
+    reference:
+      format: "concept"
+      diagram_expected: true
+      min_sources: 3
+      expected_source_types:
+        - "paper"
+        - "official_docs"
+      must_cover:
+        - "The need for Approximate Nearest Neighbor (ANN) over exact k-NN in high dimensions"
+        - "Inverted File Index (IVF): Voronoi cell partitioning and centroid clustering"
+        - "Hierarchical Navigable Small World (HNSW): multi-layer proximity graphs and skip-list navigation"
+        - "Performance trade-offs: memory consumption, build time, query latency, and recall"
+      expected_sections:
+        - "Why Exact k-NN Breaks Down at Scale"
+        - "Inverted File (IVF) Indexing: Cluster and Search"
+        - "HNSW: Graph-Based Proximity Search"
+        - "Benchmarking IVF vs HNSW: Memory, Speed, and Recall"
+      known_facts:
+        - "Exact k-NN search requires O(N*D) distance computations, making it slow for millions of vectors."
+        - "IVF clusters the vector space into Voronoi cells using k-means clustering."
+        - "HNSW builds a multi-layer graph where upper layers have longer links for fast traversal."
+        - "HNSW provides superior query recall and latency at the cost of higher RAM consumption."
+
+  - id: "eval-07-fastapi-dependency-injection"
+    inputs:
+      topic: "FastAPI Dependency Injection: Architecture, Scoping, and Advanced Testing Patterns"
+      mode: "article"
+      audience: "Python backend engineers"
+      depth: "intermediate"
+      format: "tutorial"
+      include_diagram: "no"
+      requirements: "Detail FastAPI Depends() mechanism, async vs sync dependencies, yield dependencies for resource cleanup (DB sessions), and app.dependency_overrides in pytest."
+    reference:
+      format: "tutorial"
+      diagram_expected: false
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "FastAPI Depends() injection mechanism and sub-dependency resolution tree"
+        - "Resource lifecycle management using yield dependencies (context manager pattern)"
+        - "Execution context: async def dependencies vs standard def dependencies on thread pool"
+        - "Overriding dependencies during unit and integration tests with app.dependency_overrides"
+      expected_sections:
+        - "How Dependency Injection Works in FastAPI"
+        - "Managing Database Sessions with Yield Dependencies"
+        - "Sub-dependencies and Hierarchical Authentication"
+        - "Testing Cleanly with Dependency Overrides"
+      known_facts:
+        - "FastAPI resolves dependencies and sub-dependencies into a directed acyclic graph before executing endpoints."
+        - "Yield dependencies execute code before the yield on request start, and code after yield on cleanup."
+        - "FastAPI runs standard def dependencies inside an external threadpool to prevent blocking the event loop."
+        - "app.dependency_overrides is a dictionary used in tests to swap live services with fakes."
+
+  - id: "eval-08-kubernetes-operator-pattern"
+    inputs:
+      topic: "The Kubernetes Operator Pattern: Custom Resources and Control Loops"
+      mode: "article"
+      audience: "Cloud and platform engineers"
+      depth: "intermediate"
+      format: "concept"
+      include_diagram: "yes"
+      requirements: "Explain Custom Resource Definitions (CRDs), reconciliation loops (desired state vs actual state), controller-runtime, and level-triggered architecture."
+    reference:
+      format: "concept"
+      diagram_expected: true
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "Extending Kubernetes API with Custom Resource Definitions (CRDs)"
+        - "The reconciliation loop: comparing observed state with desired spec"
+        - "Level-triggered vs edge-triggered event handling in Kubernetes controllers"
+        - "Idempotency and error handling with exponential backoff requeue"
+      expected_sections:
+        - "Custom Resource Definitions (CRDs) as API Extensions"
+        - "The Control Loop: Observe, Analyze, Act"
+        - "Why Level-Triggered Design Matters in Distributed Systems"
+        - "Implementing Controllers with controller-runtime and Operator SDK"
+      known_facts:
+        - "A Kubernetes Operator combines Custom Resources with a custom controller."
+        - "The controller's reconcile loop continuously drives the actual state toward the desired state specified in the CRD."
+        - "Kubernetes controllers are level-triggered, ensuring recovery even if intermediate events were dropped."
+        - "Reconciliation functions must be idempotent to handle repeated reconcile invocations."
+
+  - id: "eval-09-docker-multi-stage-builds"
+    inputs:
+      topic: "Docker Multi-Stage Builds: Minimizing Container Images for Production"
+      mode: "article"
+      audience: "Software developers and DevOps engineers"
+      depth: "intro"
+      format: "tutorial"
+      include_diagram: "no"
+      requirements: "Explain multi-stage Dockerfile syntax, separation of build environment from runtime container, distroless and alpine base images, and security advantages."
+    reference:
+      format: "tutorial"
+      diagram_expected: false
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "Multi-stage syntax using 'FROM ... AS builder' and 'COPY --from=builder'"
+        - "Separation of compilers/SDKs from lean production runtime images"
+        - "Comparison of base images: standard Debian vs Alpine vs Google Distroless"
+        - "Security benefits: reduced attack surface and fewer CVE vulnerabilities"
+      expected_sections:
+        - "The Problem of Bloated Docker Images"
+        - "Syntax and Mechanics of Multi-Stage Builds"
+        - "Choosing Production Base Images: Alpine and Distroless"
+        - "Best Practices for Layer Caching and Non-Root Users"
+      known_facts:
+        - "Multi-stage builds allow using multiple FROM instructions in a single Dockerfile."
+        - "Artifacts can be selectively copied from one stage to another using COPY --from."
+        - "Build tools like compilers and test dependencies can be discarded from the final image."
+        - "Smaller images reduce container startup time, network transfer time, and security vulnerability surface."
+
+  - id: "eval-10-distributed-locks-redis"
+    inputs:
+      topic: "Distributed Locks with Redis: Redlock Algorithm and Common Pitfalls"
+      mode: "article"
+      audience: "Backend engineers building distributed systems"
+      depth: "deep_dive"
+      format: "concept"
+      include_diagram: "yes"
+      requirements: "Detail single-instance Redis SET NX PX lock implementation, Redlock multi-node consensus algorithm, clock drift issues, and fencing tokens."
+    reference:
+      format: "concept"
+      diagram_expected: true
+      min_sources: 3
+      expected_source_types:
+        - "paper"
+        - "official_docs"
+        - "blog"
+      must_cover:
+        - "Single-instance locking with atomic SET resource_name my_random_value NX PX 30000"
+        - "Safe release via Lua script checking random ownership value"
+        - "The Redlock multi-instance algorithm: acquiring locks across N independent masters"
+        - "Criticisms and pitfalls: GC pauses, clock drift, and why Martin Kleppmann recommends fencing tokens"
+      expected_sections:
+        - "Anatomy of a Correct Single-Node Redis Lock"
+        - "The Redlock Algorithm for Distributed Fault Tolerance"
+        - "Timing Assumptions: Clock Drift and Garbage Collection Pauses"
+        - "Fencing Tokens: Ensuring End-to-End Correctness"
+      known_facts:
+        - "Redis SET command with NX and PX flags provides atomic key creation with expiration."
+        - "A random unique value is required to prevent a client from releasing another client's expired lock."
+        - "Lock release must be performed atomically using a Lua script."
+        - "Fencing tokens provide monotonically increasing version numbers checked by backend storage."
+
+  - id: "eval-11-database-indexing-btree-vs-hash"
+    inputs:
+      topic: "PostgreSQL Indexing: Deep Dive into B-Tree, Hash, and GIN Indexes"
+      mode: "article"
+      audience: "Backend and database engineers"
+      depth: "deep_dive"
+      format: "concept"
+      include_diagram: "yes"
+      requirements: "Compare B-Tree (range and equality), Hash (exact lookups), and GIN (JSONB and full text search) indexes in PostgreSQL, explaining index page structures."
+    reference:
+      format: "concept"
+      diagram_expected: true
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "B-Tree index structure: balanced search tree supporting equality, ranges (<, >), and sorting"
+        - "PostgreSQL Hash indexes: O(1) equality lookups and WAL logging improvements"
+        - "Generalized Inverted Index (GIN): multi-key indexing for JSONB containment and full text search"
+        - "Index write overhead, maintenance costs (VACUUM), and index-only scans"
+      expected_sections:
+        - "B-Tree: The General-Purpose Balanced Tree"
+        - "Hash Indexes: Constant-Time Exact Matching"
+        - "GIN: Inverted Indexing for Arrays and JSONB"
+        - "Choosing the Right Index: Query Patterns and Storage Costs"
+      known_facts:
+        - "B-Tree is the default index type in PostgreSQL and supports <, <=, =, >=, >, and BETWEEN operators."
+        - "Hash indexes in PostgreSQL only support equality comparisons (=)."
+        - "GIN indexes split compound values (like JSONB documents or text words) into individual keys."
+        - "GIN indexes offer fast lookups for containment operators (@>) but have higher write amplification."
+
+  - id: "eval-12-oauth2-pkce-flow"
+    inputs:
+      topic: "OAuth 2.0 Authorization Code Flow with PKCE for Single Page Applications"
+      mode: "article"
+      audience: "Frontend and full-stack security engineers"
+      depth: "intermediate"
+      format: "tutorial"
+      include_diagram: "yes"
+      requirements: "Explain why implicit flow is deprecated, how Proof Key for Code Exchange (PKCE) prevents authorization code interception, and step-by-step code challenge/verifier generation."
+    reference:
+      format: "tutorial"
+      diagram_expected: true
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "Why client-side Single Page Apps (SPAs) are public clients incapable of storing client secrets"
+        - "PKCE mechanism: code_verifier (high-entropy secret) and code_challenge (SHA-256 hash)"
+        - "Step-by-step protocol sequence between browser, authorization server, and resource server"
+        - "Token storage best practices: in-memory state and secure HTTP-only cookie delegation"
+      expected_sections:
+        - "Why the Implicit Flow was Deprecated"
+        - "How PKCE Works: Code Verifier and Code Challenge"
+        - "Step-by-Step Authorization Sequence"
+        - "Secure Token Storage in Modern Web Browsers"
+      known_facts:
+        - "Single Page Applications cannot securely store confidential client secrets."
+        - "PKCE creates a cryptographic proof that the client requesting tokens is the one that initiated authorization."
+        - "The code_challenge is sent during the initial authorization request and code_verifier during token exchange."
+        - "The code challenge method S256 uses SHA-256 hashing on the code verifier."

@@ -201,3 +201,41 @@ class WorkflowStore(IWorkflowStore):
                     asset.article_revision_id = revision_id
                     repo.update(asset)
         await arun_in_session(run)
+
+    async def record_usage(
+        self,
+        task_id: uuid.UUID,
+        run_id: uuid.UUID | None,
+        node: str,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        cached_tokens: int,
+        total_tokens: int,
+        latency_ms: int,
+        cost_usd: float,
+    ) -> None:
+        from src.modules.agent.infrastructure.persistence.run_usage_repository import RunUsageRepository
+        from src.modules.shared.domain.entities import RunUsageEntity
+
+        usage = RunUsageEntity(
+            task_id=task_id,
+            run_id=run_id,
+            node=node,
+            model=model,
+            input_tokens=input_tokens,
+            output_tokens=output_tokens,
+            cached_tokens=cached_tokens,
+            total_tokens=total_tokens,
+            latency_ms=latency_ms,
+            cost_usd=cost_usd,
+        )
+        await arun_in_session(lambda s: RunUsageRepository(s).add(usage))
+
+    async def get_task_cost(self, task_id: uuid.UUID) -> float:
+        from src.modules.agent.infrastructure.persistence.run_usage_repository import RunUsageRepository
+        return await arun_in_session(lambda s: RunUsageRepository(s).total_cost_for_task(task_id))
+
+    async def get_usage_breakdown(self, task_id: uuid.UUID) -> dict:
+        from src.modules.agent.infrastructure.persistence.run_usage_repository import RunUsageRepository
+        return await arun_in_session(lambda s: RunUsageRepository(s).usage_breakdown(task_id))

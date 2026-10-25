@@ -1,13 +1,15 @@
 from .review_usecases import (
-    CreateOwnerRevisionUsecaseDep,
-    ReviewTaskUsecaseDep,
     ApproveRevisionUsecaseDep,
+    CreateOwnerRevisionUsecaseDep,
     ListApprovalsUsecaseDep,
+    RecordRevisionRatingUsecaseDep,
+    ReviewTaskUsecaseDep,
 )
 
 __all__ = [
-    "CreateOwnerRevisionUsecaseDep",
-    "ReviewTaskUsecaseDep",
     "ApproveRevisionUsecaseDep",
+    "CreateOwnerRevisionUsecaseDep",
     "ListApprovalsUsecaseDep",
+    "RecordRevisionRatingUsecaseDep",
+    "ReviewTaskUsecaseDep",
 ]

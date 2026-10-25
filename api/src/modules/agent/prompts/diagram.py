@@ -1,4 +1,6 @@
-"""Prompts for DiagramSpec structured generation (E7-S1)."""
+"""Prompts for DiagramSpec structured generation (E7-S1). Bump PROMPT_VERSION on any wording change."""
+
+PROMPT_VERSION = "diagram-v1"
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 

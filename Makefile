@@ -58,7 +58,17 @@ test-integration: dev-db ## API tests against a real Postgres (the compose db)
 	$(COMPOSE) exec -T db sh -c "createdb -U $$POSTGRES_USER blog_agent_test 2>/dev/null || true"; \
 	TEST_DB_URL=postgresql://$$POSTGRES_USER:$$POSTGRES_PASSWORD@127.0.0.1:$${DB_PORT:-5433}/blog_agent_test $(MAKE) -C api test
 
+## ---- Evaluation & Observability (Epic 9) -----------------------------------
+eval-sync: ## Sync evals/dataset.yaml to LangSmith dataset blog-agent-eval
+	cd api && uv run python src/modules/evaluation/scripts/sync_dataset.py
+
+eval: ## Run offline evaluation on LangSmith dataset (usage: make eval EXPERIMENT=name)
+	cd api && uv run python src/modules/evaluation/scripts/run_eval.py $(if $(EXPERIMENT),--experiment "$(EXPERIMENT)")
+
+eval-compare: ## Compare two evaluation experiments (usage: make eval-compare BASE=exp-1 NEW=exp-2)
+	cd api && uv run python src/modules/evaluation/scripts/compare_experiments.py --base "$(BASE)" --new "$(NEW)"
+
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 
-.PHONY: up down logs ps reset-db migrate dev-db dev-api dev-ui dev install test test-integration help
+.PHONY: up down logs ps reset-db migrate dev-db dev-api dev-ui dev install test test-integration eval-sync eval-eval eval-compare help

@@ -61,6 +61,8 @@ async def lifespan(app: FastAPI):
         get_tracing(),
         max_concurrency=config.workflow_max_concurrency,
         secrets=config.secret_values(),
+        deps=deps,
+        config=config,
     )
     app.state.workflow_runner = runner
     await runner.recover()

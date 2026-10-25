@@ -19,6 +19,7 @@ import { RejectDialog } from "./RejectDialog";
 import { RequestRevisionDialog } from "./RequestRevisionDialog";
 import { ReviewMain } from "./ReviewMain";
 import { ReviewSidebar } from "./ReviewSidebar";
+import { RevisionFeedback } from "./RevisionFeedback";
 import { RevisionSelector } from "./RevisionSelector";
 
 function readOnlyReason(task: TTask, isLatest: boolean) {
@@ -134,6 +135,11 @@ export function ReviewPage() {
             <div className="flex flex-wrap items-center gap-2">
               <TaskStatusBadge status={task.status} running={task.is_running} />
               <RevisionSelector revisions={revisions} currentId={revision.id} dirty={dirty} />
+              <RevisionFeedback
+                taskId={taskId}
+                revisionId={revision.id}
+                revisionNumber={revision.revision_number}
+              />
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">

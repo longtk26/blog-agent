@@ -92,9 +92,11 @@ class _Review():
     async def _pending_type(self, task_id: uuid.UUID) -> str | None:
         return (await self.runner.pending_interrupt(str(task_id)) or {}).get("type")
 
-    def _feedback(self, task: WritingTaskEntity, score: float, comment: str | None, value: dict) -> None:
+    def _feedback(
+        self, task: WritingTaskEntity, score: float, comment: str | None, value: dict, key: str = "approved"
+    ) -> None:
         if task.last_run_id:
-            self.tracing.record_feedback(task.last_run_id, "owner_review", score=score, comment=comment, value=value)
+            self.tracing.record_feedback(task.last_run_id, key, score=score, comment=comment, value=value)
 
 
 class CreateOwnerRevisionUsecase(_Review):
@@ -244,7 +246,13 @@ class ReviewTaskUsecase(_Review):
         }
         task = self._request(task_id, dto, command)
         self.broker.notify(task_id)
-        self._feedback(task, 0, command["feedback"], {"action": "revise", "target": dto.scope.target, "round": command["round"]})
+        self._feedback(
+            task,
+            0,
+            command["feedback"],
+            {"action": "revise", "target": dto.scope.target, "round": command["round"]},
+            key="revision_request",
+        )
         await self.runner.resume(str(task_id), command)
         return TaskResponseDto.from_entity(task, is_running=True)
 
@@ -270,7 +278,7 @@ class ReviewTaskUsecase(_Review):
         pending = None if running else await self._pending_type(task_id)
         task = self._mark_rejected(task_id, dto.reason)
         self.broker.notify(task_id)
-        self._feedback(task, 0, dto.reason, {"action": "reject"})
+        self._feedback(task, 0, dto.reason, {"action": "reject", "reason": dto.reason}, key="approved")
         if running:
             await self.runner.cancel(str(task_id))
         elif pending in ("awaiting_review", "awaiting_publish"):
@@ -301,9 +309,46 @@ class ApproveRevisionUsecase(_Review):
 
         task, approvals = self._approve(revision, dto)
         self.broker.notify(task_id)
-        self._feedback(
-            task, 1, None, {"action": "approve", "revision": revision.revision_number, "destinations": [str(d) for d in dto.destinations]}
+
+        # E9-S6: approval feedback
+        revs = self.revisions.list_by_task(task_id)
+        revisions_before_approval = len(revs)
+        last_ai_rev = next(
+            (r for r in sorted(revs, key=lambda x: x.revision_number, reverse=True) if r.created_by == RevisionAuthor.AI),
+            None,
         )
+        owner_edit_size_pct = 0.0
+        if last_ai_rev and last_ai_rev.id != revision.id:
+            import difflib
+
+            ai_lines = last_ai_rev.markdown.splitlines()
+            appr_lines = revision.markdown.splitlines()
+            diff = list(difflib.unified_diff(ai_lines, appr_lines))
+            changed = sum(1 for line in diff if line.startswith(("+", "-")) and not line.startswith(("+++", "---")))
+            total = max(len(ai_lines), 1)
+            owner_edit_size_pct = round(min(1.0, changed / (total * 2)) * 100.0, 2)
+
+        self._feedback(
+            task,
+            1,
+            None,
+            {
+                "action": "approve",
+                "revision": revision.revision_number,
+                "revisions_before_approval": revisions_before_approval,
+                "owner_edit_size_pct": owner_edit_size_pct,
+                "destinations": [str(d) for d in dto.destinations],
+            },
+            key="approved",
+        )
+        if owner_edit_size_pct > 0:
+            self._feedback(
+                task,
+                owner_edit_size_pct,
+                None,
+                {"owner_edit_size_pct": owner_edit_size_pct},
+                key="owner_edit_size",
+            )
         if pending == "awaiting_review":
             await self.runner.resume(str(task_id), {"action": "approve", "revision_id": str(revision.id)})
         return ApprovalListResponseDto(items=[ApprovalDto.from_entity(a) for a in approvals])
@@ -373,7 +418,23 @@ class ListApprovalsUsecase():
         return ApprovalListResponseDto(items=[ApprovalDto.from_entity(a) for a in self.approvals.list_by_task(task_id)])
 
 
+class RecordRevisionRatingUsecase(_Review):
+    """E9-S6: record owner thumbs up/down rating and optional comment as feedback."""
+
+    async def execute(self, task_id: uuid.UUID, revision_id: uuid.UUID, score: float, comment: str | None = None) -> None:
+        task = self._get_task(task_id)
+        self._feedback(
+            task,
+            score,
+            comment,
+            {"revision_id": str(revision_id)},
+            key="revision_rating",
+        )
+
+
 CreateOwnerRevisionUsecaseDep = Annotated[CreateOwnerRevisionUsecase, Depends(CreateOwnerRevisionUsecase)]
 ReviewTaskUsecaseDep = Annotated[ReviewTaskUsecase, Depends(ReviewTaskUsecase)]
 ApproveRevisionUsecaseDep = Annotated[ApproveRevisionUsecase, Depends(ApproveRevisionUsecase)]
 ListApprovalsUsecaseDep = Annotated[ListApprovalsUsecase, Depends(ListApprovalsUsecase)]
+RecordRevisionRatingUsecaseDep = Annotated[RecordRevisionRatingUsecase, Depends(RecordRevisionRatingUsecase)]
+

@@ -89,3 +89,12 @@ async def stream_task_events(
         media_type="text/event-stream",
         headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
     )
+
+
+@task_router.get("/{task_id}/usage")
+async def get_task_usage(task_id: uuid.UUID):
+    from src.libs.database import arun_in_session
+    from src.modules.agent.infrastructure.persistence.run_usage_repository import RunUsageRepository
+
+    return await arun_in_session(lambda s: RunUsageRepository(s).usage_breakdown(task_id))
+

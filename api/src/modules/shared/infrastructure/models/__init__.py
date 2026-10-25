@@ -12,6 +12,7 @@ from .knowledge_models import (
 )
 
 from .diagram_models import DiagramAssetModel
+from .run_usage_model import RunUsageModel
 
 __all__ = [
     "WritingTaskModel",
@@ -30,4 +31,5 @@ __all__ = [
     "StyleProfileModel",
     "OwnerNoteModel",
     "DiagramAssetModel",
+    "RunUsageModel",
 ]

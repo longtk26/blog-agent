@@ -102,6 +102,7 @@ export type TTask = {
   is_running: boolean;
   pending_interrupt: { type: string; [key: string]: unknown } | null;
   trace_url: string | null;
+  total_cost_usd?: number;
   created_at: string;
   updated_at: string;
 };
@@ -109,7 +110,34 @@ export type TTask = {
 export type TTaskSummary = Pick<
   TTask,
   "id" | "topic" | "mode" | "format" | "status" | "progress" | "last_error" | "is_running" | "created_at" | "updated_at"
->;
+> & {
+  total_cost_usd?: number;
+};
+
+export type TStageUsage = {
+  stage: string;
+  calls: number;
+  models: string[];
+  input_tokens: number;
+  output_tokens: number;
+  cached_tokens: number;
+  total_tokens: number;
+  latency_ms: number;
+  cost_usd: number;
+};
+
+export type TTaskUsage = {
+  total_cost_usd: number;
+  total_latency_ms: number;
+  total_input_tokens: number;
+  output_tokens: number;
+  total_output_tokens?: number;
+  cached_tokens: number;
+  total_cached_tokens?: number;
+  total_tokens: number;
+  total_calls: number;
+  stages: TStageUsage[];
+};
 
 export type TTaskList = { items: TTaskSummary[]; total: number; limit: number; offset: number };
 

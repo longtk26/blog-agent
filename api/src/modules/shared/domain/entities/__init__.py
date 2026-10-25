@@ -39,6 +39,7 @@ from .research_entity import (
 )
 
 from .diagram_entity import DiagramAssetEntity
+from .run_usage_entity import RunUsageEntity
 
 __all__ = [
     "WritingTaskEntity",
@@ -76,4 +77,5 @@ __all__ = [
     "StyleProfileEntity",
     "OwnerNoteEntity",
     "DiagramAssetEntity",
+    "RunUsageEntity",
 ]

@@ -21,7 +21,11 @@ class GetTaskUsecase():
         trace_url = await self.tracing.run_url(task.last_run_id) if task.last_run_id else None
         running = self.runner.is_running(str(task_id))
         pending = None if running else await self.runner.pending_interrupt(str(task_id))
-        return TaskResponseDto.from_entity(task, is_running=running, trace_url=trace_url, pending_interrupt=pending)
+        from src.modules.agent.infrastructure.persistence.run_usage_repository import RunUsageRepository
+        cost = RunUsageRepository(self.tasks.session).total_cost_for_task(task_id)
+        return TaskResponseDto.from_entity(
+            task, is_running=running, trace_url=trace_url, pending_interrupt=pending, total_cost_usd=cost
+        )
 
 
 GetTaskUsecaseDep = Annotated[GetTaskUsecase, Depends(GetTaskUsecase)]

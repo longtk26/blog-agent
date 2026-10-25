@@ -35,6 +35,7 @@ class TaskBudgetsDto(BaseModel):
     max_sources: int | None = Field(default=None, ge=1, le=config.research_max_sources)
     max_research_rounds: int | None = Field(default=None, ge=1, le=config.research_max_rounds)
     results_per_query: int | None = Field(default=None, ge=1, le=10)
+    max_cost_usd: float | None = Field(default=None, ge=0.01, le=100.0)
 
 
 class CreateTaskRequestDto(BaseModel):
@@ -158,15 +159,24 @@ class TaskResponseDto(BaseModel):
     is_running: bool
     pending_interrupt: dict | None = None
     trace_url: str | None
+    total_cost_usd: float = 0.0
     created_at: datetime
     updated_at: datetime
 
     @classmethod
     def from_entity(
-        cls, task: WritingTaskEntity, is_running: bool, trace_url: str | None = None, pending_interrupt: dict | None = None
+        cls,
+        task: WritingTaskEntity,
+        is_running: bool,
+        trace_url: str | None = None,
+        pending_interrupt: dict | None = None,
+        total_cost_usd: float | None = None,
     ) -> "TaskResponseDto":
+        dump = task.model_dump(exclude={"last_run_id"})
+        if total_cost_usd is not None:
+            dump["total_cost_usd"] = total_cost_usd
         return cls(
-            **task.model_dump(exclude={"last_run_id"}),
+            **dump,
             is_running=is_running,
             trace_url=trace_url,
             pending_interrupt=pending_interrupt,
@@ -182,6 +192,7 @@ class TaskSummaryDto(BaseModel):
     progress: TaskProgress
     last_error: str | None
     is_running: bool
+    total_cost_usd: float = 0.0
     created_at: datetime
     updated_at: datetime
 
@@ -191,6 +202,31 @@ class TaskListResponseDto(BaseModel):
     total: int
     limit: int
     offset: int
+
+
+class StageUsageDto(BaseModel):
+    stage: str
+    calls: int
+    models: list[str]
+    input_tokens: int
+    output_tokens: int
+    cached_tokens: int
+    total_tokens: int
+    latency_ms: int
+    cost_usd: float
+
+
+class TaskUsageResponseDto(BaseModel):
+    task_id: uuid.UUID
+    stages: list[StageUsageDto]
+    total_calls: int
+    total_input_tokens: int
+    total_output_tokens: int
+    total_cached_tokens: int
+    total_tokens: int
+    total_latency_ms: int
+    total_cost_usd: float
+    is_estimate: bool = True
 
 
 class TaskEventDto(BaseModel):

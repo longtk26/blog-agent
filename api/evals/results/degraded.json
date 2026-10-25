@@ -1,0 +1,20 @@
+{
+  "experiment": "degraded",
+  "git_sha": "c3d4e5f",
+  "metrics": {
+    "markdown_valid": 0.0,
+    "render_contract_violations": 3.0,
+    "citation_coverage": 0.50,
+    "source_quality_mix": 0.40,
+    "min_sources_met": 0.50,
+    "required_sections_present": 0.50,
+    "diagram_valid": 0.0,
+    "tool_error_rate": 0.20,
+    "cost_usd": 0.85,
+    "latency_s": 45.0,
+    "factual_support": 2.5,
+    "must_cover_coverage": 2.8,
+    "style_consistency": 2.6,
+    "audience_depth_fit": 2.9
+  }
+}

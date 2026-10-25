@@ -15,5 +15,11 @@ test:
 	$(PY) -m pytest -q
 test-unit:
 	$(PY) -m pytest -q -m "not integration"
+eval-sync:
+	uv run python src/modules/evaluation/scripts/sync_dataset.py
+eval:
+	uv run python src/modules/evaluation/scripts/run_eval.py $(if $(EXPERIMENT),--experiment "$(EXPERIMENT)")
+eval-compare:
+	uv run python src/modules/evaluation/scripts/compare_experiments.py --base "$(BASE)" --new "$(NEW)"
 
-.PHONY: install run newmg mghead mgdown test test-unit
+.PHONY: install run newmg mghead mgdown test test-unit eval-sync eval eval-compare

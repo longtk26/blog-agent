@@ -222,7 +222,13 @@ class WritingNodes:
             sample_sections=sample_sections,
             internal_links=internal_links,
         )
-        return await invoke_structured(self.deps.models.get(ModelRole.WRITER), SectionDraftOut, messages)
+        return await invoke_structured(
+            self.deps.models.get(ModelRole.WRITER),
+            SectionDraftOut,
+            messages,
+            run_name=f"draft_section:{heading or 'intro'}",
+            node="draft_article",
+        )
 
     def _claim_map(self, out: SectionDraftOut, evidence: Evidence) -> list[dict]:
         return [
@@ -283,6 +289,8 @@ class WritingNodes:
                     current_outline,
                     sample_outlines=sample_outlines,
                 ),
+                run_name="outline",
+                node="outline",
             )
             out = normalize_outline(out, settings.draft_max_sections)
             covered = {m.requirement for m in out.requirement_map}
@@ -333,6 +341,8 @@ class WritingNodes:
 
     @workflow_node("review_outline", None)
     async def review_outline(self, state: BlogState) -> dict:
+        if state.get("eval_mode"):
+            return {}
         # Optional owner check before drafting; POST /tasks/{id}/outline/approve resumes it.
         decision = interrupt({"type": "outline_review", "task_id": state["task_id"]}) or {}
         edited = decision.get("outline") if isinstance(decision, dict) else None
@@ -431,6 +441,8 @@ class WritingNodes:
                 self.deps.models.get(ModelRole.FAST),
                 MetadataOut,
                 metadata_messages(task, outline["title_options"], outline["angle"], draft.sections[0].markdown),
+                run_name="generate_metadata",
+                node="draft_article",
             )
             draft.metadata = await self._unique_metadata(normalize_metadata(meta, meta.title.strip() or outline["title"]), task_id)
         await self._assemble(draft, evidence)
@@ -631,6 +643,8 @@ class WritingNodes:
                 self.deps.models.get(ModelRole.JUDGE),
                 JudgeReportOut,
                 judge_messages(task, draft.markdown, evidence.lines(), state["outline"].get("must_cover", []), style),
+                run_name="judge_draft",
+                node="judge_draft",
             )
         )
         draft.judge = report.model_dump()
@@ -833,6 +847,8 @@ class WritingNodes:
         task = await self.deps.store.get_task(task_id)
         if task.status == TaskStatus.VALIDATING:
             await self.deps.store.transition(task_id, TaskStatus.AWAITING_REVIEW, reason="draft_ready")
+        if state.get("eval_mode"):
+            return {"review": {}, "revision_id": state.get("revision_id")}
         # POST /tasks/{id}/review (revise/reject) and POST /revisions/{id}/approvals resume this.
         # Owner edits do not resume it; the command carries the revision the owner reviewed instead.
         review = interrupt({"type": "awaiting_review", "revision_id": state.get("revision_id")})
@@ -841,6 +857,8 @@ class WritingNodes:
 
     @staticmethod
     def route_after_review(state: BlogState) -> str:
+        if state.get("eval_mode"):
+            return END
         action = (state.get("review") or {}).get("action")
         return {"revise": "route_feedback", "approve": "await_publish"}.get(action, END)
 
@@ -863,6 +881,8 @@ class WritingNodes:
                     self.deps.models.get(ModelRole.FAST),
                     FeedbackRouteOut,
                     feedback_route_messages(task, feedback, list(names.values()), scoped),
+                    run_name="route_feedback",
+                    node="route_feedback",
                 )
                 target, reason = out.target, out.reason
                 scoped = scoped or [section_name(n) for n in out.sections]
@@ -955,6 +975,8 @@ class WritingNodes:
             self.deps.models.get(ModelRole.FAST),
             MetadataOut,
             metadata_revision_messages(task, current, state.get("review_feedback", ""), intro),
+            run_name="revise_metadata",
+            node="revise_metadata",
         )
         draft.metadata = await self._unique_metadata(normalize_metadata(meta, meta.title.strip() or current["title"]), task_id)
         await self._assemble(draft, await self._evidence(task_id))

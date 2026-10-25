@@ -16,6 +16,7 @@ import { TaskActions } from "./TaskActions";
 import { TaskSidebar } from "./TaskSidebar";
 import { TaskStatusBadge } from "./TaskStatusBadge";
 import { TaskTimeline } from "./TaskTimeline";
+import { TaskUsagePanel } from "./TaskUsagePanel";
 
 export function TaskDetail() {
   const { id, task, error, isPending, events, connected, hasBrief, hasDraft } = useTaskDetail();
@@ -60,6 +61,7 @@ export function TaskDetail() {
               <TabsTrigger value="draft" disabled={!hasDraft}>
                 Draft
               </TabsTrigger>
+              <TabsTrigger value="usage">Usage & Cost</TabsTrigger>
             </TabsList>
             <Card className="mt-3">
               <CardContent>
@@ -78,6 +80,9 @@ export function TaskDetail() {
                 </TabsContent>
                 <TabsContent value="draft">
                   <DraftPanel taskId={id} enabled={hasDraft} />
+                </TabsContent>
+                <TabsContent value="usage">
+                  <TaskUsagePanel taskId={id} />
                 </TabsContent>
               </CardContent>
             </Card>

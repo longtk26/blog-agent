@@ -6,6 +6,7 @@ from src.modules.research.presenter import research_router
 from src.modules.reviews.presenter import review_router
 from src.modules.styles.presenter import style_router
 from src.modules.tasks.presenter import task_router
+from src.modules.tasks.presenter.stats_router import stats_router
 
 all_router = [
     health_router,
@@ -16,4 +17,6 @@ all_router = [
     style_router,
     publishing_router,
     diagram_router,
+    stats_router,
 ]
+

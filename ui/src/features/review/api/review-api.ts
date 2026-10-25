@@ -25,5 +25,7 @@ export const reviewApi = {
       main_image: string | null;
       description: string | null;
     }>(`/revisions/${revisionId}/render/devto`),
+  submitFeedback: (taskId: string, revisionId: string, payload: { score: number; comment?: string }) =>
+    apiClient.post<{ status: string }>(`/tasks/${taskId}/revisions/${revisionId}/feedback`, payload),
 };
 

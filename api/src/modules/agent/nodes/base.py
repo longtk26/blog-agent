@@ -1,7 +1,9 @@
 import asyncio
 import functools
+import inspect
 import time
 import uuid
+from contextvars import ContextVar
 from typing import Any, Awaitable, Callable
 
 from langgraph.config import get_stream_writer
@@ -14,6 +16,8 @@ from src.modules.shared.domain.value_objects import TaskStatus
 logger = get_logger(__name__)
 
 NodeFn = Callable[[Any, BlogState], Awaitable[dict]]
+
+workflow_callbacks_ctx: ContextVar[list[Any]] = ContextVar("workflow_callbacks_ctx", default=[])
 
 
 class TaskCancelled(Exception):
@@ -57,6 +61,32 @@ def workflow_node(name: str, stage: TaskStatus | None, timeout_seconds: float | 
                 raise TaskCancelled(str(task_id))
             if stage is not None and task.status != stage:
                 await deps.store.transition(task_id, stage)
+
+            # Budget enforcement (E9-S2): check cost at node boundary
+            cost_call = deps.store.get_task_cost(task_id) if hasattr(deps.store, "get_task_cost") else 0.0
+            total_cost = await cost_call if inspect.isawaitable(cost_call) else (float(cost_call) if isinstance(cost_call, (int, float)) else 0.0)
+            max_cost = (
+                task.budgets.max_cost_usd
+                if (task.budgets and task.budgets.max_cost_usd is not None)
+                else deps.settings.task_default_max_cost_usd
+            )
+            if max_cost is not None and max_cost > 0:
+                if total_cost >= max_cost:
+                    message = f"Budget exceeded: task spent ${total_cost:.4f} reaching limit ${max_cost:.4f}"
+                    logger.warning(
+                        message,
+                        extra={"context": {"task_id": str(task_id), "total_cost": total_cost, "max_cost": max_cost}},
+                    )
+                    emit("budget_exceeded", current_cost=total_cost, max_cost=max_cost)
+                    await deps.store.fail_task(task_id, "budget_exceeded", message, resumable=True)
+                    raise NodeFailed(f"budget_exceeded: {message}")
+                elif total_cost >= 0.8 * max_cost:
+                    emit(
+                        "budget_warning",
+                        current_cost=total_cost,
+                        max_cost=max_cost,
+                        ratio=round(total_cost / max_cost, 4),
+                    )
 
             emit("node_started", node=name)
             started = time.perf_counter()

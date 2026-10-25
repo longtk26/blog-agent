@@ -47,6 +47,7 @@ class TaskBudgets(BaseModel):
     max_sources: int = 15
     max_research_rounds: int = 2
     results_per_query: int = 5
+    max_cost_usd: float | None = 2.0
 
 
 class TaskProgress(BaseModel):
@@ -84,6 +85,7 @@ class WritingTaskEntity(BaseModel):
     outline: dict | None = None
     open_questions: list[str] = Field(default_factory=list)
     progress: TaskProgress = Field(default_factory=TaskProgress)
+    total_cost_usd: float = 0.0
     last_run_id: uuid.UUID | None = None
 
     created_at: datetime | None = None

@@ -11,13 +11,21 @@ from src.modules.reviews.presenter.dtos import (
     CreateOwnerRevisionDto,
     ReviewRequestDto,
 )
+from pydantic import BaseModel, Field
+
 from src.modules.reviews.usecases import (
     ApproveRevisionUsecaseDep,
     CreateOwnerRevisionUsecaseDep,
     ListApprovalsUsecaseDep,
+    RecordRevisionRatingUsecaseDep,
     ReviewTaskUsecaseDep,
 )
 from src.modules.tasks.presenter.dtos import TaskResponseDto
+
+
+class RevisionRatingDto(BaseModel):
+    score: float = Field(..., ge=0.0, le=1.0)
+    comment: str | None = None
 
 
 review_router = APIRouter(tags=["reviews"])
@@ -44,3 +52,15 @@ async def approve_revision(revision_id: uuid.UUID, body: CreateApprovalDto, usec
 @review_router.get("/tasks/{task_id}/approvals", response_model=ApprovalListResponseDto)
 async def list_approvals(task_id: uuid.UUID, usecase: ListApprovalsUsecaseDep):
     return await usecase.execute(task_id)
+
+
+@review_router.post("/tasks/{task_id}/revisions/{revision_id}/feedback")
+async def record_revision_feedback(
+    task_id: uuid.UUID,
+    revision_id: uuid.UUID,
+    body: RevisionRatingDto,
+    usecase: RecordRevisionRatingUsecaseDep,
+):
+    await usecase.execute(task_id, revision_id, body.score, body.comment)
+    return {"status": "ok"}
+

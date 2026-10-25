@@ -101,7 +101,7 @@ async def test_article_mode_goes_straight_to_writing(checkpointer):
     assert h.task(task_id).status == TaskStatus.AWAITING_REVIEW
     statuses = [e.to_status for e in h.events(task_id) if e.type == "status_changed"]
     # one self-revision round: validating -> drafting -> validating
-    assert statuses == ["researching", "outlining", "drafting", "validating", "drafting", "validating", "awaiting_review"]
+    assert statuses == ["researching", "outlining", "drafting", "generating_diagram", "validating", "drafting", "validating", "awaiting_review"]
 
 
 async def test_failed_node_retries_from_checkpoint_without_duplicates(checkpointer):

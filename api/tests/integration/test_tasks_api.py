@@ -126,3 +126,16 @@ def test_revisions_and_style_guide_endpoints(client):
 
     approve = client.post(f"/tasks/{task['id']}/outline/approve", json={})
     assert approve.status_code == 409 and approve.json()["code"] == "NOTHING_TO_RESUME"
+
+
+def test_get_ops_stats(client):
+    response = client.get("/stats?days=30")
+    assert response.status_code == 200, response.text
+    data = response.json()
+    assert data["period_days"] == 30
+    assert "tasks_by_status" in data
+    assert "stage_durations" in data
+    assert "avg_cost_per_task" in data
+    assert "total_cost_period" in data
+    assert "tool_error_rates" in data
+    assert "recent_failures" in data

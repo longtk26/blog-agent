@@ -55,3 +55,45 @@ All ports bind to `127.0.0.1` only. The UI uses port 3100 so it doesn't clash wi
 ### Smoke-testing the workflow runtime
 
 Set `DEBUG=true`. Then `POST /health/graph {"thread_id": "demo"}` runs a tiny LangGraph graph with the Postgres checkpointer. Calling it again, even after `make down && make up`, increments `count`, which shows that checkpoints persist. Pass `"use_llm": true` to also call the configured fast model. With tracing on, the run shows up in LangSmith and the response includes `trace_url`.
+
+## Observability & Evaluation (Epic 9)
+
+### 1. LangSmith Saved Filters & Views
+Every root run in LangSmith is tagged with execution metadata: `task_id`, `mode`, `format`, `revision_number`, `graph_version`, `prompt_versions`, `prompt_hashes`, `style_profile_version`, and `models`.
+
+- **Filter by specific task ID:** In the LangSmith project view (`blog-agent-local`), enter the filter expression:
+  ```text
+  metadata.task_id = "<your-task-id>"
+  ```
+- **Filter by mode:**
+  ```text
+  tag = "mode:article"
+  ```
+- **Saved view:** In LangSmith, save a view named `Tasks By Mode` with columns for `task_id`, `mode`, `status`, and `total_cost_usd`.
+
+### 2. Evaluation Commands
+The dataset in `api/evals/dataset.yaml` is the source of truth for evaluation benchmarks.
+
+```bash
+# Sync local YAML dataset to LangSmith (dataset: blog-agent-eval)
+make eval-sync
+
+# Run offline evaluation experiment across the dataset in eval mode (no interrupts, publishing disabled)
+make eval EXPERIMENT=my_experiment_name
+
+# Compare two evaluation experiments with regression threshold gate (exit code != 0 on regression)
+make eval-compare BASE=baseline NEW=my_experiment_name
+```
+
+### 3. Adding Real Tasks to the Evaluation Dataset
+To capture interesting real-world tasks and failures as regression tests:
+
+1. **In LangSmith:**
+   - Locate the root trace for the task in project `blog-agent-local`.
+   - Click **Add to Dataset** (or send to an Annotation Queue e.g. `blog-agent-annotation-queue`).
+   - Select target dataset: `blog-agent-eval`.
+2. **Define Expectations:**
+   - Review and populate reference fields: `must_cover`, `expected_source_types`, `min_sources`, `format`, `expected_sections`, `diagram_expected`, and `known_facts`.
+3. **Commit to Git:**
+   - Append the new entry to `api/evals/dataset.yaml` to ensure git remains the source of truth for all runs.
+

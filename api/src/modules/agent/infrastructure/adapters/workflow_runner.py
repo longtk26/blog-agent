@@ -7,18 +7,25 @@ from langgraph.types import Command
 
 from src.configs.logger import Redactor, get_logger, task_id_ctx
 from src.libs.exceptions import ConflictException, ErrorCode
-from src.modules.agent.nodes.base import NodeFailed, TaskCancelled, safe_error
+from src.configs import config as app_config
+from src.configs.config import Config
+from src.modules.agent.infrastructure.adapters.langsmith_tracing import GRAPH_VERSION
+from src.modules.agent.infrastructure.adapters.token_usage_callback import TokenUsageCallbackHandler
+from src.modules.agent.nodes.base import (
+    NodeFailed,
+    TaskCancelled,
+    safe_error,
+    workflow_callbacks_ctx,
+)
 from src.modules.agent.ports.output.tracing import ITracing
 from src.modules.agent.ports.output.workflow_runner import IWorkflowRunner, ThreadStatus
 from src.modules.agent.ports.output.workflow_store import IWorkflowStore
-from src.modules.agent.prompts.research import PROMPT_VERSION as RESEARCH_PROMPT_VERSION
-from src.modules.agent.prompts.writing import PROMPT_VERSION as WRITING_PROMPT_VERSION
+from src.modules.agent.prompts.registry import get_prompt_registry
 from src.modules.shared.domain.entities import EventActor
 from src.modules.shared.domain.value_objects import ACTIVE_STATUSES, TaskStatus
 
 logger = get_logger(__name__)
 
-PROMPT_VERSIONS = {"research": RESEARCH_PROMPT_VERSION, "writing": WRITING_PROMPT_VERSION}
 # Interrupts left by placeholder nodes in earlier versions; resumed automatically once the real node exists.
 PLACEHOLDER_INTERRUPTS = {"not_implemented"}
 RECURSION_LIMIT = 80
@@ -41,11 +48,22 @@ class LangGraphWorkflowRunner(IWorkflowRunner):
     interrupt) and continue later from the last checkpoint.
     """
 
-    def __init__(self, graph, store: IWorkflowStore, tracing: ITracing, max_concurrency: int, secrets: list[str]):
+    def __init__(
+        self,
+        graph,
+        store: IWorkflowStore,
+        tracing: ITracing,
+        max_concurrency: int,
+        secrets: list[str],
+        deps: Any | None = None,
+        config: Config | None = None,
+    ):
         self.graph = graph
         self.store = store
         self.tracing = tracing
         self.redactor = Redactor(secrets)
+        self.deps = deps
+        self.config = config or app_config
         self._semaphore = asyncio.Semaphore(max_concurrency)
         self._running: dict[str, asyncio.Task] = {}
 
@@ -112,6 +130,40 @@ class LangGraphWorkflowRunner(IWorkflowRunner):
                     review_metadata["review_feedback"] = self.redactor(str(resume["feedback"]))[:2000]
                 run_id = uuid.uuid4()
                 await self.store.update_task(task_uuid, last_run_id=run_id)
+
+                # Collect prompt versions & hashes
+                prompt_reg = get_prompt_registry()
+                prompt_versions = prompt_reg.all_versions()
+                prompt_hashes = prompt_reg.all_hashes()
+
+                # Get latest revision number if available
+                latest_rev = await self.store.latest_revision(task_uuid)
+                revision_number = latest_rev.revision_number if latest_rev else 0
+
+                # Get active style profile version
+                try:
+                    style_profile_ver, _ = await self.store.style_guide()
+                except Exception:
+                    style_profile_ver = "seed-v2"
+
+                # Models dictionary {role: model_id}
+                models_dict: dict[str, str] = {}
+                if self.deps and getattr(self.deps, "models", None):
+                    for role_str in ("planner", "writer", "fast", "judge"):
+                        try:
+                            spec = self.deps.models.spec(role_str)
+                            if spec and spec.model:
+                                models_dict[role_str] = spec.model
+                        except Exception:
+                            pass
+                if not models_dict:
+                    for role_str in ("planner", "writer", "fast", "judge"):
+                        m = getattr(self.config, f"llm_{role_str}_model", None) or self.config.llm_default_model
+                        if m:
+                            models_dict[role_str] = m
+
+                usage_callback = TokenUsageCallbackHandler(task_uuid, self.store, self.config)
+
                 run_config = self.tracing.run_config(
                     run_name="blog_task",
                     tags=[f"mode:{task.mode}", f"format:{task.format}"],
@@ -119,22 +171,34 @@ class LangGraphWorkflowRunner(IWorkflowRunner):
                         "task_id": task_id,
                         "mode": str(task.mode),
                         "format": str(task.format),
-                        "prompt_versions": PROMPT_VERSIONS,
+                        "revision_number": revision_number,
+                        "graph_version": GRAPH_VERSION,
+                        "prompt_versions": prompt_versions,
+                        "prompt_hashes": prompt_hashes,
+                        "style_profile_version": style_profile_ver,
+                        "models": models_dict,
+                        **({"agent_id": self.config.langsmith_agent_id} if self.config.langsmith_agent_id else {}),
+                        **({"agent_environment": self.config.langsmith_agent_environment} if self.config.langsmith_agent_environment else {}),
                         **review_metadata,
                     },
                     run_id=run_id,
+                    callbacks=[usage_callback],
                     configurable={"thread_id": task_id},
                 )
                 run_config["recursion_limit"] = RECURSION_LIMIT
                 logger.info("Workflow run started", extra={"context": {"run_id": str(run_id), "resume": graph_input is None or isinstance(graph_input, Command)}})
 
-                async for mode, chunk in self.graph.astream(graph_input, run_config, stream_mode=["updates", "custom"]):
-                    if mode == "custom" and isinstance(chunk, dict) and chunk.get("type"):
-                        payload = _jsonable({k: v for k, v in chunk.items() if k != "type"})
-                        await self.store.record_event(task_uuid, chunk["type"], payload)
-                    elif mode == "updates" and isinstance(chunk, dict) and "__interrupt__" in chunk:
-                        values = [_jsonable(getattr(i, "value", i)) for i in chunk["__interrupt__"]]
-                        await self.store.record_event(task_uuid, "paused", {"interrupts": values})
+                cb_token = workflow_callbacks_ctx.set(run_config.get("callbacks", []))
+                try:
+                    async for mode, chunk in self.graph.astream(graph_input, run_config, stream_mode=["updates", "custom"]):
+                        if mode == "custom" and isinstance(chunk, dict) and chunk.get("type"):
+                            payload = _jsonable({k: v for k, v in chunk.items() if k != "type"})
+                            await self.store.record_event(task_uuid, chunk["type"], payload)
+                        elif mode == "updates" and isinstance(chunk, dict) and "__interrupt__" in chunk:
+                            values = [_jsonable(getattr(i, "value", i)) for i in chunk["__interrupt__"]]
+                            await self.store.record_event(task_uuid, "paused", {"interrupts": values})
+                finally:
+                    workflow_callbacks_ctx.reset(cb_token)
                 logger.info("Workflow run stopped", extra={"context": {"run_id": str(run_id)}})
             except (NodeFailed, TaskCancelled):
                 pass  # already recorded by the node wrapper / cancel use case

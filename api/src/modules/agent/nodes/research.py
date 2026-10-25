@@ -110,8 +110,13 @@ class ResearchNodes:
     async def plan_research(self, state: BlogState) -> dict:
         task = await self.deps.store.get_task(_task_id(state))
         budgets = await self._budgets(task)
-        model = self.deps.models.get(ModelRole.PLANNER)
-        plan = await invoke_structured(model, ResearchPlanOut, plan_research_messages(task, budgets.max_queries))
+        plan = await invoke_structured(
+            self.deps.models.get(ModelRole.PLANNER),
+            ResearchPlanOut,
+            plan_research_messages(task, budgets.max_queries),
+            run_name="plan_research",
+            node="plan_research",
+        )
         plan = normalize_plan(plan, budgets.max_queries)
         if not plan.questions or not plan.queries:
             raise ValueError("Research plan has no questions or queries")
@@ -287,6 +292,7 @@ class ResearchNodes:
         async def assess_one(source: ResearchSourceEntity) -> None:
             nonlocal failures
             async with limit:
+                max_doc_chars = min(settings.research_source_chars_for_llm, settings.trace_max_doc_chars)
                 messages = assess_source_messages(
                     task,
                     questions,
@@ -294,10 +300,16 @@ class ResearchNodes:
                     source.url,
                     source.title,
                     source.publisher,
-                    (source.content_text or "")[: settings.research_source_chars_for_llm],
+                    (source.content_text or "")[:max_doc_chars],
                 )
                 try:
-                    assessment = await invoke_structured(model, SourceAssessmentOut, messages)
+                    assessment = await invoke_structured(
+                        model,
+                        SourceAssessmentOut,
+                        messages,
+                        run_name=f"assess_source:{refs.get(source.id, 'S?')}",
+                        node="assess_sources",
+                    )
                 except Exception as exc:
                     failures += 1
                     source.status = SourceStatus.FAILED
@@ -377,6 +389,8 @@ class ResearchNodes:
                 self.deps.models.get(ModelRole.PLANNER),
                 FollowUpQueriesOut,
                 follow_up_messages(task, gap_questions, done, remaining),
+                run_name="check_coverage",
+                node="check_coverage",
             )
             queries = normalize_queries(follow_up.queries, set(gaps), remaining, exclude=set(done))
             if queries:
@@ -414,6 +428,8 @@ class ResearchNodes:
                 self.deps.models.get(ModelRole.PLANNER),
                 ResearchBriefOut,
                 synthesize_messages(task, questions, evidence, gap_texts),
+                run_name="synthesize_research",
+                node="synthesize_research",
             )
         else:
             brief = ResearchBriefOut(
@@ -526,6 +542,8 @@ class ResearchNodes:
             self.deps.models.get(ModelRole.PLANNER),
             ResearchPlanOut,
             review_research_messages(task, feedback, existing, done, max_queries),
+            run_name="plan_review_research",
+            node="plan_review_research",
         )
         out = normalize_plan(out, max_queries, max_questions=3)
         # Renumber after the existing questions so ids stay unique across the merged plan.
@@ -575,6 +593,8 @@ class ResearchNodes:
         task = await self.deps.store.get_task(task_id)
         if task.status == TaskStatus.RESEARCHING:
             await self.deps.store.transition(task_id, TaskStatus.COMPLETED, reason="research_complete")
+        if state.get("eval_mode"):
+            return {"mode": "article", "promotion": {}}
         # Pauses the thread; `POST /tasks/{id}/promote` resumes it with the owner's choices.
         promotion = interrupt({"type": "awaiting_promotion", "task_id": state["task_id"]})
         return {"mode": "article", "promotion": promotion}

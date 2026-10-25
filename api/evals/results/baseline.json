@@ -1,0 +1,20 @@
+{
+  "experiment": "baseline",
+  "git_sha": "a1b2c3d",
+  "metrics": {
+    "markdown_valid": 1.0,
+    "render_contract_violations": 0.0,
+    "citation_coverage": 0.85,
+    "source_quality_mix": 0.70,
+    "min_sources_met": 1.0,
+    "required_sections_present": 1.0,
+    "diagram_valid": 1.0,
+    "tool_error_rate": 0.0,
+    "cost_usd": 0.15,
+    "latency_s": 20.0,
+    "factual_support": 4.0,
+    "must_cover_coverage": 4.0,
+    "style_consistency": 4.0,
+    "audience_depth_fit": 4.0
+  }
+}

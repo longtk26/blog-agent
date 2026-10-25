@@ -109,6 +109,11 @@ class Config(BaseSettings):
     copy_detection_block_threshold: float = 0.30
     copy_detection_run_words: int = 40
 
+    # Observability & Evaluation (Epic 9)
+    prompt_source: str = "files"
+    trace_max_doc_chars: int = 5000
+    task_default_max_cost_usd: float = 2.0
+
     langsmith_tracing: bool = False
     langsmith_api_key: SecretStr | None = None
     # Editable Diagrams (Epic 7)
@@ -120,6 +125,27 @@ class Config(BaseSettings):
     langsmith_endpoint: str = "https://api.smith.langchain.com"
     langsmith_hide_inputs: bool = False
     langsmith_hide_outputs: bool = False
+    langsmith_agent_id: str | None = None
+    langsmith_agent_environment: str | None = None
+
+    model_pricing: dict[str, dict[str, float]] = {
+        "claude-3-5-sonnet": {"input": 3.0, "output": 15.0, "cached": 0.30},
+        "claude-3-7-sonnet": {"input": 3.0, "output": 15.0, "cached": 0.30},
+        "claude-sonnet": {"input": 3.0, "output": 15.0, "cached": 0.30},
+        "claude-3-5-haiku": {"input": 0.80, "output": 4.0, "cached": 0.08},
+        "claude-haiku": {"input": 0.80, "output": 4.0, "cached": 0.08},
+        "gpt-4o": {"input": 2.50, "output": 10.0, "cached": 1.25},
+        "gpt-4o-mini": {"input": 0.15, "output": 0.60, "cached": 0.075},
+        "gemini-3.8-flash-lite": {"input": 0.50, "output": 2.50, "cached": 0.05},
+        "gemini-3.8-flash": {"input": 0.75, "output": 3.75, "cached": 0.075},
+        "gemini-3.1-flash-lite": {"input": 0.25, "output": 1.50, "cached": 0.025},
+        "gemini-3.1-flash": {"input": 0.50, "output": 2.50, "cached": 0.05},
+        "gemini-2.0-flash": {"input": 0.10, "output": 0.40, "cached": 0.025},
+        "gemini-1.5-flash-8b": {"input": 0.0375, "output": 0.15, "cached": 0.01},
+        "gemini-1.5-flash": {"input": 0.075, "output": 0.30, "cached": 0.01875},
+        "gemini-1.5-pro": {"input": 1.25, "output": 5.0, "cached": 0.3125},
+        "default": {"input": 2.0, "output": 10.0, "cached": 0.50},
+    }
 
     model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 

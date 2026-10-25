@@ -145,3 +145,27 @@ class IWorkflowStore(ABC):
         self, task_id: uuid.UUID, revision_id: uuid.UUID, asset_ids: list[uuid.UUID]
     ) -> None:
         pass
+
+    @abstractmethod
+    async def record_usage(
+        self,
+        task_id: uuid.UUID,
+        run_id: uuid.UUID | None,
+        node: str,
+        model: str,
+        input_tokens: int,
+        output_tokens: int,
+        cached_tokens: int,
+        total_tokens: int,
+        latency_ms: int,
+        cost_usd: float,
+    ) -> None:
+        pass
+
+    @abstractmethod
+    async def get_task_cost(self, task_id: uuid.UUID) -> float:
+        pass
+
+    @abstractmethod
+    async def get_usage_breakdown(self, task_id: uuid.UUID) -> dict:
+        pass

@@ -41,8 +41,9 @@ export function TaskTable() {
             <TableHead>Topic</TableHead>
             <TableHead className="w-36">Status</TableHead>
             <TableHead className="w-32">Mode</TableHead>
-            <TableHead className="w-28 text-right">Sources</TableHead>
-            <TableHead className="w-32 text-right">Updated</TableHead>
+            <TableHead className="w-24 text-right">Cost</TableHead>
+            <TableHead className="w-24 text-right">Sources</TableHead>
+            <TableHead className="w-28 text-right">Updated</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -61,6 +62,9 @@ export function TaskTable() {
               </TableCell>
               <TableCell>
                 <Badge variant="secondary">{task.mode === "research_only" ? "research" : humanize(task.format)}</Badge>
+              </TableCell>
+              <TableCell className="text-right font-mono text-sm text-muted-foreground">
+                ${(task.total_cost_usd ?? 0).toFixed(3)}
               </TableCell>
               <TableCell className="text-right font-mono text-sm">{task.progress.sources_found}</TableCell>
               <TableCell className="text-right text-sm text-muted-foreground">{formatRelative(task.updated_at)}</TableCell>
