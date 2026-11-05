@@ -158,13 +158,6 @@ def test_drawio_matches_geometry_and_round_trips():
     assert 'background="#0B1120"' in xml
 
 
-def test_svg_embeds_drawio_and_is_sized_to_content():
-    built = build_diagram(MEDIA)
-    assert built.svg.startswith("<svg") and 'content="&lt;mxfile' in built.svg
-    assert f'viewBox="0 0 {built.width} {built.height}"' in built.svg
-    assert "<script" not in built.svg and " on" not in re.sub(r'content="[^"]*"', "", built.svg).split("<defs>")[0]
-
-
 def test_sequence_labels_fit_between_lifelines():
     spec = DiagramSpec(
         type="sequence", title="Token refresh",

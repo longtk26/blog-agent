@@ -1,0 +1,118 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1437" height="325" viewBox="0 0 1437 325" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" content="&lt;mxfile host=&quot;app.diagrams.net&quot; agent=&quot;blog-agent&quot; version=&quot;24.0.0&quot; type=&quot;device&quot;&gt;
+  &lt;diagram id=&quot;diagram_1&quot; name=&quot;Media pipeline on Google Cloud&quot;&gt;
+    &lt;mxGraphModel dx=&quot;1437&quot; dy=&quot;325&quot; grid=&quot;1&quot; gridSize=&quot;10&quot; guides=&quot;1&quot; tooltips=&quot;1&quot; connect=&quot;1&quot; arrows=&quot;1&quot; fold=&quot;1&quot; page=&quot;1&quot; pageScale=&quot;1&quot; pageWidth=&quot;1437&quot; pageHeight=&quot;325&quot; background=&quot;#0B1120&quot; math=&quot;0&quot; shadow=&quot;0&quot;&gt;
+      &lt;root&gt;
+        &lt;mxCell id=&quot;0&quot; /&gt;
+        &lt;mxCell id=&quot;1&quot; parent=&quot;0&quot; /&gt;
+        &lt;mxCell id=&quot;diagram_title&quot; value=&quot;Media pipeline on Google Cloud&quot; style=&quot;text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=16;fontStyle=1;fontColor=#F1F5F9;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;22&quot; width=&quot;249&quot; height=&quot;28&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;gcp&quot; value=&quot;Google Cloud&quot; style=&quot;rounded=1;arcSize=2;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;fillColor=none;strokeColor=#4285F4;fontColor=#8AB4F8;fontStyle=1;fontSize=12;verticalAlign=top;align=left;spacingLeft=10;dashed=0;&quot; vertex=&quot;1&quot; parent=&quot;1&quot; container=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;193.2&quot; y=&quot;58&quot; width=&quot;1219.4&quot; height=&quot;243&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;proj&quot; value=&quot;Project media-prod&quot; style=&quot;rounded=1;arcSize=2;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;fillColor=none;strokeColor=#9AA0A6;fontColor=#E8EAED;fontStyle=1;fontSize=12;verticalAlign=top;align=left;spacingLeft=10;dashed=1;&quot; vertex=&quot;1&quot; parent=&quot;gcp&quot; container=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;34&quot; width=&quot;1171.4&quot; height=&quot;185&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;vpc&quot; value=&quot;VPC network&quot; style=&quot;rounded=1;arcSize=2;absoluteArcSize=1;whiteSpace=wrap;html=1;container=1;collapsible=0;recursiveResize=0;fillColor=none;strokeColor=#34A853;fontColor=#86EFAC;fontStyle=1;fontSize=12;verticalAlign=top;align=left;spacingLeft=10;dashed=0;&quot; vertex=&quot;1&quot; parent=&quot;proj&quot; container=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;618.4&quot; y=&quot;34&quot; width=&quot;303.4&quot; height=&quot;127&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;user&quot; value=&quot;Users&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#CBD5E1;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.aws4.user;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;155.5&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;lb&quot; value=&quot;Load Balancer&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#4285F4;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.gcp2.load_balancing;&quot; vertex=&quot;1&quot; parent=&quot;proj&quot;&gt;
+          &lt;mxGeometry x=&quot;42.4&quot; y=&quot;73.5&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;run&quot; value=&quot;API (Cloud Run)&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#4285F4;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.gcp3.cloudrun;&quot; vertex=&quot;1&quot; parent=&quot;proj&quot;&gt;
+          &lt;mxGeometry x=&quot;203.3&quot; y=&quot;73.5&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;gke&quot; value=&quot;Workers (GKE)&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#4285F4;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.gcp3.gke;&quot; vertex=&quot;1&quot; parent=&quot;vpc&quot;&gt;
+          &lt;mxGeometry x=&quot;43.5&quot; y=&quot;34&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;sql&quot; value=&quot;Cloud SQL&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#4285F4;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.gcp3.cloudsql;&quot; vertex=&quot;1&quot; parent=&quot;vpc&quot;&gt;
+          &lt;mxGeometry x=&quot;224.7&quot; y=&quot;34&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;gcs&quot; value=&quot;Cloud Storage&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#4285F4;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.gcp3.cloud_storage;&quot; vertex=&quot;1&quot; parent=&quot;proj&quot;&gt;
+          &lt;mxGeometry x=&quot;1082.4&quot; y=&quot;73.5&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;ps&quot; value=&quot;Pub/Sub&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#4285F4;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=image;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnY9Imh0dHBzOi8vdmVjdGEuaW8vbmFubyIgd2lkdGg9IjE4LjMxOTk5OTY5NDgyNDIyIiBoZWlnaHQ9IjIwLjAwMDAwMTkwNzM0ODYzMyIgdmlld0JveD0iMCAwIDE4LjMxOTk5OTY5NDgyNDIyIDIwLjAwMDAwMTkwNzM0ODYzMyI+JiN4YTsJPHN0eWxlIHR5cGU9InRleHQvY3NzIj4mI3hhOwkuc3Qwe2ZpbGw6IzY2OWRmNjt9JiN4YTsJLnN0MXtmaWxsOiM0Mjg1ZjQ7fSYjeGE7CS5zdDJ7ZmlsbDojYWVjYmZhO30mI3hhOwk8L3N0eWxlPiYjeGE7CTxkZWZzPiYjeGE7CQk8ZmlsdGVyIGlkPSJBIiB4PSI0LjY0IiB5PSI0LjE5IiB3aWR0aD0iMTQuNzMiIGhlaWdodD0iMTIuNzYiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4mI3hhOwkJCTxmZUZsb29kIGZsb29kLWNvbG9yPSIjZmZmIi8+JiN4YTsJCQk8ZmVCbGVuZCBpbj0iU291cmNlR3JhcGhpYyIvPiYjeGE7CQk8L2ZpbHRlcj4mI3hhOwkJPG1hc2sgaWQ9IkIiIHg9IjQuNjQiIHk9IjQuMTkiIHdpZHRoPSIxNC43MyIgaGVpZ2h0PSIxMi43NiIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSI+JiN4YTsJCQk8Y2lyY2xlIGN4PSIxMiIgY3k9IjEyLjIzIiByPSIzLjU4IiBmaWx0ZXI9InVybCgjQSkiLz4mI3hhOwkJPC9tYXNrPiYjeGE7CTwvZGVmcz4mI3hhOwk8ZyBjbGFzcz0ic3QwIj4mI3hhOwkJPGNpcmNsZSBjeD0iMTYuMTMiIGN5PSI2LjIxIiByPSIxLjcyIi8+JiN4YTsJCTxjaXJjbGUgY3g9IjIuMTkiIGN5PSI2LjIxIiByPSIxLjcyIi8+JiN4YTsJCTxjaXJjbGUgY3g9IjkuMTYiIGN5PSIxOC4yOCIgcj0iMS43MiIvPiYjeGE7CTwvZz4mI3hhOwk8ZyBtYXNrPSJ1cmwoI0IpIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMi44NCAtMikiPiYjeGE7CQk8cGF0aCB0cmFuc2Zvcm09Im1hdHJpeCguNSAtLjg3IC44NyAuNSAtNC41OSAyMC41MykiIGQ9Ik0xNC42OSAxMC4yMmgxLjU5djguMDRoLTEuNTl6IiBjbGFzcz0ic3QxIi8+JiN4YTsJCTxwYXRoIHRyYW5zZm9ybT0icm90YXRlKDMzMCA4LjUyMyAxNC4yNDQpIiBkPSJNNC40OSAxMy40NWg4LjA0djEuNTlINC40OXoiIGNsYXNzPSJzdDEiLz4mI3hhOwkJPHBhdGggZD0iTTExLjIgNC4xOWgxLjU5djguMDRIMTEuMnoiIGNsYXNzPSJzdDEiLz4mI3hhOwk8L2c+JiN4YTsJPGcgY2xhc3M9InN0MiI+JiN4YTsJCTxjaXJjbGUgY3g9IjkuMTYiIGN5PSIxMC4yMyIgcj0iMi43OCIvPiYjeGE7CQk8Y2lyY2xlIGN4PSIyLjE5IiBjeT0iMTQuMjUiIHI9IjIuMTkiLz4mI3hhOwkJPGNpcmNsZSBjeD0iMTYuMTMiIGN5PSIxNC4yNSIgcj0iMi4xOSIvPiYjeGE7CQk8Y2lyY2xlIGN4PSI5LjE2IiBjeT0iMi4xOSIgcj0iMi4xOSIvPiYjeGE7CTwvZz4mI3hhOzwvc3ZnPg==;&quot; vertex=&quot;1&quot; parent=&quot;proj&quot;&gt;
+          &lt;mxGeometry x=&quot;431.7&quot; y=&quot;73.5&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e0_user_lb&quot; value=&quot;HTTPS&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.0008;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;user&quot; target=&quot;lb&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.1640&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;237.2&quot; y=&quot;179.5&quot; /&gt;&lt;mxPoint x=&quot;237.2&quot; y=&quot;189.5&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e1_lb_run&quot; value=&quot;&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=0.9992;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0004;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;proj&quot; source=&quot;lb&quot; target=&quot;run&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e2_run_gcs&quot; value=&quot;upload&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0004;exitY=0.3542;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0006;entryY=0.6458;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;proj&quot; source=&quot;run&quot; target=&quot;gcs&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.1604&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;344.7&quot; y=&quot;90.5&quot; /&gt;&lt;mxPoint x=&quot;344.7&quot; y=&quot;171&quot; /&gt;&lt;mxPoint x=&quot;996.6&quot; y=&quot;171&quot; /&gt;&lt;mxPoint x=&quot;996.6&quot; y=&quot;104.5&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e3_run_ps&quot; value=&quot;job&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0004;exitY=0.6458;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.0008;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;proj&quot; source=&quot;run&quot; target=&quot;ps&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.1821&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;378.2&quot; y=&quot;104.5&quot; /&gt;&lt;mxPoint x=&quot;378.2&quot; y=&quot;97.5&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e4_ps_gke&quot; value=&quot;subscribe&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=0.9992;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.0000;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;proj&quot; source=&quot;ps&quot; target=&quot;gke&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.0207&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;638.4&quot; y=&quot;97.5&quot; /&gt;&lt;mxPoint x=&quot;638.4&quot; y=&quot;92&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e5_gke_sql&quot; value=&quot;SQL&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0000;exitY=0.3542;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0008;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;vpc&quot; source=&quot;gke&quot; target=&quot;sql&quot;&gt;
+          &lt;mxGeometry x=&quot;0.4124&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;159.9&quot; y=&quot;51&quot; /&gt;&lt;mxPoint x=&quot;159.9&quot; y=&quot;58&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e6_gke_gcs&quot; value=&quot;read/write&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0000;exitY=0.6458;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0006;entryY=0.3542;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;proj&quot; source=&quot;gke&quot; target=&quot;gcs&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.6026&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;778.3&quot; y=&quot;99&quot; /&gt;&lt;mxPoint x=&quot;778.3&quot; y=&quot;141&quot; /&gt;&lt;mxPoint x=&quot;1029&quot; y=&quot;141&quot; /&gt;&lt;mxPoint x=&quot;1029&quot; y=&quot;90.5&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+      &lt;/root&gt;
+    &lt;/mxGraphModel&gt;
+  &lt;/diagram&gt;
+&lt;/mxfile&gt;">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#94A3B8"/></marker>
+</defs>
+<rect width="100%" height="100%" rx="12" fill="#0B1120"/>
+<text x="24" y="40" font-size="16" font-weight="700" fill="#F1F5F9">Media pipeline on Google Cloud</text>
+<rect x="193.2" y="58" width="1219.4" height="243" rx="6" fill="#64748B" fill-opacity="0.05" stroke="#64748B" stroke-width="1.4"/>
+<text x="205.2" y="75" font-size="12" font-weight="700" fill="#CBD5E1">Google Cloud</text>
+<rect x="217.2" y="92" width="1171.4" height="185" rx="6" fill="#64748B" fill-opacity="0.05" stroke="#64748B" stroke-width="1.4"/>
+<text x="229.2" y="109" font-size="12" font-weight="700" fill="#CBD5E1">Project media-prod</text>
+<rect x="835.6" y="126" width="303.4" height="127" rx="6" fill="#8C4FFF" fill-opacity="0.05" stroke="#8C4FFF" stroke-width="1.4"/>
+<rect x="835.6" y="126" width="24" height="24" rx="4" fill="#8C4FFF"/>
+<g transform="translate(839.6,130) scale(0.667)" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17a3.5 3.5 0 0 1-.5-7 5 5 0 0 1 9.6-1.3A4 4 0 0 1 17 17z"/><path d="M10 13h4"/></g>
+<text x="867.6" y="143" font-size="12" font-weight="700" fill="#C4B5FD">VPC network</text>
+<path d="M 307.6 189.5 L 420.5 189.5" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M 72 179.5 L 232.2 179.5 Q 237.2 179.5 237.2 184.5 L 237.2 184.5 Q 237.2 189.5 242.2 189.5 L 259.6 189.5" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="131.1" y="169.5" width="47" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="154.6" y="182.5">HTTPS</tspan></text>
+<path d="M 468.5 182.5 L 555.9 182.5 Q 561.9 182.5 561.9 188.5 L 561.9 257 Q 561.9 263 567.9 263 L 1207.8 263 Q 1213.8 263 1213.8 257 L 1213.8 202.5 Q 1213.8 196.5 1219.8 196.5 L 1299.6 196.5" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="776.1" y="253" width="45" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="798.6" y="266">upload</tspan></text>
+<path d="M 468.5 196.5 L 591.9 196.5 Q 595.4 196.5 595.4 193 L 595.4 193 Q 595.4 189.5 598.9 189.5 L 648.9 189.5" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="531.6" y="186.5" width="27" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="545.1" y="199.5">job</tspan></text>
+<path d="M 696.9 189.5 L 852.9 189.5 Q 855.6 189.5 855.6 186.8 L 855.6 186.8 Q 855.6 184 858.4 184 L 879.1 184" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="757.3" y="179.5" width="63" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="788.8" y="192.5">subscribe</tspan></text>
+<path d="M 927.1 177 L 992 177 Q 995.5 177 995.5 180.5 L 995.5 180.5 Q 995.5 184 999 184 L 1060.4 184" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="1002.7" y="174" width="33" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="1019.2" y="187">SQL</tspan></text>
+<path d="M 927.1 191 L 989.5 191 Q 995.5 191 995.5 197 L 995.5 227 Q 995.5 233 1001.5 233 L 1240.2 233 Q 1246.2 233 1246.2 227 L 1246.2 188.5 Q 1246.2 182.5 1252.2 182.5 L 1299.6 182.5" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="960.5" y="205" width="70" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="995.5" y="218">read/write</tspan></text>
+<rect x="24" y="155.5" width="48" height="48" rx="6" fill="#CBD5E1"/>
+<g transform="translate(34,165.5) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c0-4.2 3.4-6.5 7.5-6.5s7.5 2.3 7.5 6.5"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="48" y="221.5">Users</tspan></text>
+<rect x="259.6" y="165.5" width="48" height="48" rx="6" fill="#4285F4"/>
+<g transform="translate(269.6,175.5) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="283.6" y="231.5">Load Balancer</tspan></text>
+<rect x="420.5" y="165.5" width="48" height="48" rx="6" fill="#4285F4"/>
+<g transform="translate(430.5,175.5) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="444.5" y="231.5">API (Cloud Run)</tspan></text>
+<rect x="879.1" y="160" width="48" height="48" rx="6" fill="#4285F4"/>
+<g transform="translate(889.1,170) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="903.1" y="226">Workers (GKE)</tspan></text>
+<rect x="1060.4" y="160" width="48" height="48" rx="6" fill="#4285F4"/>
+<g transform="translate(1070.4,170) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="1084.4" y="226">Cloud SQL</tspan></text>
+<rect x="1299.6" y="165.5" width="48" height="48" rx="6" fill="#4285F4"/>
+<g transform="translate(1309.6,175.5) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="1323.6" y="231.5">Cloud Storage</tspan></text>
+<rect x="648.9" y="165.5" width="48" height="48" rx="6" fill="#4285F4"/>
+<g transform="translate(658.9,175.5) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="672.9" y="231.5">Pub/Sub</tspan></text>
+</svg>

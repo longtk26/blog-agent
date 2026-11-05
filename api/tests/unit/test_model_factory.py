@@ -21,6 +21,7 @@ def test_roles_fall_back_to_default_model():
         "writer": "anthropic:claude-sonnet-5-5",
         "fast": "anthropic:claude-haiku-5-5",
         "judge": "anthropic:claude-sonnet-5-5",
+        "vision": "anthropic:claude-sonnet-5-5",
     }
     assert factory.spec(ModelRole.FAST).provider == "anthropic"
 

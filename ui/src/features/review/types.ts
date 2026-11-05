@@ -84,8 +84,29 @@ export type TDiagramAsset = {
   png_path: string | null;
   sha256: string;
   validation_status: string;
+  /** E10-S7 visual review of the published render. */
+  review: TDiagramReview | null;
+  review_rounds: number;
   created_at: string;
   source_url: string;
   svg_url: string;
   png_url: string | null;
+};
+
+export type TDiagramReviewIssue = {
+  check: number;
+  severity: "minor" | "major";
+  description: string;
+  labels_involved: string[];
+};
+
+export type TDiagramReview = {
+  status: "passed" | "issues" | "skipped" | "disabled";
+  passed: boolean;
+  major: number;
+  minor: number;
+  issues: TDiagramReviewIssue[];
+  lint: Array<{ check: string; message: string }>;
+  rounds: number;
+  chosen_round: number;
 };

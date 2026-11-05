@@ -1,10 +1,25 @@
-"""XML validation and round-trip verification for draw.io files (E7-S3)."""
+"""XML validation and round-trip verification for draw.io files (E7-S3, hygiene rules from E10-S5)."""
 
+import re
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from typing import Set, Tuple
 
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
+
+
+# Markup draw.io renders inside html=1 labels. Anything else means a label was not escaped twice
+# (`<sha>` must be written `&amp;lt;sha&amp;gt;` in the attribute to display as text).
+_LABEL_TAGS = {"br", "b", "i", "u", "s", "font", "span", "div", "p", "sub", "sup", "strong", "em", "code", "hr"}
+_TAG = re.compile(r"<\s*/?\s*([A-Za-z][\w:-]*)")
+LEGEND_PREFIX = "legend"
+
+
+def label_markup_errors(cell_id: str, value: str, style: str) -> list[str]:
+    if "html=1" not in style or "<" not in value:
+        return []
+    bad = sorted({t.lower() for t in _TAG.findall(value)} - _LABEL_TAGS)
+    return [f"Cell '{cell_id}' label has unescaped markup <{', '.join(bad)}> (escape it twice in the XML)"] if bad else []
 
 
 @dataclass
@@ -15,14 +30,21 @@ class DrawioValidationResult:
     parsed_edges: set[tuple[str, str]]
 
 
-def validate_drawio_xml(xml_content: str, spec: DiagramSpec | None = None) -> DrawioValidationResult:
-    """Validate draw.io XML structure and optionally perform round-trip check with DiagramSpec."""
+def validate_drawio_xml(xml_content: str, spec: DiagramSpec | None = None, strict: bool = True) -> DrawioValidationResult:
+    """Validate draw.io XML structure and optionally perform round-trip check with DiagramSpec.
+
+    strict (generated files) adds the hygiene rules: no XML comments, label markup escaped twice. Owner uploads are
+    validated with strict=False, since a hand-edited label may legitimately hold HTML lists or tables.
+    """
     errors: list[str] = []
     parsed_nodes: set[str] = set()
     parsed_edges: set[tuple[str, str]] = set()
 
     if not xml_content or not xml_content.strip():
         return DrawioValidationResult(False, ["XML content is empty"], set(), set())
+
+    if strict and "<!--" in xml_content:
+        errors.append("XML comments are not allowed in draw.io files")
 
     try:
         root = ET.fromstring(xml_content)
@@ -88,6 +110,8 @@ def validate_drawio_xml(xml_content: str, spec: DiagramSpec | None = None) -> Dr
         geom = cell.find("mxGeometry")
         if geom is None:
             errors.append(f"Cell '{cid}' is missing <mxGeometry>")
+        if strict:
+            errors.extend(label_markup_errors(cid, cell.attrib.get("value", ""), cell.attrib.get("style", "")))
 
         is_vertex = cell.attrib.get("vertex") == "1"
         is_edge = cell.attrib.get("edge") == "1"
@@ -95,7 +119,7 @@ def validate_drawio_xml(xml_content: str, spec: DiagramSpec | None = None) -> Dr
         if is_vertex:
             # Containers and free text (the diagram title, annotations) are not spec nodes.
             style = cell.attrib.get("style", "")
-            if cell.attrib.get("container") != "1" and not style.startswith("text;"):
+            if cell.attrib.get("container") != "1" and not style.startswith("text;") and not cid.startswith(LEGEND_PREFIX):
                 parsed_nodes.add(cid)
         elif is_edge:
             src = cell.attrib.get("source")

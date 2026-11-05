@@ -20,4 +20,7 @@ class DiagramAssetEntity(BaseModel):
     png_path: str | None = None
     sha256: str = ""
     validation_status: str = "valid"  # valid | warning | error
+    # E10-S7 visual review of the published render: {status, passed, major, minor, issues[], lint[]}
+    review: dict[str, Any] | None = None
+    review_rounds: int = 0            # generations tried for this slot (1 = no repair needed)
     created_at: datetime = Field(default_factory=utcnow)

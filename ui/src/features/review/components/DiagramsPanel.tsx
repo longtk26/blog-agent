@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { useDiagrams } from "../hooks/use-diagrams";
-import type { TDiagramAsset } from "../types";
+import type { TDiagramAsset, TDiagramReview } from "../types";
 
 type DiagramsPanelProps = {
   taskId: string;
@@ -170,6 +170,8 @@ export function DiagramsPanel({ taskId, canEdit }: DiagramsPanelProps) {
                   <span>{nodeCount} nodes • {edgeCount} connections</span>
                 </div>
 
+                <DiagramReviewSummary review={d.review} rounds={d.review_rounds} />
+
                 {/* Actions */}
                 <div className="flex flex-wrap items-center gap-1.5 pt-1">
                   <Button
@@ -238,7 +240,8 @@ export function DiagramsPanel({ taskId, canEdit }: DiagramsPanelProps) {
                 </div>
 
                 <p className="text-[10px] text-muted-foreground/80">
-                  Tip: Download .drawio or .svg, edit locally at diagrams.net, and upload to replace.
+                  Tip: the downloaded .drawio, .svg and .png all open as editable diagrams in diagrams.net; edit there and
+                  upload the .drawio to replace.
                 </p>
               </CardContent>
             </Card>
@@ -312,6 +315,39 @@ export function DiagramsPanel({ taskId, canEdit }: DiagramsPanelProps) {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+function DiagramReviewSummary({ review, rounds }: { review: TDiagramReview | null; rounds: number }) {
+  if (!review) return null;
+  const remaining = [
+    ...review.issues.map((i) => ({ key: `v-${i.check}-${i.description}`, severity: i.severity, text: i.description })),
+    ...review.lint.map((l) => ({ key: `l-${l.message}`, severity: "major" as const, text: l.message })),
+  ];
+  const label =
+    review.status === "disabled"
+      ? "Visual review off"
+      : review.status === "skipped"
+        ? "Visual review skipped"
+        : remaining.length === 0
+          ? "Visual review passed"
+          : `${review.major} major • ${review.minor} minor`;
+  return (
+    <div className="space-y-1 text-[11px]">
+      <div className="flex items-center justify-between text-muted-foreground">
+        <span className={review.major > 0 ? "font-medium text-destructive" : undefined}>{label}</span>
+        {rounds > 1 && <span>{rounds} rounds</span>}
+      </div>
+      {remaining.length > 0 && (
+        <ul className="list-disc space-y-0.5 pl-4 text-muted-foreground">
+          {remaining.slice(0, 5).map((issue) => (
+            <li key={issue.key} className={issue.severity === "major" ? "text-destructive" : undefined}>
+              {issue.text}
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

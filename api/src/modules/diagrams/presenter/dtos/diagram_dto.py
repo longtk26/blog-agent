@@ -23,6 +23,8 @@ class DiagramAssetResponseDto(BaseModel):
     png_path: str | None = None
     sha256: str
     validation_status: str
+    review: dict[str, Any] | None = None
+    review_rounds: int = 0
     created_at: datetime
     source_url: str
     svg_url: str
@@ -43,6 +45,8 @@ class DiagramAssetResponseDto(BaseModel):
             png_path=entity.png_path,
             sha256=entity.sha256,
             validation_status=entity.validation_status,
+            review=entity.review,
+            review_rounds=entity.review_rounds,
             created_at=entity.created_at,
             source_url=f"{base_asset_url}?type=source",
             svg_url=f"{base_asset_url}?type=svg",

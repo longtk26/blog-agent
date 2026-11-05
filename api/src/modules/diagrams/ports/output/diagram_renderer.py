@@ -13,12 +13,11 @@ class RenderResult(BaseModel):
 class IDiagramRenderer(ABC):
     @abstractmethod
     async def render_drawio(self, xml_content: str, embed_diagram: bool = True) -> RenderResult:
-        """Render draw.io XML to SVG with diagram embedded, and PNG at 2x."""
-        ...
+        """Export draw.io XML with draw.io itself (E10-S1): SVG + 2x PNG, the diagram XML embedded in both.
 
-    @abstractmethod
-    async def render_png(self, svg: str, scale: float = 2) -> bytes | None:
-        """Rasterise an SVG (generated diagrams are drawn in Python); None when the renderer is unavailable."""
+        Raises RendererUnavailableException when the renderer cannot be reached, DiagramRendererException when the
+        export fails. Never returns a placeholder: a published diagram is always the real render.
+        """
         ...
 
     @abstractmethod

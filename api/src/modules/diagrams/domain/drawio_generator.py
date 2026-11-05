@@ -15,7 +15,7 @@ from src.modules.diagrams.domain.geometry import (
 )
 from src.modules.diagrams.domain.group_styles import group_style
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
-from src.modules.diagrams.domain.svg_renderer import BACKGROUND, BOX_STYLES, EDGE, LABEL_BG, TEXT
+from src.modules.diagrams.domain.palette import BACKGROUND, BOX_STYLES, EDGE, LABEL_BG, TEXT
 
 FONT_FAMILY = "Helvetica"
 
@@ -57,17 +57,29 @@ def _vertex(cell_id: str, value: str, style: str, parent: str, x: float, y: floa
     )
 
 
+def _point_at(points: list[tuple[float, float]], frac: float) -> tuple[float, float]:
+    """The point at `frac` of an orthogonal polyline's length (how draw.io positions an edge label)."""
+    total = sum(abs(b[0] - a[0]) + abs(b[1] - a[1]) for a, b in zip(points, points[1:]))
+    target, walked = max(0.0, min(1.0, frac)) * total, 0.0
+    for a, b in zip(points, points[1:]):
+        seg = abs(b[0] - a[0]) + abs(b[1] - a[1])
+        if seg and walked + seg >= target:
+            t = (target - walked) / seg
+            return a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t
+        walked += seg
+    return points[-1]
+
+
 def _node_style(node: NodeGeom) -> str:
     if node.icon is not None:
-        label = (
-            "verticalLabelPosition=bottom;verticalAlign=top;align=center;"
-            if node.label_side == "bottom"
-            else "labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;spacingLeft=6;"
-        )
+        label = {
+            "bottom": "verticalLabelPosition=bottom;verticalAlign=top;align=center;",
+            "top": "verticalLabelPosition=top;verticalAlign=bottom;align=center;",
+        }.get(node.label_side, "labelPosition=right;verticalLabelPosition=middle;align=left;verticalAlign=middle;spacingLeft=6;")
         return (
-            f"sketch=0;outlineConnect=0;gradientColor=none;fillColor={node.icon.color};strokeColor=#ffffff;dashed=0;"
-            f"html=1;fontSize=12;fontStyle=0;fontColor={TEXT};fontFamily={FONT_FAMILY};aspect=fixed;{label}"
-            f"{node.icon.drawio_shape}"
+            f"sketch=0;outlineConnect=0;gradientColor=none;fillColor={node.icon.color};strokeColor={node.icon.stroke};"
+            f"dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor={TEXT};fontFamily={FONT_FAMILY};"
+            f"aspect=fixed;{label}{node.icon.drawio_shape}"
         )
     fill, stroke = BOX_STYLES.get(node.kind, BOX_STYLES["process"])
     shape = {
@@ -111,7 +123,7 @@ def _flow_xml(spec: DiagramSpec, g: DiagramGeometry) -> str:
         ox, oy = (rects[parent].x, rects[parent].y) if parent != "1" else (0, 0)
         r = grp.rect
         lines.append(
-            _vertex(grp.id, grp.title, group_style(grp.title).drawio, parent, r.x - ox, r.y - oy, r.w, r.h, ' container="1"')
+            _vertex(grp.id, grp.title, group_style(grp.title, g.family).drawio, parent, r.x - ox, r.y - oy, r.w, r.h, ' container="1"')
         )
 
     for node in g.nodes.values():
@@ -121,8 +133,22 @@ def _flow_xml(spec: DiagramSpec, g: DiagramGeometry) -> str:
         value = _html_lines(node.lines)
         lines.append(_vertex(node.id, value, _node_style(node), parent, b.x - ox, b.y - oy, b.w, b.h))
 
+    group_parent = {grp.id: grp.parent for grp in g.groups}
+
+    def chain(node_id: str) -> list[str]:
+        out, gid = [], g.nodes[node_id].group
+        while gid in rects and gid not in out:
+            out.append(gid)
+            gid = group_parent.get(gid)
+        return out
+
     for edge in g.edges:
         src, tgt = g.nodes[edge.source].body, g.nodes[edge.target].body
+        # Parent = innermost container holding both ends, so moving that container in draw.io moves the edge too.
+        # Waypoints are relative to the parent's origin.
+        target_chain = chain(edge.target)
+        parent = next((gid for gid in chain(edge.source) if gid in target_chain), "1")
+        ox, oy = (rects[parent].x, rects[parent].y) if parent != "1" else (0, 0)
         (sx, sy), (tx, ty) = edge.points[0], edge.points[-1]
         exit_x, exit_y = (sx - src.x) / src.w, (sy - src.y) / src.h
         entry_x, entry_y = (tx - tgt.x) / tgt.w, (ty - tgt.y) / tgt.h
@@ -135,15 +161,47 @@ def _flow_xml(spec: DiagramSpec, g: DiagramGeometry) -> str:
             f"exitX={exit_x:.4f};exitY={exit_y:.4f};exitDx=0;exitDy=0;exitPerimeter=0;"
             f"entryX={entry_x:.4f};entryY={entry_y:.4f};entryDx=0;entryDy=0;entryPerimeter=0;"
         )
-        waypoints = "".join(f'<mxPoint x="{_num(x)}" y="{_num(y)}" />' for x, y in edge.points[1:-1])
+        waypoints = "".join(f'<mxPoint x="{_num(x - ox)}" y="{_num(y - oy)}" />' for x, y in edge.points[1:-1])
         label_x = f' x="{edge.label_at * 2 - 1:.4f}"' if edge.lines else ""
+        # draw.io puts a label at a fraction of the path; the offset moves it to where the geometry placed it
+        # (beside the line when the line itself had no room), so draw.io shows exactly what the layout checked.
+        offset = ""
+        if edge.lines and edge.label is not None:
+            px, py = _point_at(edge.points, edge.label_at)
+            dx, dy = edge.label.cx - px, edge.label.cy - py
+            if abs(dx) > 0.5 or abs(dy) > 0.5:
+                offset = f'<mxPoint x="{_num(dx)}" y="{_num(dy)}" as="offset" />'
         lines.append(
             f'        <mxCell id="{_attr(edge.id)}" value="{_attr(_html_lines(edge.lines))}" style="{_attr(style)}" '
-            f'edge="1" parent="1" source="{_attr(edge.source)}" target="{_attr(edge.target)}">\n'
+            f'edge="1" parent="{_attr(parent)}" source="{_attr(edge.source)}" target="{_attr(edge.target)}">\n'
             f'          <mxGeometry{label_x} relative="1" as="geometry">'
             + (f'<Array as="points">{waypoints}</Array>' if waypoints else "")
+            + offset
             + "</mxGeometry>\n        </mxCell>"
         )
+    if g.legend:
+        for n, item in enumerate(g.legend.items):
+            (x1, y1), (x2, y2) = item.line
+            style = (
+                f"html=1;endArrow=block;endFill=1;strokeColor={EDGE};strokeWidth=1.6;"
+                f"{'dashed=1;' if item.dashed else ''}"
+            )
+            lines.append(
+                f'        <mxCell id="legend_line_{n}" value="" style="{_attr(style)}" edge="1" parent="1">\n'
+                '          <mxGeometry relative="1" as="geometry">'
+                f'<mxPoint x="{_num(x1)}" y="{_num(y1)}" as="sourcePoint" />'
+                f'<mxPoint x="{_num(x2)}" y="{_num(y2)}" as="targetPoint" />'
+                "</mxGeometry>\n        </mxCell>"
+            )
+            r = item.text_rect
+            lines.append(
+                _vertex(
+                    f"legend_text_{n}", item.text,
+                    f"text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;"
+                    f"fontColor=#CBD5E1;fontFamily={FONT_FAMILY};",
+                    "1", r.x, r.y, r.w, r.h,
+                )
+            )
     lines.extend(_FOOTER)
     return "\n".join(lines)
 
@@ -173,9 +231,10 @@ def _sequence_xml(spec: DiagramSpec, g: SequenceGeometry) -> str:
     for m in g.messages:
         dashed = "dashed=1;endArrow=open;" if m.dashed else ("endArrow=open;" if m.async_msg else "endArrow=block;endFill=1;")
         stroke = EDGE if m.dashed else "#38BDF8"
+        # Explicit dark label background: draw.io's "default" resolves to white in exports (E10 visual check).
         style = (
             f"html=1;verticalAlign=bottom;strokeColor={stroke};strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;"
-            f"fontFamily={FONT_FAMILY};{dashed}"
+            f"fontFamily={FONT_FAMILY};labelBackgroundColor={LABEL_BG};{dashed}"
         )
         (x1, y1), (x2, y2) = m.points[0], m.points[-1]
         waypoints = "".join(f'<mxPoint x="{_num(x)}" y="{_num(y)}" />' for x, y in m.points[1:-1])

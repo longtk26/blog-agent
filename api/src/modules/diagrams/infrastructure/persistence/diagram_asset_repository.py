@@ -79,6 +79,8 @@ class DiagramAssetRepository(IDiagramAssetRepository):
             png_path=entity.png_path,
             sha256=entity.sha256,
             validation_status=entity.validation_status,
+            review=entity.review,
+            review_rounds=entity.review_rounds,
             created_at=entity.created_at,
         )
 
@@ -96,6 +98,8 @@ class DiagramAssetRepository(IDiagramAssetRepository):
             png_path=model.png_path,
             sha256=model.sha256,
             validation_status=model.validation_status,
+            review=model.review,
+            review_rounds=model.review_rounds or 0,
             created_at=model.created_at,
         )
 

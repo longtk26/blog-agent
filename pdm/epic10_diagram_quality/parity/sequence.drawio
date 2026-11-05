@@ -1,0 +1,43 @@
+<mxfile host="app.diagrams.net" agent="blog-agent" version="24.0.0" type="device">
+  <diagram id="diagram_1" name="Verified webhook delivery">
+    <mxGraphModel dx="763" dy="457" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="763" pageHeight="457" background="#0B1120" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="diagram_title" value="Verified webhook delivery" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=16;fontStyle=1;fontColor=#F1F5F9;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="24" y="22" width="215.7" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="prov" value="Provider" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};size=35;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#E2E8F0;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="24" y="58" width="110" height="375" as="geometry" />
+        </mxCell>
+        <mxCell id="api" value="Webhook endpoint" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};size=35;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#E2E8F0;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="208.6" y="58" width="126.8" height="375" as="geometry" />
+        </mxCell>
+        <mxCell id="q" value="Queue" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};size=35;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#E2E8F0;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="393.1" y="58" width="110" height="375" as="geometry" />
+        </mxCell>
+        <mxCell id="w" value="Worker" style="shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};size=35;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#E2E8F0;fontStyle=1;fontFamily=Helvetica;" vertex="1" parent="1">
+          <mxGeometry x="533.1" y="58" width="110" height="375" as="geometry" />
+        </mxCell>
+        <mxCell id="m_0" value="POST event + HMAC signature" style="html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=block;endFill=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="79" y="143" as="sourcePoint" /><mxPoint x="272" y="143" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="m_1" value="verify signature + timestamp" style="html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=block;endFill=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="272" y="181" as="sourcePoint" /><mxPoint x="272" y="205" as="targetPoint" /><Array as="points"><mxPoint x="312" y="181" /><mxPoint x="312" y="205" /></Array></mxGeometry>
+        </mxCell>
+        <mxCell id="m_2" value="enqueue (idempotency key)" style="html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=block;endFill=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="272" y="243" as="sourcePoint" /><mxPoint x="448.1" y="243" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="m_3" value="202 Accepted" style="html=1;verticalAlign=bottom;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;dashed=1;endArrow=open;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="272" y="281" as="sourcePoint" /><mxPoint x="79" y="281" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="m_4" value="deliver" style="html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=open;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="448.1" y="319" as="sourcePoint" /><mxPoint x="588.1" y="319" as="targetPoint" /></mxGeometry>
+        </mxCell>
+        <mxCell id="m_5" value="skip if key already&lt;br&gt;processed" style="html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=block;endFill=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry"><mxPoint x="588.1" y="371" as="sourcePoint" /><mxPoint x="588.1" y="395" as="targetPoint" /><Array as="points"><mxPoint x="628.1" y="371" /><mxPoint x="628.1" y="395" /></Array></mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

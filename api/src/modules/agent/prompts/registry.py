@@ -7,6 +7,7 @@ from src.configs import config
 from src.configs.logger import get_logger
 from src.modules.agent.prompts.context_files import render_contract, seed_style_guide
 from src.modules.agent.prompts.diagram import PROMPT_VERSION as DIAGRAM_PROMPT_VERSION
+from src.modules.agent.prompts.diagram_review import PROMPT_VERSION as DIAGRAM_REVIEW_PROMPT_VERSION
 from src.modules.agent.prompts.research import PROMPT_VERSION as RESEARCH_PROMPT_VERSION
 from src.modules.agent.prompts.writing import PROMPT_VERSION as WRITING_PROMPT_VERSION
 
@@ -37,6 +38,7 @@ class PromptRegistry:
             "research": RESEARCH_PROMPT_VERSION,
             "writing": WRITING_PROMPT_VERSION,
             "diagram": DIAGRAM_PROMPT_VERSION,
+            "diagram_review": DIAGRAM_REVIEW_PROMPT_VERSION,
             "style_guide": style_ver,
             "render_contract": contract_ver,
         }
@@ -46,6 +48,7 @@ class PromptRegistry:
             "research": _compute_file_hash(PROMPTS_DIR / "research.py"),
             "writing": _compute_file_hash(PROMPTS_DIR / "writing.py"),
             "diagram": _compute_file_hash(PROMPTS_DIR / "diagram.py"),
+            "diagram_review": _compute_file_hash(PROMPTS_DIR / "diagram_review.py"),
             "style_guide": _compute_file_hash(PROMPTS_DIR / "style_guide.md"),
             "render_contract": _compute_file_hash(PROMPTS_DIR / "render_contract.md"),
         }

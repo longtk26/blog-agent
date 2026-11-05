@@ -1,6 +1,6 @@
 """Validator for DiagramSpec ensuring model output correctness before XML or layout generation (E7-S1)."""
 
-from src.modules.diagrams.domain.icons import ICONS
+from src.modules.diagrams.domain.icons import lookup
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
 
 
@@ -67,8 +67,11 @@ def validate_spec(spec: DiagramSpec) -> list[str]:
     for node in spec.nodes:
         if node.group and node.group not in group_ids:
             errors.append(f"Node '{node.id}' references non-existent group '{node.group}'")
-        if node.icon and node.icon.strip().lower() not in ICONS and f"aws:{node.icon.strip().lower()}" not in ICONS:
-            errors.append(f"Node '{node.id}' has unknown icon '{node.icon}' (allowed: {', '.join(sorted(ICONS))})")
+        if node.icon and lookup(node.icon) is None:
+            errors.append(
+                f"Node '{node.id}' has unknown icon '{node.icon}': use one of the icon keys listed in the instructions "
+                "(e.g. aws:eks, gcp:cloud_run, k8s:pod, gh:github) or leave icon empty"
+            )
 
     parent_map: dict[str, str] = {}
     for group in spec.groups:

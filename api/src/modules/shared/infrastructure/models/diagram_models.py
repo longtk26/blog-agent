@@ -22,4 +22,6 @@ class DiagramAssetModel(SQLModel, table=True):
     png_path: str | None = Field(default=None, sa_column=Column(Text, nullable=True))
     sha256: str = Field(max_length=64, index=True, default="")
     validation_status: str = Field(default="valid", max_length=16)  # "valid" | "warning" | "error"
+    review: dict[str, Any] | None = Field(default=None, sa_column=jsonb_column(nullable=True))
+    review_rounds: int = Field(default=0)
     created_at: datetime = Field(default_factory=utcnow, sa_column=timestamp_column())

@@ -58,6 +58,9 @@ test-integration: dev-db ## API tests against a real Postgres (the compose db)
 	$(COMPOSE) exec -T db sh -c "createdb -U $$POSTGRES_USER blog_agent_test 2>/dev/null || true"; \
 	TEST_DB_URL=postgresql://$$POSTGRES_USER:$$POSTGRES_PASSWORD@127.0.0.1:$${DB_PORT:-5433}/blog_agent_test $(MAKE) -C api test
 
+diagrams-icons: ## Rebuild the draw.io icon catalogue from the pinned shape index (REFRESH=1 re-downloads)
+	$(MAKE) -C api diagrams-icons $(if $(REFRESH),REFRESH=1)
+
 ## ---- Evaluation & Observability (Epic 9) -----------------------------------
 eval-sync: ## Sync evals/dataset.yaml to LangSmith dataset blog-agent-eval
 	cd api && uv run python src/modules/evaluation/scripts/sync_dataset.py
@@ -71,4 +74,4 @@ eval-compare: ## Compare two evaluation experiments (usage: make eval-compare BA
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  %-18s %s\n", $$1, $$2}'
 
-.PHONY: up down logs ps reset-db migrate dev-db dev-api dev-ui dev install test test-integration eval-sync eval-eval eval-compare help
+.PHONY: up down logs ps reset-db migrate dev-db dev-api dev-ui dev install test test-integration diagrams-icons eval-sync eval-eval eval-compare help

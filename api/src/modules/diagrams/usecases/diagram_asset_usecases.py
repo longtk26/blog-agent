@@ -13,6 +13,11 @@ from src.modules.diagrams.domain.drawio_validator import validate_drawio_xml
 from src.modules.diagrams.domain.mermaid_generator import generate_mermaid
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
 from src.modules.diagrams.domain.svg_sanitizer import sanitize_svg_content
+from src.modules.diagrams.infrastructure.adapters.diagram_renderer_adapter import (
+    DiagramRendererException,
+    RendererUnavailableException,
+)
+from src.modules.diagrams.usecases.generate_diagram_usecase import store_render
 from src.modules.diagrams.ports.output.diagram_renderer import IDiagramRenderer
 from src.modules.diagrams.ports.output.diagram_repository import IDiagramAssetRepository
 from src.modules.shared.domain.entities.diagram_entity import DiagramAssetEntity
@@ -29,6 +34,14 @@ class DiagramAssetUsecases:
         self.repository = repository
         self.task_repository = task_repository
         self.renderer = renderer
+
+    async def _render_drawio(self, xml: str):
+        try:
+            return await self.renderer.render_drawio(xml, embed_diagram=True)
+        except RendererUnavailableException as exc:
+            raise BadRequestException("The diagram renderer is not running; start it and try again") from exc
+        except DiagramRendererException as exc:
+            raise BadRequestException(f"draw.io could not render this diagram: {str(exc)[:300]}") from exc
 
     def get_diagram(self, asset_id: uuid.UUID) -> DiagramAssetEntity:
         asset = self.repository.get(asset_id)
@@ -76,24 +89,16 @@ class DiagramAssetUsecases:
                     asset.png_path = str(png_file)
             except Exception:
                 pass
-        else:  # drawio
+        else:  # drawio: rendered by draw.io itself (E10-S2)
             built = build_diagram(spec)
+            out = await self._render_drawio(built.drawio_xml)
             source_file = task_dir / f"{clean_slot}.drawio"
             source_file.write_text(built.drawio_xml, encoding="utf-8")
             asset.source_path = str(source_file)
             asset.format = "drawio"
-
-            svg_content = sanitize_svg_content(built.svg)
-            svg_file = task_dir / f"{clean_slot}.svg"
-            svg_file.write_text(svg_content, encoding="utf-8")
-            asset.svg_path = str(svg_file)
-            asset.sha256 = hashlib.sha256(svg_content.encode("utf-8")).hexdigest()
-
-            png_bytes = await self.renderer.render_png(svg_content)
-            if png_bytes:
-                png_file = task_dir / f"{clean_slot}.png"
-                png_file.write_bytes(png_bytes)
-                asset.png_path = str(png_file)
+            asset.svg_path, asset.png_path = store_render(task_dir, clean_slot, out.svg, out.png_bytes)
+            asset.sha256 = out.sha256
+            asset.review = None  # the stored review belonged to the other format's render
 
         return self.repository.update(asset)
 
@@ -117,20 +122,18 @@ class DiagramAssetUsecases:
 
         if ext == "drawio" or filename.endswith(".xml"):
             xml_str = content_bytes.decode("utf-8", errors="replace")
-            res = validate_drawio_xml(xml_str)
+            res = validate_drawio_xml(xml_str, strict=False)
             if not res.is_valid:
                 raise BadRequestException(f"Invalid draw.io XML: {', '.join(res.errors)}")
 
+            render_out = await self._render_drawio(xml_str)
             source_file = task_dir / f"{clean_slot}.drawio"
             source_file.write_text(xml_str, encoding="utf-8")
             asset.source_path = str(source_file)
             asset.format = "drawio"
-
-            render_out = await self.renderer.render_drawio(xml_str, embed_diagram=True)
-            svg_file = task_dir / f"{clean_slot}.svg"
-            svg_file.write_text(render_out.svg, encoding="utf-8")
-            asset.svg_path = str(svg_file)
+            asset.svg_path, asset.png_path = store_render(task_dir, clean_slot, render_out.svg, render_out.png_bytes)
             asset.sha256 = render_out.sha256 or hashlib.sha256(render_out.svg.encode("utf-8")).hexdigest()
+            asset.review = None  # an owner upload is not machine-reviewed
 
         elif ext == "svg":
             svg_str = content_bytes.decode("utf-8", errors="replace")

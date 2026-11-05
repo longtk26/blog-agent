@@ -100,6 +100,7 @@ blog-agent/
 | 7 | [Editable Diagrams](epic7_diagrams/epic7_diagrams.md) | M3 | Spec → validated draw.io XML + SVG, and Mermaid; regenerate without rewriting | 3, 4 |
 | 8 | [DEV Community Publishing](epic8_devto_publishing/epic8_devto_publishing.md) | M4 | Publish approved revisions to Dev.to safely | 5 |
 | 9 | [Evaluation & Observability](epic9_evaluation_observability/epic9_evaluation_observability.md) | M5 | Datasets, evaluators, regression tracking, cost/latency visibility | 1–3 (tracing starts in Epic 1) |
+| 10 | [Diagram Quality: draw.io-Native Rendering & Visual Review](epic10_diagram_quality/epic10_diagram_quality.md) | M3.1 | Publish the draw.io render itself, validated shape names, layout rules, vision review loop, diagram evals | 7, 9 |
 | — | Advanced agents (subgraphs, parallel research, Deep Agents) | M6 (parked) | Only if Epic 9 metrics show a measurable need | 9 |
 
 **MVP = Epics 1–5.** In the MVP:
@@ -112,7 +113,7 @@ blog-agent/
 E1 ──► E2 ──► E3 ──► E4 ──► E5   (MVP: first article published to Sanity)
                      │       └──► E8 (Dev.to)
                      ├──► E6 (style)
-                     └──► E7 (diagrams)
+                     └──► E7 (diagrams) ──► E10 (diagram quality, needs E9 evals)
 E1 (tracing) ─────────────────► E9 (evals)  — can start in parallel after E3
 ```
 

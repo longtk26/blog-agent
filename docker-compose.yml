@@ -24,8 +24,9 @@ services:
       test: ["CMD-SHELL", "node -e 'require(\"http\").get(\"http://127.0.0.1:8080/health\", (r) => process.exit(r.statusCode === 200 ? 0 : 1))'"]
       interval: 10s
       timeout: 3s
-      start_period: 5s
+      start_period: 60s   # /health turns 200 only after a real draw.io smoke export (Electron cold start)
       retries: 5
+    shm_size: "256m"      # Electron/Chromium need more than Docker's 64 MB /dev/shm
 
   api:
     build: ./api

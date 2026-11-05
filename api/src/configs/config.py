@@ -39,14 +39,17 @@ class Config(BaseSettings):
     llm_writer_model: str | None = None
     llm_fast_model: str | None = None
     llm_judge_model: str | None = None
+    llm_vision_model: str | None = None       # must accept images; diagram visual review (E10-S7)
     llm_planner_temperature: float = 0.2
     llm_writer_temperature: float = 0.7
     llm_fast_temperature: float = 0.0
     llm_judge_temperature: float = 0.0
+    llm_vision_temperature: float = 0.0
     llm_planner_max_tokens: int = 4096
     llm_writer_max_tokens: int = 8192
     llm_fast_max_tokens: int = 2048
     llm_judge_max_tokens: int = 4096
+    llm_vision_max_tokens: int = 2048
     llm_timeout_seconds: float = 120.0
     llm_max_retries: int = 2
 
@@ -118,8 +121,11 @@ class Config(BaseSettings):
     langsmith_api_key: SecretStr | None = None
     # Editable Diagrams (Epic 7)
     diagram_renderer_url: str = "http://renderer:8080"
-    diagram_render_timeout: float = 30.0
+    diagram_render_timeout: float = 45.0       # client side; the renderer caps each render at 30 s itself
     diagram_max_concurrent_renders: int = 2
+    # Diagram quality (Epic 10)
+    diagram_visual_review: bool = True         # vision-model review of the rendered PNG + bounded repair
+    diagram_review_max_rounds: int = 2         # extra generations driven by review feedback
 
     langsmith_project: str = "blog-agent-local"
     langsmith_endpoint: str = "https://api.smith.langchain.com"

@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="763" height="457" viewBox="0 0 763 457" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" content="&lt;mxfile host=&quot;app.diagrams.net&quot; agent=&quot;blog-agent&quot; version=&quot;24.0.0&quot; type=&quot;device&quot;&gt;
+  &lt;diagram id=&quot;diagram_1&quot; name=&quot;Verified webhook delivery&quot;&gt;
+    &lt;mxGraphModel dx=&quot;763&quot; dy=&quot;457&quot; grid=&quot;1&quot; gridSize=&quot;10&quot; guides=&quot;1&quot; tooltips=&quot;1&quot; connect=&quot;1&quot; arrows=&quot;1&quot; fold=&quot;1&quot; page=&quot;1&quot; pageScale=&quot;1&quot; pageWidth=&quot;763&quot; pageHeight=&quot;457&quot; background=&quot;#0B1120&quot; math=&quot;0&quot; shadow=&quot;0&quot;&gt;
+      &lt;root&gt;
+        &lt;mxCell id=&quot;0&quot; /&gt;
+        &lt;mxCell id=&quot;1&quot; parent=&quot;0&quot; /&gt;
+        &lt;mxCell id=&quot;diagram_title&quot; value=&quot;Verified webhook delivery&quot; style=&quot;text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=16;fontStyle=1;fontColor=#F1F5F9;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;22&quot; width=&quot;215.7&quot; height=&quot;28&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;prov&quot; value=&quot;Provider&quot; style=&quot;shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};size=35;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#E2E8F0;fontStyle=1;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;58&quot; width=&quot;110&quot; height=&quot;375&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;api&quot; value=&quot;Webhook endpoint&quot; style=&quot;shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};size=35;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#E2E8F0;fontStyle=1;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;208.6&quot; y=&quot;58&quot; width=&quot;126.8&quot; height=&quot;375&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;q&quot; value=&quot;Queue&quot; style=&quot;shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};size=35;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#E2E8F0;fontStyle=1;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;393.1&quot; y=&quot;58&quot; width=&quot;110&quot; height=&quot;375&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;w&quot; value=&quot;Worker&quot; style=&quot;shape=umlLifeline;perimeter=lifelinePerimeter;whiteSpace=wrap;html=1;container=1;dropTarget=0;collapsible=0;recursiveResize=0;outlineConnect=0;portConstraint=eastwest;newEdgeStyle={};size=35;fillColor=#1E293B;strokeColor=#38BDF8;fontColor=#E2E8F0;fontStyle=1;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;533.1&quot; y=&quot;58&quot; width=&quot;110&quot; height=&quot;375&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;m_0&quot; value=&quot;POST event + HMAC signature&quot; style=&quot;html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=block;endFill=1;&quot; edge=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;mxPoint x=&quot;79&quot; y=&quot;143&quot; as=&quot;sourcePoint&quot; /&gt;&lt;mxPoint x=&quot;272&quot; y=&quot;143&quot; as=&quot;targetPoint&quot; /&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;m_1&quot; value=&quot;verify signature + timestamp&quot; style=&quot;html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=block;endFill=1;&quot; edge=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;mxPoint x=&quot;272&quot; y=&quot;181&quot; as=&quot;sourcePoint&quot; /&gt;&lt;mxPoint x=&quot;272&quot; y=&quot;205&quot; as=&quot;targetPoint&quot; /&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;312&quot; y=&quot;181&quot; /&gt;&lt;mxPoint x=&quot;312&quot; y=&quot;205&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;m_2&quot; value=&quot;enqueue (idempotency key)&quot; style=&quot;html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=block;endFill=1;&quot; edge=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;mxPoint x=&quot;272&quot; y=&quot;243&quot; as=&quot;sourcePoint&quot; /&gt;&lt;mxPoint x=&quot;448.1&quot; y=&quot;243&quot; as=&quot;targetPoint&quot; /&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;m_3&quot; value=&quot;202 Accepted&quot; style=&quot;html=1;verticalAlign=bottom;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;dashed=1;endArrow=open;&quot; edge=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;mxPoint x=&quot;272&quot; y=&quot;281&quot; as=&quot;sourcePoint&quot; /&gt;&lt;mxPoint x=&quot;79&quot; y=&quot;281&quot; as=&quot;targetPoint&quot; /&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;m_4&quot; value=&quot;deliver&quot; style=&quot;html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=open;&quot; edge=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;mxPoint x=&quot;448.1&quot; y=&quot;319&quot; as=&quot;sourcePoint&quot; /&gt;&lt;mxPoint x=&quot;588.1&quot; y=&quot;319&quot; as=&quot;targetPoint&quot; /&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;m_5&quot; value=&quot;skip if key already&amp;lt;br&amp;gt;processed&quot; style=&quot;html=1;verticalAlign=bottom;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;endArrow=block;endFill=1;&quot; edge=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;mxPoint x=&quot;588.1&quot; y=&quot;371&quot; as=&quot;sourcePoint&quot; /&gt;&lt;mxPoint x=&quot;588.1&quot; y=&quot;395&quot; as=&quot;targetPoint&quot; /&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;628.1&quot; y=&quot;371&quot; /&gt;&lt;mxPoint x=&quot;628.1&quot; y=&quot;395&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+      &lt;/root&gt;
+    &lt;/mxGraphModel&gt;
+  &lt;/diagram&gt;
+&lt;/mxfile&gt;">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#94A3B8"/></marker>
+</defs>
+<rect width="100%" height="100%" rx="12" fill="#0B1120"/>
+<text x="24" y="40" font-size="16" font-weight="700" fill="#F1F5F9">Verified webhook delivery</text>
+<line x1="79" y1="93" x2="79" y2="433" stroke="#475569" stroke-width="1.2" stroke-dasharray="4 4"/>
+<line x1="272" y1="93" x2="272" y2="433" stroke="#475569" stroke-width="1.2" stroke-dasharray="4 4"/>
+<line x1="448.1" y1="93" x2="448.1" y2="433" stroke="#475569" stroke-width="1.2" stroke-dasharray="4 4"/>
+<line x1="588.1" y1="93" x2="588.1" y2="433" stroke="#475569" stroke-width="1.2" stroke-dasharray="4 4"/>
+<rect x="24" y="58" width="110" height="35" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="79" y="78">Provider</tspan></text>
+<rect x="208.6" y="58" width="126.8" height="35" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="272" y="78">Webhook endpoint</tspan></text>
+<rect x="393.1" y="58" width="110" height="35" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="448.1" y="78">Queue</tspan></text>
+<rect x="533.1" y="58" width="110" height="35" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="588.1" y="78">Worker</tspan></text>
+<path d="M 79 143 L 272 143" fill="none" stroke="#38BDF8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="175.5" y="134">POST event + HMAC signature</tspan></text>
+<path d="M 272 181 L 308 181 Q 312 181 312 185 L 312 201 Q 312 205 308 205 L 272 205" fill="none" stroke="#38BDF8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="396.4" y="189">verify signature + timestamp</tspan></text>
+<path d="M 272 243 L 448.1 243" fill="none" stroke="#38BDF8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="360" y="234">enqueue (idempotency key)</tspan></text>
+<path d="M 272 281 L 79 281" fill="none" stroke="#94A3B8" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="175.5" y="272">202 Accepted</tspan></text>
+<path d="M 448.1 319 L 588.1 319" fill="none" stroke="#38BDF8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="518.1" y="310">deliver</tspan></text>
+<path d="M 588.1 371 L 624.1 371 Q 628.1 371 628.1 375 L 628.1 391 Q 628.1 395 624.1 395 L 588.1 395" fill="none" stroke="#38BDF8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="686.3" y="372">skip if key already</tspan><tspan x="686.3" y="386">processed</tspan></text>
+</svg>

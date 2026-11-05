@@ -13,8 +13,11 @@ import heapq
 import math
 from dataclasses import dataclass, field
 
-from src.modules.diagrams.domain.icons import IconSpec, resolve_icon
+from src.configs.logger import get_logger
+from src.modules.diagrams.domain.icons import IconSpec, dominant_family, lookup, resolve_icon
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramEdge, DiagramSpec
+
+logger = get_logger(__name__)
 
 ICON_SIZE = 48
 NODE_FONT = 12
@@ -28,7 +31,7 @@ GROUP_TITLE = 34         # title band at the top of a group
 NODE_GAP = 40            # between neighbours in a rank
 RANK_GAP_LR = 72         # between ranks (grown to fit edge labels)
 RANK_GAP_TB = 64
-NODE_CLEARANCE = 14      # how close an edge may run to a node
+NODE_CLEARANCE = 18      # how close an edge may run to a node
 STUB = 20                # straight segment out of a port
 MARGIN = 24
 BEND_COST = 28
@@ -36,6 +39,10 @@ OVERLAP_COST = 6.0       # per pixel of running on another edge's line
 CROSS_COST = 14
 GROUP_CROSS_COST = 36
 SEPARATION = 10          # minimum distance between parallel lines of different edges
+ROW_GROUP_WORDS = ("region", "project")   # frames whose own services go in a bottom row (E10-S6)
+ROW_GAP = 76             # between a frame's content and its services row (room for stubs + a label)
+BORDER_CLEARANCE = 8     # closest an edge may run parallel to a group border (E10-S6)
+BORDER_COST = 12.0       # per pixel of running parallel to a group border within BORDER_CLEARANCE
 
 
 # --- text -------------------------------------------------------------------------------------
@@ -127,8 +134,9 @@ class NodeGeom:
     icon: IconSpec | None
     body: Rect                      # icon tile, or the box holding the text
     label: Rect | None = None       # text below/right of an icon
-    label_side: str | None = None   # "bottom" | "right"
+    label_side: str | None = None   # "bottom" | "right" | "top"
     group: str | None = None
+    row: bool = False               # sits in a regional services row at the bottom of its group (E10-S6)
 
     @property
     def footprint(self) -> Rect:
@@ -173,6 +181,23 @@ class TitleGeom:
 
 
 @dataclass
+class LegendItem:
+    dashed: bool
+    text: str
+    line: tuple[Point, Point]
+    text_rect: Rect
+
+
+@dataclass
+class LegendGeom:
+    rect: Rect
+    items: list[LegendItem]
+
+
+LEGEND_TEXT = {False: "data path", True: "control / automation"}
+
+
+@dataclass
 class DiagramGeometry:
     direction: str
     width: float
@@ -181,25 +206,36 @@ class DiagramGeometry:
     nodes: dict[str, NodeGeom]
     groups: list[GroupGeom]            # parents before children
     edges: list[EdgeGeom]
+    family: str = "aws"                # dominant cloud of the icons: picks AWS or GCP container styles
+    legend: LegendGeom | None = None   # solid vs dashed key, when a diagram uses both (E10-S6)
 
 
 # --- node sizes -------------------------------------------------------------------------------
 
-def _make_node(node, diagram_type: str, lr: bool) -> NodeGeom:
-    icon, text = resolve_icon(node.icon, node.label, node.kind, diagram_type)
+def _make_node(node, diagram_type: str, lr: bool, family: str | None = None, side_label: bool = False) -> NodeGeom:
+    if node.icon and lookup(node.icon) is None:
+        logger.warning(f"Unknown icon key {node.icon!r} on node {node.id!r}; drawing it as a {node.kind} shape")
+    icon, text = resolve_icon(node.icon, node.label, node.kind, diagram_type, family)
     if icon is not None:
         lines = wrap(text, 18)
         lw = max(text_width(line) for line in lines) + 4
         lh = len(lines) * LINE_HEIGHT
         body = Rect(0, 0, ICON_SIZE, ICON_SIZE)
-        if lr:
+        if lr and not side_label:
             # Label below; centred under the tile.
             width = max(ICON_SIZE, lw)
             body = Rect((width - ICON_SIZE) / 2, 0, ICON_SIZE, ICON_SIZE)
             label = Rect((width - lw) / 2, ICON_SIZE + LABEL_GAP, lw, lh)
             side = "bottom"
+        elif lr:
+            # Left-to-right flow uses the left/right sides and a services row uses the bottom: label goes on top.
+            width = max(ICON_SIZE, lw)
+            label = Rect((width - lw) / 2, 0, lw, lh)
+            body = Rect((width - ICON_SIZE) / 2, lh + LABEL_GAP, ICON_SIZE, ICON_SIZE)
+            side = "top"
         else:
-            # Top-to-bottom edges attach above/below the tile, so the label goes to the right.
+            # Edges attach above/below the tile (top-to-bottom flow, or links to a services row): label on the right,
+            # because a label under the icon always collides with an edge leaving from the bottom (note §2.5).
             height = max(ICON_SIZE, lh)
             body = Rect(0, (height - ICON_SIZE) / 2, ICON_SIZE, ICON_SIZE)
             label = Rect(ICON_SIZE + LABEL_GAP + 2, (height - lh) / 2, lw, lh)
@@ -247,11 +283,55 @@ class _Layout:
     def __init__(self, spec: DiagramSpec):
         self.spec = spec
         self.lr = spec.direction != "TB"
-        self.nodes = {n.id: _make_node(n, spec.type, self.lr) for n in spec.nodes}
+        self.family = dominant_family([n.icon for n in spec.nodes])
         self.group_ids = [g.id for g in spec.groups]
         self.group_parent = {g.id: (g.parent if g.parent in self.group_ids and g.parent != g.id else None) for g in spec.groups}
         self.node_group = {n.id: (n.group if n.group in self.group_ids else None) for n in spec.nodes}
         self.group_rects: dict[str, Rect] = {}
+        self._measured: dict[str | None, tuple[dict[str, tuple[float, float]], float, float]] = {}
+
+        # Regional services row (E10-S6): in a region/project frame that also holds nested frames (a VPC), the nodes
+        # sitting directly in it (S3, ECR, Route 53, Cloud Storage, ...) go in a row along its bottom edge instead of a
+        # side column, so their edges stay short and vertical.
+        labels = {g.id: g.label.lower() for g in spec.groups}
+        self.row_groups = {
+            gid for gid in self.group_ids
+            if any(word in labels[gid] for word in ROW_GROUP_WORDS)
+            and any(self.group_parent[c] == gid for c in self.group_ids)
+            and any(self.node_group[n.id] == gid for n in spec.nodes)
+        }
+        # Only services *used by* the nested frames qualify (every neighbour sits inside one of the frame's child
+        # groups): S3/ECR/Parameter Store next to a VPC do; a load balancer or Cloud Run API on the main flow don't.
+        self.row_nodes = set()
+        for n in spec.nodes:
+            gid = self.node_group[n.id]
+            if gid not in self.row_groups:
+                continue
+            neighbours = [e.to_node if e.from_node == n.id else e.from_node
+                          for e in spec.edges if n.id in (e.from_node, e.to_node)]
+            if neighbours and all(self._inside_child_group(other, gid) for other in neighbours):
+                self.row_nodes.add(n.id)
+        self.row_groups = {gid for gid in self.row_groups if any(self.node_group[n] == gid for n in self.row_nodes)}
+        linked = set()
+        for e in spec.edges:
+            if (e.from_node in self.row_nodes) != (e.to_node in self.row_nodes):
+                linked.add(e.to_node if e.from_node in self.row_nodes else e.from_node)
+        self.nodes = {
+            n.id: _make_node(n, spec.type, self.lr, self.family, side_label=n.id in linked) for n in spec.nodes
+        }
+        for node_id in self.row_nodes:
+            self.nodes[node_id].row = True
+
+    def _inside_child_group(self, node_id: str, gid: str) -> bool:
+        """True when node_id sits (at any depth) inside a group whose parent is gid."""
+        cur = self.node_group.get(node_id)
+        seen = set()
+        while cur is not None and cur not in seen:
+            seen.add(cur)
+            if self.group_parent.get(cur) == gid:
+                return True
+            cur = self.group_parent.get(cur)
+        return False
 
     # axis helpers: u = rank (main) axis, v = cross axis
     def _uv(self, w: float, h: float) -> tuple[float, float]:
@@ -288,8 +368,79 @@ class _Layout:
         return keys
 
     def _measure(self, container: str | None) -> tuple[dict[str, tuple[float, float]], float, float]:
-        """Relative top-left of each child in a container, plus the content size."""
+        """Relative top-left of each child in a container, plus the content size (memoised: pure per container)."""
+        if container not in self._measured:
+            self._measured[container] = self._measure_uncached(container)
+        return self._measured[container]
+
+    def _offset_in(self, container: str | None, node_id: str) -> tuple[float, float] | None:
+        """Centre of a node relative to a container's content origin (None when the node is not inside it)."""
+        key = self._child_of(container, node_id)
+        if key is None:
+            return None
+        rel, _, _ = self._measure(container)
+        if key not in rel:
+            return None
+        x, y = rel[key]
+        if key == node_id:
+            fp = self.nodes[node_id].footprint
+            body = self.nodes[node_id].body
+            return x + (body.cx - fp.x), y + (body.cy - fp.y)
+        inner = self._offset_in(key[2:], node_id)
+        return None if inner is None else (x + GROUP_PAD + inner[0], y + GROUP_TITLE + inner[1])
+
+    def _measure_uncached(self, container: str | None) -> tuple[dict[str, tuple[float, float]], float, float]:
         keys = self._children(container)
+        if container in self.row_groups:
+            return self._measure_with_row(container, keys)
+        return self._measure_keys(container, keys)
+
+    def _measure_with_row(self, container: str, keys: list[str]):
+        row = [k for k in keys if k in self.row_nodes]
+        main_keys = [k for k in keys if k not in self.row_nodes]
+        rel, main_w, main_h = self._measure_keys(container, main_keys)
+        # Order the row under the things it connects to (barycentre of neighbour x), spec order on ties.
+        desired: dict[str, float] = {}
+        for k in row:
+            xs = []
+            for e in self.spec.edges:
+                other = e.to_node if e.from_node == k else e.from_node if e.to_node == k else None
+                if other is None or other in row:
+                    continue
+                key = self._child_of(container, other)
+                if key in rel:
+                    if key == other:
+                        fp = self.nodes[other].footprint
+                        xs.append(rel[key][0] + (self.nodes[other].body.cx - fp.x))
+                    else:
+                        inner = self._offset_in(key[2:], other)
+                        if inner is not None:
+                            xs.append(rel[key][0] + GROUP_PAD + inner[0])
+            desired[k] = sum(xs) / len(xs) if xs else main_w / 2
+        row.sort(key=lambda k: (desired[k], keys.index(k)))
+        widths = [self.nodes[k].footprint.w for k in row]
+        offsets, cursor = [], 0.0
+        for k, w in zip(row, widths):
+            body = self.nodes[k].body
+            fp = self.nodes[k].footprint
+            offsets.append(cursor + (body.cx - fp.x))
+            cursor += w + NODE_GAP
+        fitted = _isotonic([desired[k] - offsets[i] for i, k in enumerate(row)])
+        shift = min(0.0, min(fitted)) if fitted else 0.0
+        row_y = main_h + ROW_GAP
+        row_h = 0.0
+        out = {k: (x - shift, y) for k, (x, y) in rel.items()} if shift < 0 else dict(rel)
+        width = main_w - shift
+        for i, k in enumerate(row):
+            fp = self.nodes[k].footprint
+            x = fitted[i] + offsets[i] - (self.nodes[k].body.cx - fp.x) - shift
+            out[k] = (x, row_y)
+            width = max(width, x + fp.w)
+            row_h = max(row_h, fp.h)
+        return out, width, row_y + row_h
+
+    def _measure_keys(self, container: str | None, keys: list[str]):
+        """Relative top-left of each child in a container, plus the content size."""
         items: dict[str, _Item] = {}
         for key in keys:
             if key.startswith("g:"):
@@ -309,9 +460,36 @@ class _Layout:
                 edges.append((a, b, edge))
         if not items:
             return {}, 0.0, 0.0
-        return self._layered(keys, items, edges)
+        return self._layered(keys, items, edges, container)
 
-    def _layered(self, keys, items, edges):
+    def _external_side(self, key: str, edges) -> tuple[str, str] | None:
+        """For a top-level external system linked to one frame only: ("before"|"after", frame key) by where its
+        neighbours sit inside that frame, so DB/ACME end up next to the NAT gateway they talk to (note §2.5)."""
+        node = next((n for n in self.spec.nodes if n.id == key), None)
+        if node is None or node.kind != "external" or self.node_group.get(key) is not None:
+            return None
+        frames = {b if a == key else a for a, b, _ in edges if key in (a, b)}
+        if len(frames) != 1:
+            return None
+        frame = next(iter(frames))
+        if not frame.startswith("g:"):
+            return None
+        gid = frame[2:]
+        positions = []
+        for e in self.spec.edges:
+            other = e.to_node if e.from_node == key else e.from_node if e.to_node == key else None
+            if other is None:
+                continue
+            pos = self._offset_in(gid, other)
+            if pos is not None:
+                positions.append(pos[0] if self.lr else pos[1])
+        if not positions:
+            return None
+        _, w, h = self._measure(gid)
+        size = w if self.lr else h
+        return ("before" if sum(positions) / len(positions) < size / 2 else "after"), frame
+
+    def _layered(self, keys, items, edges, container=None):
         # 1. ranks: longest path over a DAG (back edges found by DFS in spec order are ignored)
         succ: dict[str, list[str]] = {k: [] for k in keys}
         pred: dict[str, list[str]] = {k: [] for k in keys}
@@ -356,6 +534,15 @@ class _Layout:
         for k in keys:
             if not pred[k] and succ[k]:
                 rank[k] = max(rank[k], min(rank[s] for s in succ[k]) - 1)
+        if container is None:
+            for k in keys:
+                side = self._external_side(k, edges)
+                if side:
+                    where, frame = side
+                    rank[k] = rank[frame] - 1 if where == "before" else rank[frame] + 1
+            low = min(rank.values())
+            if low < 0:
+                rank = {k: r - low for k, r in rank.items()}
         ranks: dict[int, list[str]] = {}
         for k in keys:
             ranks.setdefault(rank[k], []).append(k)
@@ -484,6 +671,7 @@ class _Router:
         self.used_points: set[Point] = set()
         self.extra_x: set[float] = set()
         self.extra_y: set[float] = set()
+        self.penalty: list[tuple[bool, float, float, float]] = []   # (horizontal, line, lo, hi) to keep well away from
 
     def add_coordinates(self, points: list[Point]) -> None:
         for x, y in points:
@@ -499,8 +687,13 @@ class _Router:
         for g in self.groups:
             xs.update((g.rect.x - 10, g.rect.x + 10, g.rect.x2 - 10, g.rect.x2 + 10))
             ys.update((g.rect.y - 10, g.rect.y + GROUP_TITLE + 8, g.rect.y2 - 10, g.rect.y2 + 10))
-        self.xs = self._with_channels(sorted(round(x, 1) for x in xs))
-        self.ys = self._with_channels(sorted(round(y, 1) for y in ys))
+        # Group borders: vertical lines at x (spanning y1..y2) and horizontal lines at y (spanning x1..x2).
+        self.border_v = [(x, g.rect.y, g.rect.y2) for g in self.groups for x in (g.rect.x, g.rect.x2)]
+        self.border_h = [(y, g.rect.x, g.rect.x2) for g in self.groups for y in (g.rect.y, g.rect.y2)]
+        keep_x = {round(v, 1) for v in (self.bounds.x, self.bounds.x2, *self.extra_x)}
+        keep_y = {round(v, 1) for v in (self.bounds.y, self.bounds.y2, *self.extra_y)}
+        self.xs = self._off_borders(self._with_channels(sorted(round(x, 1) for x in xs)), [b[0] for b in self.border_v], keep_x)
+        self.ys = self._off_borders(self._with_channels(sorted(round(y, 1) for y in ys)), [b[0] for b in self.border_h], keep_y)
         self.ix = {x: i for i, x in enumerate(self.xs)}
         self.iy = {y: i for i, y in enumerate(self.ys)}
         # rows/columns closer than SEPARATION count as "the same line" for overlap costs
@@ -509,6 +702,11 @@ class _Router:
         # blocked intervals per row/column
         self.row_block = [[(r.x, r.x2) for r in self.hard if r.y < y < r.y2] for y in self.ys]
         self.col_block = [[(r.y, r.y2) for r in self.hard if r.x < x < r.x2] for x in self.xs]
+
+    @staticmethod
+    def _off_borders(values: list[float], borders: list[float], keep: set[float]) -> list[float]:
+        """Drop routing lines that would run on (or hug) a group border; port stubs and bounds are kept."""
+        return [v for v in values if v in keep or all(abs(v - b) >= BORDER_CLEARANCE for b in borders)]
 
     @staticmethod
     def _with_channels(values: list[float]) -> list[float]:
@@ -554,6 +752,20 @@ class _Router:
         for g in self.groups:
             if g.rect.contains(x1, y1) != g.rect.contains(x2, y2):
                 cost += GROUP_CROSS_COST
+        for horizontal, line, lo, hi in self.penalty:
+            if horizontal == bool(di):
+                pos, a, b = (y1, min(x1, x2), max(x1, x2)) if di else (x1, min(y1, y2), max(y1, y2))
+                if abs(pos - line) < SEPARATION and min(hi, b) - max(lo, a) > 0:
+                    cost += 60 * length
+        # Running parallel to a group border reads as part of the frame (note §2.4): push such segments away.
+        if di:
+            for line, lo, hi in self.border_h:
+                if abs(y1 - line) < BORDER_CLEARANCE and min(hi, max(x1, x2)) - max(lo, min(x1, x2)) > 0:
+                    cost += BORDER_COST * length
+        else:
+            for line, lo, hi in self.border_v:
+                if abs(x1 - line) < BORDER_CLEARANCE and min(hi, max(y1, y2)) - max(lo, min(y1, y2)) > 0:
+                    cost += BORDER_COST * length
         return cost
 
     def route(self, start: Point, start_dir: int, goal: Point, goal_dir: int) -> list[Point] | None:
@@ -640,16 +852,22 @@ _SIDE_OUT = {"right": (1, 0), "left": (-1, 0), "bottom": (0, 1), "top": (0, -1)}
 
 def _sides(src: NodeGeom, tgt: NodeGeom, lr: bool) -> tuple[str, str]:
     a, b = src.body, tgt.body
+    # Services rows are reached vertically: down into the row, up out of it.
+    if tgt.row and not src.row and b.y >= a.y2 + 1 and src.label_side != "bottom":
+        return "bottom", "top"
+    if src.row and not tgt.row and b.y2 <= a.y - 1 and tgt.label_side != "bottom":
+        return "top", "bottom"
     if lr:
         if b.x >= a.x2 + 1:
             return "right", "left"
         if b.x2 <= a.x - 1:
             return "left", "right"
-        # same column: icons with labels below must not use their bottom side
+        # same column: never attach on the side an icon's label sits on
         down = b.cy > a.cy
-        if src.label_side == "bottom" or tgt.label_side == "bottom":
+        exit_side, entry_side = ("bottom", "top") if down else ("top", "bottom")
+        if src.label_side == exit_side or tgt.label_side == entry_side:
             return ("right", "right")
-        return ("bottom", "top") if down else ("top", "bottom")
+        return exit_side, entry_side
     if b.y >= a.y2 + 1:
         return "bottom", "top"
     if b.y2 <= a.y - 1:
@@ -711,12 +929,17 @@ def _place_label(
                 # Branch labels ("Yes"/"No") belong next to the decision; others mid-way along the edge.
                 score = abs((walked + center) / total - (0.12 if near_source else 0.5)) * 40 if total else 0
                 score += 0 if horizontal == lr else 25
-                score += 30 * sum(_crosses(rect, o.points) for o in others if o is not edge)
+                score += 400 * sum(_crosses(rect, o.points) for o in others if o is not edge)
                 if best is None or score < best[0]:
                     best = (score, rect, (walked + center) / total if total else 0.5)
         walked += seg
+    if best is not None and best[0] >= 400:
+        # Every spot on the line sits on another edge: a spot beside the line that is clear of all edges is better.
+        side = _label_beside(edge, (w, h), blockers + _edge_rects(others, edge), total)
+        if side[0] < 1.0 or not any(_crosses(side[1], o.points) for o in others if o is not edge):
+            best = side
     if best is None:
-        best = _label_beside(edge, (w, h), blockers, total)
+        best = _label_beside(edge, (w, h), blockers + _edge_rects(others, edge), total)
     edge.label = best[1]
     edge.label_at = best[2]
 
@@ -752,6 +975,17 @@ def _label_beside(edge: EdgeGeom, size: tuple[float, float], blockers: list[Rect
             if not any(rect.intersects(r) for r in blockers):
                 return (0.0, rect, 0.5)
     return (0.0, Rect(cx - w / 2, cy - h / 2, w, h), 0.5)
+
+
+def _edge_rects(edges: list[EdgeGeom], skip: EdgeGeom) -> list[Rect]:
+    """Thin rectangles along other edges, used as blockers when a label must leave its own line."""
+    out = []
+    for e in edges:
+        if e is skip:
+            continue
+        for (x1, y1), (x2, y2) in zip(e.points, e.points[1:]):
+            out.append(Rect(min(x1, x2) - 1.5, min(y1, y2) - 1.5, abs(x2 - x1) + 3, abs(y2 - y1) + 3))
+    return out
 
 
 def _crosses(rect: Rect, points: list[Point]) -> int:
@@ -806,6 +1040,71 @@ def _nudge_overlaps(edges: list[EdgeGeom], hard: list[Rect]) -> None:
                     edge.points[i], edge.points[i + 1] = (x1, new), (x2, new)
                 else:
                     edge.points[i], edge.points[i + 1] = (new, y1), (new, y2)
+
+
+def _shared_pairs(edges: list[EdgeGeom]) -> list[tuple[EdgeGeom, EdgeGeom]]:
+    """Pairs of edges with parallel segments closer than 3 px that overlap by 6 px or more (they read as one line)."""
+    pairs = []
+    for i, e1 in enumerate(edges):
+        for e2 in edges[i + 1:]:
+            if any(_parallel_close(a1, b1, a2, b2, 3.0) >= 6.0
+                   for a1, b1 in zip(e1.points, e1.points[1:]) for a2, b2 in zip(e2.points, e2.points[1:])):
+                pairs.append((e1, e2))
+    return pairs
+
+
+def _parallel_close(a1: Point, b1: Point, a2: Point, b2: Point, distance: float) -> float:
+    h1, h2 = abs(a1[1] - b1[1]) < 0.01, abs(a2[1] - b2[1]) < 0.01
+    if h1 != h2:
+        return 0.0
+    k = 1 if h1 else 0      # coordinate that is constant along the segment
+    j = 0 if h1 else 1
+    if abs(a1[k] - a2[k]) >= distance:
+        return 0.0
+    return min(max(a1[j], b1[j]), max(a2[j], b2[j])) - max(min(a1[j], b1[j]), min(a2[j], b2[j]))
+
+
+def _segments_close(points_a: list[Point], points_b: list[Point]) -> bool:
+    return any(_parallel_close(a1, b1, a2, b2, 3.0) >= 6.0
+               for a1, b1 in zip(points_a, points_a[1:]) for a2, b2 in zip(points_b, points_b[1:]))
+
+
+def _penalty_lines(edges: list[EdgeGeom]) -> list[tuple[bool, float, float, float]]:
+    out = []
+    for e in edges:
+        for a, b in zip(e.points, e.points[1:]):
+            if abs(a[1] - b[1]) < 0.01:
+                out.append((True, a[1], min(a[0], b[0]), max(a[0], b[0])))
+            else:
+                out.append((False, a[0], min(a[1], b[1]), max(a[1], b[1])))
+    return out
+
+
+def _repair_shared_lines(edges, by_index, port_info, sides, router: "_Router") -> None:
+    """Re-route one edge of each pair that still shares a line, steering it away from every other edge (E10-S5).
+
+    A new route is kept only if it shares no line with any other edge, so a repair never moves the problem.
+    """
+    index_of = {id(e): i for i, e in by_index.items()}
+    for e1, e2 in _shared_pairs(edges):
+        if not _segments_close(e1.points, e2.points):
+            continue  # an earlier repair already fixed this pair
+        for moving in (e2, e1):
+            others = [e for e in edges if e is not moving]
+            i = index_of[id(moving)]
+            sp, ss, tp, ts = port_info[i]
+            s_side, t_side = sides[i]
+            router.penalty = _penalty_lines(others)
+            inbound = {"left": 0, "right": 1, "top": 2, "bottom": 3}[t_side]
+            path = router.route(ss, _SIDE_DIR[s_side], ts, inbound)
+            router.penalty = []
+            if path is None:
+                continue
+            candidate = _simplify([sp, *path, tp])
+            if not any(_segments_close(candidate, o.points) for o in others):
+                moving.points = candidate
+                router.commit(candidate)
+                break
 
 
 # --- entry point ------------------------------------------------------------------------------
@@ -916,6 +1215,7 @@ def build_geometry(spec: DiagramSpec) -> DiagramGeometry:
     _nudge_overlaps(edges, router.hard)
     for edge in edges:
         edge.points = _simplify(edge.points)
+    _repair_shared_lines(edges, {i: e for i, e in edge_geoms.items()}, port_info, sides, router)
 
     # Labels: place long ones first; placed labels block later ones.
     blockers = [n.body.inflate(4) for n in nodes.values()] + [n.label.inflate(2) for n in nodes.values() if n.label]
@@ -954,14 +1254,30 @@ def build_geometry(spec: DiagramSpec) -> DiagramGeometry:
             edge.label = edge.label.moved(dx, dy)
     if title:
         title.rect = title.rect.moved(dx, dy)
+    width, height = extent.w + 2 * MARGIN, extent.h + 2 * MARGIN
+    legend = None
+    if {e.dashed for e in edges} == {False, True}:
+        # Bottom-left key: "solid = data path, dashed = control / automation" (note §2.5).
+        top, items = MARGIN + extent.h + 16, []
+        for row, dashed in enumerate((False, True)):
+            y = top + row * 20 + 9
+            text = LEGEND_TEXT[dashed]
+            items.append(LegendItem(dashed, text, ((MARGIN, y), (MARGIN + 36, y)),
+                                    Rect(MARGIN + 44, y - 9, text_width(text, EDGE_FONT) + 8, 18)))
+        box = items[0].text_rect.union(items[1].text_rect).union(Rect(MARGIN, top, 36, 1))
+        legend = LegendGeom(box, items)
+        width = max(width, box.x2 + MARGIN)
+        height = box.y2 + MARGIN
     return DiagramGeometry(
         direction="LR" if lr else "TB",
-        width=math.ceil(extent.w + 2 * MARGIN),
-        height=math.ceil(extent.h + 2 * MARGIN),
+        width=math.ceil(width),
+        height=math.ceil(height),
         title=title,
         nodes=nodes,
         groups=groups,
         edges=edges,
+        family=layout.family,
+        legend=legend,
     )
 
 

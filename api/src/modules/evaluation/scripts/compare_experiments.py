@@ -26,6 +26,8 @@ DEFAULT_THRESHOLDS = {
     "min_sources_met": 0.05,
     "required_sections_present": 0.05,
     "diagram_valid": 0.05,
+    "diagram_visual_quality": 0.10,   # E10-S8: 0.10 = two minor issues or less than half a major one
+    "diagram_icons_resolved": 0.05,
     "tool_error_rate": 0.05,
     "cost_usd": 0.50,                 # $0.50 cost increase threshold
     "latency_s": 15.0,                # 15s latency regression threshold

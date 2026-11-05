@@ -15,6 +15,9 @@ test:
 	$(PY) -m pytest -q
 test-unit:
 	$(PY) -m pytest -q -m "not integration"
+diagrams-icons: ## Rebuild the icon catalogue + shape-name fixture from the pinned draw.io index (E10-S3/S4)
+	$(PY) -m src.modules.diagrams.scripts.build_icon_catalogue $(if $(REFRESH),--refresh)
+diagrams-shape-index: diagrams-icons
 eval-sync:
 	uv run python src/modules/evaluation/scripts/sync_dataset.py
 eval:
@@ -22,4 +25,4 @@ eval:
 eval-compare:
 	uv run python src/modules/evaluation/scripts/compare_experiments.py --base "$(BASE)" --new "$(NEW)"
 
-.PHONY: install run newmg mghead mgdown test test-unit eval-sync eval eval-compare
+.PHONY: install run newmg mghead mgdown test test-unit diagrams-icons diagrams-shape-index eval-sync eval eval-compare

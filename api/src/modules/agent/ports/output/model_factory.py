@@ -10,6 +10,7 @@ class ModelRole(StrEnum):
     WRITER = "writer"
     FAST = "fast"
     JUDGE = "judge"
+    VISION = "vision"   # image input: diagram visual review (E10-S7)
 
 
 @dataclass(frozen=True)

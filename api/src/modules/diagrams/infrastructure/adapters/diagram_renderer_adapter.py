@@ -40,41 +40,23 @@ class DiagramRendererAdapter(IDiagramRenderer):
     async def render_drawio(self, xml_content: str, embed_diagram: bool = True) -> RenderResult:
         try:
             async with httpx.AsyncClient(timeout=self.timeout) as client:
-                res = await client.post(
-                    f"{self.base_url}/render/drawio",
-                    json={"xml": xml_content, "embed_diagram": embed_diagram, "format": "both"},
-                )
-                if res.status_code == 200:
-                    data = res.json()
-                    svg = sanitize_svg_content(data.get("svg", ""))
-                    png_b64 = data.get("png_base64")
-                    png_bytes = base64.b64decode(png_b64) if png_b64 else None
-                    sha = data.get("sha256") or hashlib.sha256(svg.encode("utf-8")).hexdigest()
-                    return RenderResult(svg=svg, png_bytes=png_bytes, sha256=sha)
-                else:
-                    raise DiagramRendererException(f"draw.io render failed: {res.text}")
+                res = await client.post(f"{self.base_url}/render/drawio", json={"xml": xml_content})
         except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
             logger.warning(f"Diagram renderer service is unavailable at {self.base_url}: {exc}")
-            # Fallback: create standalone embedded SVG so workflow continues gracefully
-            return self._fallback_drawio_embed(xml_content)
-        except DiagramRendererException:
-            raise
-        except Exception as exc:
-            logger.warning(f"Diagram render error: {exc}")
-            return self._fallback_drawio_embed(xml_content)
-
-    async def render_png(self, svg: str, scale: float = 2) -> bytes | None:
-        try:
-            async with httpx.AsyncClient(timeout=self.timeout) as client:
-                res = await client.post(f"{self.base_url}/render/png", json={"svg": svg, "scale": scale})
-            if res.status_code == 200:
-                data = res.json().get("png_base64")
-                return base64.b64decode(data) if data else None
-            logger.warning(f"PNG render failed: {res.text[:300]}")
-        except Exception as exc:
-            # The SVG is the published asset; a missing PNG only affects Dev.to and can be regenerated.
-            logger.warning(f"PNG render unavailable: {exc}")
-        return None
+            raise RendererUnavailableException("Renderer service is unavailable") from exc
+        except httpx.TimeoutException as exc:
+            raise DiagramRendererException(f"draw.io render timed out after {self.timeout}s") from exc
+        if res.status_code != 200:
+            raise DiagramRendererException(f"draw.io render failed ({res.status_code}): {res.text[:500]}")
+        data = res.json()
+        svg = sanitize_svg_content(data.get("svg", ""))
+        if "<svg" not in svg:
+            raise DiagramRendererException("draw.io render returned no SVG")
+        png_b64 = data.get("png_base64")
+        png_bytes = base64.b64decode(png_b64) if png_b64 else None
+        # Hash what we store (the API-side sanitised SVG), so the revision hash matches the published file.
+        sha = hashlib.sha256(svg.encode("utf-8")).hexdigest()
+        return RenderResult(svg=svg, png_bytes=png_bytes, sha256=sha)
 
     async def render_mermaid(self, mermaid_code: str) -> RenderResult:
         try:
@@ -99,21 +81,6 @@ class DiagramRendererAdapter(IDiagramRenderer):
         except (httpx.ConnectError, httpx.ConnectTimeout) as exc:
             logger.warning(f"Diagram renderer service is unavailable at {self.base_url}: {exc}")
             raise RendererUnavailableException("Renderer service is unavailable")
-
-    @staticmethod
-    def _fallback_drawio_embed(xml_content: str) -> RenderResult:
-        """Create an SVG container embedding draw.io XML so it opens in diagrams.net."""
-        escaped_xml = xml_content.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
-        svg = (
-            f'<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" '
-            f'version="1.1" width="100%" height="100%" viewBox="0 0 1200 800" content="{escaped_xml}">\n'
-            f'  <rect width="100%" height="100%" fill="#0F172A" rx="8" />\n'
-            f'  <text x="50%" y="50%" fill="#94A3B8" font-family="sans-serif" font-size="16" '
-            f'text-anchor="middle" dominant-baseline="middle">draw.io diagram source embedded (open in diagrams.net)</text>\n'
-            f'</svg>'
-        )
-        sha = hashlib.sha256(svg.encode("utf-8")).hexdigest()
-        return RenderResult(svg=svg, png_bytes=None, sha256=sha)
 
 
 DiagramRendererDep = Annotated[IDiagramRenderer, Depends(DiagramRendererAdapter)]

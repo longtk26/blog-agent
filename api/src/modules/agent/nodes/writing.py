@@ -8,7 +8,7 @@ from langgraph.types import interrupt
 from src.configs.logger import get_logger
 from src.modules.agent.graph.deps import WorkflowDeps
 from src.modules.agent.graph.state import BlogState
-from src.modules.agent.nodes.base import emit, workflow_node
+from src.modules.agent.nodes.base import emit, workflow_callbacks_ctx, workflow_node
 from src.modules.agent.nodes.llm import invoke_structured
 from src.modules.agent.ports.output.model_factory import ModelRole
 from src.modules.agent.prompts.context_files import render_contract
@@ -538,6 +538,7 @@ class WritingNodes:
                     section_text=sec_text,
                     claims_text=claims_text,
                     feedback=owner_feedback,
+                    callbacks=workflow_callbacks_ctx.get() or None,  # review calls are traced and counted in run_usage
                 )
                 diagram_asset_ids.append(str(asset.id))
 
@@ -547,9 +548,15 @@ class WritingNodes:
                     sec_draft.markdown = f"{clean_md}\n\n{markdown_snippet}\n"
                     sec_map[sec_key] = sec_draft
 
-                emit("diagram_generated", slot_id=slot_id, format=asset.format, asset_id=str(asset.id))
+                review = asset.review or {}
+                emit(
+                    "diagram_generated", slot_id=slot_id, format=asset.format, asset_id=str(asset.id),
+                    review_status=review.get("status"), review_major=review.get("major"), review_rounds=asset.review_rounds,
+                )
             except Exception as exc:
+                # The article continues without this diagram; the event makes the gap visible in the dashboard.
                 logger.warning(f"Failed to generate diagram for slot {slot_id}: {exc}")
+                emit("diagram_failed", slot_id=slot_id, reason=f"{type(exc).__name__}: {str(exc)[:200]}")
 
         await self._assemble(draft, evidence)
         await self.deps.store.save_draft(draft)

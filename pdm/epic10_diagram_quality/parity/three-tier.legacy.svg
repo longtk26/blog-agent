@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="1195" height="434" viewBox="0 0 1195 434" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" content="&lt;mxfile host=&quot;app.diagrams.net&quot; agent=&quot;blog-agent&quot; version=&quot;24.0.0&quot; type=&quot;device&quot;&gt;
+  &lt;diagram id=&quot;diagram_1&quot; name=&quot;Three-tier web app on AWS&quot;&gt;
+    &lt;mxGraphModel dx=&quot;1195&quot; dy=&quot;434&quot; grid=&quot;1&quot; gridSize=&quot;10&quot; guides=&quot;1&quot; tooltips=&quot;1&quot; connect=&quot;1&quot; arrows=&quot;1&quot; fold=&quot;1&quot; page=&quot;1&quot; pageScale=&quot;1&quot; pageWidth=&quot;1195&quot; pageHeight=&quot;434&quot; background=&quot;#0B1120&quot; math=&quot;0&quot; shadow=&quot;0&quot;&gt;
+      &lt;root&gt;
+        &lt;mxCell id=&quot;0&quot; /&gt;
+        &lt;mxCell id=&quot;1&quot; parent=&quot;0&quot; /&gt;
+        &lt;mxCell id=&quot;diagram_title&quot; value=&quot;Three-tier web app on AWS&quot; style=&quot;text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=16;fontStyle=1;fontColor=#F1F5F9;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;22&quot; width=&quot;227.7&quot; height=&quot;28&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;cloud&quot; value=&quot;AWS Cloud&quot; style=&quot;points=[];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_aws_cloud_alt;strokeColor=#CBD5E1;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#CBD5E1;dashed=0;&quot; vertex=&quot;1&quot; parent=&quot;1&quot; container=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;193.2&quot; y=&quot;58&quot; width=&quot;977.4&quot; height=&quot;352&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;vpc&quot; value=&quot;VPC (10.0.0.0/16)&quot; style=&quot;points=[];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_vpc2;strokeColor=#8C4FFF;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#8C4FFF;dashed=0;&quot; vertex=&quot;1&quot; parent=&quot;cloud&quot; container=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;34&quot; width=&quot;929.4&quot; height=&quot;294&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;pub&quot; value=&quot;Public Subnet&quot; style=&quot;points=[];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_security_group;strokeColor=#7AA116;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#7AA116;dashed=0;&quot; vertex=&quot;1&quot; parent=&quot;vpc&quot; container=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;263.3&quot; y=&quot;34&quot; width=&quot;132.9&quot; height=&quot;236&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;priv&quot; value=&quot;Private Subnet&quot; style=&quot;points=[];outlineConnect=0;gradientColor=none;html=1;whiteSpace=wrap;fontSize=12;fontStyle=1;container=1;pointerEvents=0;collapsible=0;recursiveResize=0;shape=mxgraph.aws4.group;grIcon=mxgraph.aws4.group_security_group;strokeColor=#00A4A6;fillColor=none;verticalAlign=top;align=left;spacingLeft=30;fontColor=#00A4A6;dashed=0;&quot; vertex=&quot;1&quot; parent=&quot;vpc&quot; container=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;627.8&quot; y=&quot;88.5&quot; width=&quot;277.6&quot; height=&quot;127&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;user&quot; value=&quot;User&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#CBD5E1;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.aws4.user;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;210&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;igw&quot; value=&quot;Internet Gateway&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#8C4FFF;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.aws4.internet_gateway;&quot; vertex=&quot;1&quot; parent=&quot;vpc&quot;&gt;
+          &lt;mxGeometry x=&quot;51.1&quot; y=&quot;128&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;alb&quot; value=&quot;Load Balancer&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#8C4FFF;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.aws4.application_load_balancer;&quot; vertex=&quot;1&quot; parent=&quot;pub&quot;&gt;
+          &lt;mxGeometry x=&quot;42.4&quot; y=&quot;34&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;nat&quot; value=&quot;NAT Gateway&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#8C4FFF;strokeColor=none;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.aws4.nat_gateway;&quot; vertex=&quot;1&quot; parent=&quot;pub&quot;&gt;
+          &lt;mxGeometry x=&quot;42.4&quot; y=&quot;143&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;ec2&quot; value=&quot;App Server&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#ED7100;strokeColor=#FFFFFF;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;&quot; vertex=&quot;1&quot; parent=&quot;priv&quot;&gt;
+          &lt;mxGeometry x=&quot;34.2&quot; y=&quot;34&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;rds&quot; value=&quot;Postgres&quot; style=&quot;sketch=0;outlineConnect=0;gradientColor=none;fillColor=#C925D1;strokeColor=#FFFFFF;dashed=0;pointerEvents=1;html=1;fontSize=12;fontStyle=0;fontColor=#E2E8F0;fontFamily=Helvetica;aspect=fixed;verticalLabelPosition=bottom;verticalAlign=top;align=center;shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;&quot; vertex=&quot;1&quot; parent=&quot;priv&quot;&gt;
+          &lt;mxGeometry x=&quot;202.5&quot; y=&quot;34&quot; width=&quot;48&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e0_user_igw&quot; value=&quot;HTTPS&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=-0.0008;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;user&quot; target=&quot;igw&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.1992&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;237.2&quot; y=&quot;234&quot; /&gt;&lt;mxPoint x=&quot;237.2&quot; y=&quot;244&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e1_igw_alb&quot; value=&quot;0.0.0.0/0&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=0.9992;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0008;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;vpc&quot; source=&quot;igw&quot; target=&quot;alb&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.0637&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;283.3&quot; y=&quot;152&quot; /&gt;&lt;mxPoint x=&quot;283.3&quot; y=&quot;92&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e2_alb_ec2&quot; value=&quot;Internal traffic&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0008;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0000;entryY=0.3542;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;vpc&quot; source=&quot;alb&quot; target=&quot;ec2&quot;&gt;
+          &lt;mxGeometry x=&quot;0.0155&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;617.8&quot; y=&quot;92&quot; /&gt;&lt;mxPoint x=&quot;617.8&quot; y=&quot;139.5&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e3_ec2_nat&quot; value=&quot;Outbound&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=0.0000;exitY=0.6458;exitDx=0;exitDy=0;exitPerimeter=0;entryX=1.0008;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;vpc&quot; source=&quot;ec2&quot; target=&quot;nat&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.0145&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;376.2&quot; y=&quot;153.5&quot; /&gt;&lt;mxPoint x=&quot;376.2&quot; y=&quot;201&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e4_ec2_rds&quot; value=&quot;SQL&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.0008;entryY=0.5000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;priv&quot; source=&quot;ec2&quot; target=&quot;rds&quot;&gt;
+          &lt;mxGeometry x=&quot;0.0367&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+      &lt;/root&gt;
+    &lt;/mxGraphModel&gt;
+  &lt;/diagram&gt;
+&lt;/mxfile&gt;">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#94A3B8"/></marker>
+</defs>
+<rect width="100%" height="100%" rx="12" fill="#0B1120"/>
+<text x="24" y="40" font-size="16" font-weight="700" fill="#F1F5F9">Three-tier web app on AWS</text>
+<rect x="193.2" y="58" width="977.4" height="352" rx="6" fill="#CBD5E1" fill-opacity="0.05" stroke="#CBD5E1" stroke-width="1.4"/>
+<rect x="193.2" y="58" width="24" height="24" rx="4" fill="#CBD5E1"/>
+<g transform="translate(197.2,62) scale(0.667)" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4 4 0 0 1-.5-8 5.5 5.5 0 0 1 10.6-1.5A4.5 4.5 0 0 1 17 18z"/></g>
+<text x="225.2" y="75" font-size="12" font-weight="700" fill="#E2E8F0">AWS Cloud</text>
+<rect x="217.2" y="92" width="929.4" height="294" rx="6" fill="#8C4FFF" fill-opacity="0.05" stroke="#8C4FFF" stroke-width="1.4"/>
+<rect x="217.2" y="92" width="24" height="24" rx="4" fill="#8C4FFF"/>
+<g transform="translate(221.2,96) scale(0.667)" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17a3.5 3.5 0 0 1-.5-7 5 5 0 0 1 9.6-1.3A4 4 0 0 1 17 17z"/><path d="M10 13h4"/></g>
+<text x="249.2" y="109" font-size="12" font-weight="700" fill="#C4B5FD">VPC (10.0.0.0/16)</text>
+<rect x="480.5" y="126" width="132.9" height="236" rx="6" fill="#7AA116" fill-opacity="0.05" stroke="#7AA116" stroke-width="1.4"/>
+<rect x="480.5" y="126" width="24" height="24" rx="4" fill="#7AA116"/>
+<g transform="translate(484.5,130) scale(0.667)" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="11" width="12" height="9" rx="1.5"/><path d="M9 11V8a3 3 0 0 1 6 0"/></g>
+<text x="512.5" y="143" font-size="12" font-weight="700" fill="#BEF264">Public Subnet</text>
+<rect x="845" y="180.5" width="277.6" height="127" rx="6" fill="#00A4A6" fill-opacity="0.05" stroke="#00A4A6" stroke-width="1.4"/>
+<rect x="845" y="180.5" width="24" height="24" rx="4" fill="#00A4A6"/>
+<g transform="translate(849,184.5) scale(0.667)" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="11" width="12" height="9" rx="1.5"/><path d="M9 11V8a3 3 0 0 1 6 0v3"/></g>
+<text x="877" y="197.5" font-size="12" font-weight="700" fill="#5EEAD4">Private Subnet</text>
+<path d="M 72 234 L 232.2 234 Q 237.2 234 237.2 239 L 237.2 239 Q 237.2 244 242.2 244 L 268.3 244" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="131.1" y="224" width="47" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="154.6" y="237">HTTPS</tspan></text>
+<path d="M 316.3 244 L 494.5 244 Q 500.5 244 500.5 238 L 500.5 190 Q 500.5 184 506.5 184 L 523 184" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="409.7" y="234" width="63" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="441.2" y="247">0.0.0.0/0</tspan></text>
+<path d="M 571 184 L 829 184 Q 835 184 835 190 L 835 225.5 Q 835 231.5 841 231.5 L 879.2 231.5" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="706.6" y="174" width="90" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="751.6" y="187">Internal traffic</tspan></text>
+<path d="M 879.2 245.5 L 599.4 245.5 Q 593.4 245.5 593.4 251.5 L 593.4 287 Q 593.4 293 587.4 293 L 571 293" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="674.9" y="235.5" width="58" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="703.9" y="248.5">Outbound</tspan></text>
+<path d="M 927.2 238.5 L 1047.6 238.5" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="973.1" y="228.5" width="33" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="989.6" y="241.5">SQL</tspan></text>
+<rect x="24" y="210" width="48" height="48" rx="6" fill="#CBD5E1"/>
+<g transform="translate(34,220) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4.5 20c0-4.2 3.4-6.5 7.5-6.5s7.5 2.3 7.5 6.5"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="48" y="276">User</tspan></text>
+<rect x="268.3" y="220" width="48" height="48" rx="6" fill="#8C4FFF"/>
+<g transform="translate(278.3,230) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20V10a7 7 0 0 1 14 0v10"/><path d="M9 15h6M12 12v6"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="292.3" y="286">Internet Gateway</tspan></text>
+<rect x="523" y="160" width="48" height="48" rx="6" fill="#8C4FFF"/>
+<g transform="translate(533,170) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M4 12h5M15 12l5-5M15 12l5 5M15 12h5"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="547" y="226">Load Balancer</tspan></text>
+<rect x="523" y="269" width="48" height="48" rx="6" fill="#8C4FFF"/>
+<g transform="translate(533,279) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h13l-3-3M20 15H7l3 3"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="547" y="335">NAT Gateway</tspan></text>
+<rect x="879.2" y="214.5" width="48" height="48" rx="6" fill="#ED7100"/>
+<g transform="translate(889.2,224.5) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="1.5"/><path d="M8 8h8M8 12h8M8 16h5"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="903.2" y="280.5">App Server</tspan></text>
+<rect x="1047.6" y="214.5" width="48" height="48" rx="6" fill="#C925D1"/>
+<g transform="translate(1057.6,224.5) scale(1.167)" fill="none" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 12c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6"/></g>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="1071.6" y="280.5">Postgres</tspan></text>
+</svg>

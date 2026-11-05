@@ -381,3 +381,116 @@ examples:
         - "PKCE creates a cryptographic proof that the client requesting tokens is the one that initiated authorization."
         - "The code_challenge is sent during the initial authorization request and code_verifier during token exchange."
         - "The code challenge method S256 uses SHA-256 hashing on the code verifier."
+
+  # --- Epic 10: diagram-focused cases, scored by diagram_visual_quality / diagram_icons_resolved -------------------
+  - id: "eval-13-diagram-aws-eks-gitops"
+    inputs:
+      topic: "Running a Small Product on AWS EKS with Argo CD GitOps"
+      mode: "article"
+      audience: "Backend engineers moving their first service to Kubernetes"
+      depth: "intermediate"
+      format: "tutorial"
+      include_diagram: "yes"
+      diagram_format: "drawio"
+      requirements: "Show the full architecture in one diagram: users, Route 53, internet gateway, ALB and NAT gateway in public subnets, an EKS cluster in private subnets with an app namespace (ingress, API pods, worker pods) and an argocd namespace, ECR, S3 and Parameter Store as regional services, GitHub syncing to Argo CD, and an external managed Postgres reached through the NAT gateway."
+    reference:
+      format: "tutorial"
+      diagram_expected: true
+      diagram_type: "architecture"
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "Public vs private subnets and why the cluster nodes sit in private subnets"
+        - "How Argo CD pulls desired state from GitHub (GitOps) instead of CI pushing to the cluster"
+        - "Pulling images from ECR and reading configuration from Parameter Store"
+      expected_sections:
+        - "Architecture Overview"
+        - "Networking: VPC, Subnets, ALB and NAT"
+        - "GitOps Deployments with Argo CD"
+      known_facts:
+        - "A NAT gateway lets resources in private subnets reach the internet without accepting inbound connections."
+        - "Argo CD continuously reconciles the cluster state with manifests stored in a Git repository."
+
+  - id: "eval-14-diagram-gcp-serverless"
+    inputs:
+      topic: "A Serverless Media Pipeline on Google Cloud"
+      mode: "article"
+      audience: "Developers designing event-driven systems on GCP"
+      depth: "intermediate"
+      format: "concept"
+      include_diagram: "yes"
+      diagram_format: "drawio"
+      requirements: "Draw one Google Cloud architecture diagram: users through Cloud Load Balancing to a Cloud Run API, uploads to Cloud Storage, jobs published to Pub/Sub, GKE workers subscribing and writing to Cloud SQL, all inside a project with a VPC network for GKE and Cloud SQL."
+    reference:
+      format: "concept"
+      diagram_expected: true
+      diagram_type: "architecture"
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "Decoupling the API from workers with Pub/Sub"
+        - "When to choose Cloud Run versus GKE for a workload"
+        - "Private connectivity from GKE to Cloud SQL"
+      expected_sections:
+        - "Architecture Overview"
+        - "Asynchronous Processing with Pub/Sub"
+        - "Choosing Cloud Run or GKE"
+      known_facts:
+        - "Pub/Sub delivers each message to every subscription attached to a topic."
+        - "Cloud Run scales container instances automatically, including down to zero."
+
+  - id: "eval-15-diagram-flowchart-incident"
+    inputs:
+      topic: "An Incident Triage Flow for Small Engineering Teams"
+      mode: "article"
+      audience: "On-call engineers"
+      depth: "intro"
+      format: "concept"
+      include_diagram: "yes"
+      diagram_format: "drawio"
+      requirements: "Include one flowchart of the triage decisions: alert fires, check customer impact, decide severity, page or ticket, mitigate, write a postmortem."
+    reference:
+      format: "concept"
+      diagram_expected: true
+      diagram_type: "flowchart"
+      min_sources: 2
+      must_cover:
+        - "Assessing customer impact before choosing a severity"
+        - "Mitigation before root-cause analysis"
+        - "Blameless postmortems"
+      expected_sections:
+        - "The Triage Flow"
+        - "Choosing a Severity"
+        - "After the Incident"
+      known_facts:
+        - "Mitigating customer impact takes priority over finding the root cause during an incident."
+
+  - id: "eval-16-diagram-sequence-webhook"
+    inputs:
+      topic: "Verifying Webhooks: Signatures, Retries and Idempotency"
+      mode: "article"
+      audience: "Backend engineers integrating third-party webhooks"
+      depth: "intermediate"
+      format: "tutorial"
+      include_diagram: "yes"
+      diagram_format: "drawio"
+      requirements: "Include one sequence diagram between the provider, our webhook endpoint, a queue and a worker: signed delivery, signature check, enqueue, 2xx acknowledgement, retry on timeout, idempotent processing."
+    reference:
+      format: "tutorial"
+      diagram_expected: true
+      diagram_type: "sequence"
+      min_sources: 2
+      expected_source_types:
+        - "official_docs"
+      must_cover:
+        - "HMAC signature verification with a shared secret and a timestamp"
+        - "Acknowledging quickly and processing asynchronously"
+        - "Idempotency keys to make retried deliveries safe"
+      expected_sections:
+        - "How Webhook Delivery Works"
+        - "Verifying the Signature"
+        - "Retries and Idempotent Processing"
+      known_facts:
+        - "Webhook providers typically retry deliveries that do not receive a 2xx response in time."

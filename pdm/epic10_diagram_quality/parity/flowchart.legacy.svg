@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="646" height="724" viewBox="0 0 646 724" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" content="&lt;mxfile host=&quot;app.diagrams.net&quot; agent=&quot;blog-agent&quot; version=&quot;24.0.0&quot; type=&quot;device&quot;&gt;
+  &lt;diagram id=&quot;diagram_1&quot; name=&quot;Fine-tuning decision&quot;&gt;
+    &lt;mxGraphModel dx=&quot;646&quot; dy=&quot;724&quot; grid=&quot;1&quot; gridSize=&quot;10&quot; guides=&quot;1&quot; tooltips=&quot;1&quot; connect=&quot;1&quot; arrows=&quot;1&quot; fold=&quot;1&quot; page=&quot;1&quot; pageScale=&quot;1&quot; pageWidth=&quot;646&quot; pageHeight=&quot;724&quot; background=&quot;#0B1120&quot; math=&quot;0&quot; shadow=&quot;0&quot;&gt;
+      &lt;root&gt;
+        &lt;mxCell id=&quot;0&quot; /&gt;
+        &lt;mxCell id=&quot;1&quot; parent=&quot;0&quot; /&gt;
+        &lt;mxCell id=&quot;diagram_title&quot; value=&quot;Fine-tuning decision&quot; style=&quot;text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=top;fontSize=16;fontStyle=1;fontColor=#F1F5F9;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;22&quot; width=&quot;171.4&quot; height=&quot;28&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;s&quot; value=&quot;Improve LLM performance&quot; style=&quot;rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#E2E8F0;fontSize=12;fontFamily=Helvetica;fontStyle=1;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;198.5&quot; y=&quot;58&quot; width=&quot;187&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;d1&quot; value=&quot;Need dynamic or&amp;lt;br&amp;gt;private facts?&quot; style=&quot;rhombus;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#FBBF24;strokeWidth=1.6;fontColor=#E2E8F0;fontSize=12;fontFamily=Helvetica;fontStyle=1;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;190&quot; y=&quot;170&quot; width=&quot;204&quot; height=&quot;90&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;rag&quot; value=&quot;Use RAG (vector DB +&amp;lt;br&amp;gt;search)&quot; style=&quot;rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#E2E8F0;fontSize=12;fontFamily=Helvetica;fontStyle=1;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;24&quot; y=&quot;402&quot; width=&quot;152&quot; height=&quot;54&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;d2&quot; value=&quot;Need custom tone&amp;lt;br&amp;gt;or structure?&quot; style=&quot;rhombus;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#FBBF24;strokeWidth=1.6;fontColor=#E2E8F0;fontSize=12;fontFamily=Helvetica;fontStyle=1;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;379&quot; y=&quot;384&quot; width=&quot;210&quot; height=&quot;90&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;ft&quot; value=&quot;Fine-tune (PEFT / QLoRA)&quot; style=&quot;rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#E2E8F0;fontSize=12;fontFamily=Helvetica;fontStyle=1;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;163.8&quot; y=&quot;598&quot; width=&quot;178&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;pr&quot; value=&quot;Use prompting&quot; style=&quot;rounded=1;arcSize=14;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#38BDF8;strokeWidth=1.6;fontColor=#E2E8F0;fontSize=12;fontFamily=Helvetica;fontStyle=1;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;399.2&quot; y=&quot;598&quot; width=&quot;120&quot; height=&quot;48&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;data&quot; value=&quot;Curated dataset&quot; style=&quot;shape=cylinder3;boundedLbl=1;backgroundOutline=1;size=7;whiteSpace=wrap;html=1;fillColor=#1E293B;strokeColor=#4ADE80;strokeWidth=1.6;fontColor=#E2E8F0;fontSize=12;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;216&quot; y=&quot;397&quot; width=&quot;123&quot; height=&quot;64&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e0_s_d1&quot; value=&quot;&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;s&quot; target=&quot;d1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e1_d1_rag&quot; value=&quot;Yes&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;d1&quot; target=&quot;rag&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.0310&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;100&quot; y=&quot;215&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e2_d1_d2&quot; value=&quot;No&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5000;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;d1&quot; target=&quot;d2&quot;&gt;
+          &lt;mxGeometry x=&quot;0.0085&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;484&quot; y=&quot;215&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e3_d2_ft&quot; value=&quot;Yes&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=0.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.6576;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;d2&quot; target=&quot;ft&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.4386&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;357&quot; y=&quot;429&quot; /&gt;&lt;mxPoint x=&quot;357&quot; y=&quot;535&quot; /&gt;&lt;mxPoint x=&quot;280.8&quot; y=&quot;535&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e4_d2_pr&quot; value=&quot;No&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=1.0000;exitY=0.5000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.4996;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;d2&quot; target=&quot;pr&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.7001&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;609&quot; y=&quot;429&quot; /&gt;&lt;mxPoint x=&quot;609&quot; y=&quot;535&quot; /&gt;&lt;mxPoint x=&quot;459.2&quot; y=&quot;535&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e5_data_ft&quot; value=&quot;500+ examples&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.5003;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;data&quot; target=&quot;ft&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.3865&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;277.5&quot; y=&quot;535&quot; /&gt;&lt;mxPoint x=&quot;252.8&quot; y=&quot;535&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;e6_rag_ft&quot; value=&quot;combine&quot; style=&quot;edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#94A3B8;strokeWidth=1.6;fontColor=#CBD5E1;fontSize=11;fontFamily=Helvetica;labelBackgroundColor=#0B1120;labelBorderColor=#334155;endArrow=block;endFill=1;dashed=1;exitX=0.5000;exitY=1.0000;exitDx=0;exitDy=0;exitPerimeter=0;entryX=0.3430;entryY=0.0000;entryDx=0;entryDy=0;entryPerimeter=0;&quot; edge=&quot;1&quot; parent=&quot;1&quot; source=&quot;rag&quot; target=&quot;ft&quot;&gt;
+          &lt;mxGeometry x=&quot;-0.5982&quot; relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;Array as=&quot;points&quot;&gt;&lt;mxPoint x=&quot;100&quot; y=&quot;535&quot; /&gt;&lt;mxPoint x=&quot;224.8&quot; y=&quot;535&quot; /&gt;&lt;/Array&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;legend_line_0&quot; value=&quot;&quot; style=&quot;html=1;endArrow=block;endFill=1;strokeColor=#94A3B8;strokeWidth=1.6;&quot; edge=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;mxPoint x=&quot;24&quot; y=&quot;671&quot; as=&quot;sourcePoint&quot; /&gt;&lt;mxPoint x=&quot;60&quot; y=&quot;671&quot; as=&quot;targetPoint&quot; /&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;legend_text_0&quot; value=&quot;data path&quot; style=&quot;text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#CBD5E1;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;68&quot; y=&quot;662&quot; width=&quot;53.5&quot; height=&quot;18&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;legend_line_1&quot; value=&quot;&quot; style=&quot;html=1;endArrow=block;endFill=1;strokeColor=#94A3B8;strokeWidth=1.6;dashed=1;&quot; edge=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry relative=&quot;1&quot; as=&quot;geometry&quot;&gt;&lt;mxPoint x=&quot;24&quot; y=&quot;691&quot; as=&quot;sourcePoint&quot; /&gt;&lt;mxPoint x=&quot;60&quot; y=&quot;691&quot; as=&quot;targetPoint&quot; /&gt;&lt;/mxGeometry&gt;
+        &lt;/mxCell&gt;
+        &lt;mxCell id=&quot;legend_text_1&quot; value=&quot;control / automation&quot; style=&quot;text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=11;fontColor=#CBD5E1;fontFamily=Helvetica;&quot; vertex=&quot;1&quot; parent=&quot;1&quot;&gt;
+          &lt;mxGeometry x=&quot;68&quot; y=&quot;682&quot; width=&quot;111.7&quot; height=&quot;18&quot; as=&quot;geometry&quot; /&gt;
+        &lt;/mxCell&gt;
+      &lt;/root&gt;
+    &lt;/mxGraphModel&gt;
+  &lt;/diagram&gt;
+&lt;/mxfile&gt;">
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 1 L 10 5 L 0 9 z" fill="#94A3B8"/></marker>
+</defs>
+<rect width="100%" height="100%" rx="12" fill="#0B1120"/>
+<text x="24" y="40" font-size="16" font-weight="700" fill="#F1F5F9">Fine-tuning decision</text>
+<path d="M 292 106 L 292 170" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<path d="M 190 215 L 106 215 Q 100 215 100 221 L 100 402" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="84.5" y="249.2" width="31" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="100" y="262.2">Yes</tspan></text>
+<path d="M 394 215 L 478 215 Q 484 215 484 221 L 484 384" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="471.5" y="245.6" width="25" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="484" y="258.6">No</tspan></text>
+<path d="M 379 429 L 363 429 Q 357 429 357 435 L 357 529 Q 357 535 351 535 L 286.8 535 Q 280.8 535 280.8 541 L 280.8 598" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="341.5" y="472" width="31" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="357" y="485">Yes</tspan></text>
+<path d="M 589 429 L 603 429 Q 609 429 609 435 L 609 529 Q 609 535 603 535 L 465.2 535 Q 459.2 535 459.2 541 L 459.2 598" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="596.5" y="449.8" width="25" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="609" y="462.8">No</tspan></text>
+<path d="M 277.5 461 L 277.5 529 Q 277.5 535 271.5 535 L 258.8 535 Q 252.8 535 252.8 541 L 252.8 598" fill="none" stroke="#94A3B8" stroke-width="1.6" marker-end="url(#arrow)"/>
+<rect x="232" y="500.6" width="91" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="277.5" y="513.6">500+ examples</tspan></text>
+<path d="M 100 456 L 100 529 Q 100 535 106 535 L 218.8 535 Q 224.8 535 224.8 541 L 224.8 598" fill="none" stroke="#94A3B8" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arrow)"/>
+<rect x="73" y="499.6" width="54" height="20" rx="4" fill="#0B1120" stroke="#334155" stroke-width="0.8"/>
+<text text-anchor="middle" font-size="11" font-weight="500" fill="#CBD5E1"><tspan x="100" y="512.6">combine</tspan></text>
+<rect x="198.5" y="58" width="187" height="48" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="292" y="84.5">Improve LLM performance</tspan></text>
+<polygon points="292,170 394,215 292,260 190,215" fill="#1E293B" stroke="#FBBF24" stroke-width="1.6" stroke-linejoin="round"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="292" y="210">Need dynamic or</tspan><tspan x="292" y="225">private facts?</tspan></text>
+<rect x="24" y="402" width="152" height="54" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="100" y="424">Use RAG (vector DB +</tspan><tspan x="100" y="439">search)</tspan></text>
+<polygon points="484,384 589,429 484,474 379,429" fill="#1E293B" stroke="#FBBF24" stroke-width="1.6" stroke-linejoin="round"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="484" y="424">Need custom tone</tspan><tspan x="484" y="439">or structure?</tspan></text>
+<rect x="163.8" y="598" width="178" height="48" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="252.8" y="624.5">Fine-tune (PEFT / QLoRA)</tspan></text>
+<rect x="399.2" y="598" width="120" height="48" rx="8" fill="#1E293B" stroke="#38BDF8" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="600" fill="#E2E8F0"><tspan x="459.2" y="624.5">Use prompting</tspan></text>
+<path d="M 216 404 A 61.5 7 0 0 1 339 404 V 454 A 61.5 7 0 0 1 216 454 Z" fill="#1E293B" stroke="#4ADE80" stroke-width="1.6"/><path d="M 216 404 A 61.5 7 0 0 0 339 404" fill="none" stroke="#4ADE80" stroke-width="1.6"/>
+<text text-anchor="middle" font-size="12" font-weight="500" fill="#E2E8F0"><tspan x="277.5" y="431.5">Curated dataset</tspan></text>
+</svg>

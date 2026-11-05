@@ -1,0 +1,853 @@
+{
+ "index_commit": "312d8062b95701d8e3b4ad8ab5fefe77ae8cc2db",
+ "icons": {
+  "aws:ec2": {
+   "family": "aws",
+   "fill": "#ED7100",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "ec2",
+    "instance",
+    "virtual machine"
+   ],
+   "source": "resIcon:mxgraph.aws4.ec2",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ec2;"
+  },
+  "aws:lambda": {
+   "family": "aws",
+   "fill": "#ED7100",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "lambda"
+   ],
+   "source": "resIcon:mxgraph.aws4.lambda",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.lambda;"
+  },
+  "aws:ecs": {
+   "family": "aws",
+   "fill": "#ED7100",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "ecs"
+   ],
+   "source": "resIcon:mxgraph.aws4.ecs",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecs;"
+  },
+  "aws:fargate": {
+   "family": "aws",
+   "fill": "#ED7100",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "fargate"
+   ],
+   "source": "resIcon:mxgraph.aws4.fargate",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.fargate;"
+  },
+  "aws:eks": {
+   "family": "aws",
+   "fill": "#ED7100",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "eks"
+   ],
+   "source": "resIcon:mxgraph.aws4.eks",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eks;"
+  },
+  "aws:ecr": {
+   "family": "aws",
+   "fill": "#ED7100",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "ecr",
+    "container registry"
+   ],
+   "source": "resIcon:mxgraph.aws4.ecr",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.ecr;"
+  },
+  "aws:s3": {
+   "family": "aws",
+   "fill": "#7AA116",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "s3",
+    "bucket"
+   ],
+   "source": "resIcon:mxgraph.aws4.s3",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.s3;"
+  },
+  "aws:rds": {
+   "family": "aws",
+   "fill": "#C925D1",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "rds",
+    "aurora"
+   ],
+   "source": "resIcon:mxgraph.aws4.rds",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.rds;"
+  },
+  "aws:dynamodb": {
+   "family": "aws",
+   "fill": "#C925D1",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "dynamodb",
+    "dynamo"
+   ],
+   "source": "resIcon:mxgraph.aws4.dynamodb",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.dynamodb;"
+  },
+  "aws:elasticache": {
+   "family": "aws",
+   "fill": "#C925D1",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "elasticache"
+   ],
+   "source": "resIcon:mxgraph.aws4.elasticache",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.elasticache;"
+  },
+  "aws:cloudfront": {
+   "family": "aws",
+   "fill": "#8C4FFF",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "cloudfront"
+   ],
+   "source": "resIcon:mxgraph.aws4.cloudfront",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudfront;"
+  },
+  "aws:api_gateway": {
+   "family": "aws",
+   "fill": "#8C4FFF",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "api gateway",
+    "apigw"
+   ],
+   "source": "resIcon:mxgraph.aws4.api_gateway",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.api_gateway;"
+  },
+  "aws:route53": {
+   "family": "aws",
+   "fill": "#8C4FFF",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "route 53",
+    "route53"
+   ],
+   "source": "resIcon:mxgraph.aws4.route_53",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.route_53;"
+  },
+  "aws:alb": {
+   "family": "aws",
+   "fill": "#8C4FFF",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "alb",
+    "elb",
+    "load balancer"
+   ],
+   "source": "shape:mxgraph.aws4.application_load_balancer",
+   "shape_style": "shape=mxgraph.aws4.application_load_balancer;"
+  },
+  "aws:nlb": {
+   "family": "aws",
+   "fill": "#8C4FFF",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "nlb"
+   ],
+   "source": "shape:mxgraph.aws4.network_load_balancer",
+   "shape_style": "shape=mxgraph.aws4.network_load_balancer;"
+  },
+  "aws:igw": {
+   "family": "aws",
+   "fill": "#8C4FFF",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "igw",
+    "internet gateway"
+   ],
+   "source": "shape:mxgraph.aws4.internet_gateway",
+   "shape_style": "shape=mxgraph.aws4.internet_gateway;"
+  },
+  "aws:nat": {
+   "family": "aws",
+   "fill": "#8C4FFF",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "nat gateway",
+    "nat"
+   ],
+   "source": "shape:mxgraph.aws4.nat_gateway",
+   "shape_style": "shape=mxgraph.aws4.nat_gateway;"
+  },
+  "aws:eventbridge": {
+   "family": "aws",
+   "fill": "#E7157B",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "eventbridge",
+    "event bridge"
+   ],
+   "source": "resIcon:mxgraph.aws4.eventbridge",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.eventbridge;"
+  },
+  "aws:sqs": {
+   "family": "aws",
+   "fill": "#E7157B",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "sqs"
+   ],
+   "source": "resIcon:mxgraph.aws4.sqs",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sqs;"
+  },
+  "aws:sns": {
+   "family": "aws",
+   "fill": "#E7157B",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "sns"
+   ],
+   "source": "resIcon:mxgraph.aws4.sns",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sns;"
+  },
+  "aws:step_functions": {
+   "family": "aws",
+   "fill": "#E7157B",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "step functions"
+   ],
+   "source": "resIcon:mxgraph.aws4.step_functions",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.step_functions;"
+  },
+  "aws:kinesis": {
+   "family": "aws",
+   "fill": "#8C4FFF",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "kinesis"
+   ],
+   "source": "resIcon:mxgraph.aws4.kinesis",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.kinesis;"
+  },
+  "aws:cognito": {
+   "family": "aws",
+   "fill": "#DD344C",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "cognito"
+   ],
+   "source": "resIcon:mxgraph.aws4.cognito",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cognito;"
+  },
+  "aws:iam": {
+   "family": "aws",
+   "fill": "#DD344C",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "iam"
+   ],
+   "source": "resIcon:mxgraph.aws4.identity_and_access_management",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.identity_and_access_management;"
+  },
+  "aws:kms": {
+   "family": "aws",
+   "fill": "#DD344C",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "kms"
+   ],
+   "source": "resIcon:mxgraph.aws4.key_management_service",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.key_management_service;"
+  },
+  "aws:waf": {
+   "family": "aws",
+   "fill": "#DD344C",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "waf"
+   ],
+   "source": "resIcon:mxgraph.aws4.waf",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.waf;"
+  },
+  "aws:acm": {
+   "family": "aws",
+   "fill": "#DD344C",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "acm",
+    "certificate manager"
+   ],
+   "source": "resIcon:mxgraph.aws4.certificate_manager_3",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.certificate_manager_3;"
+  },
+  "aws:secrets_manager": {
+   "family": "aws",
+   "fill": "#DD344C",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "secrets manager"
+   ],
+   "source": "resIcon:mxgraph.aws4.secrets_manager",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.secrets_manager;"
+  },
+  "aws:parameter_store": {
+   "family": "aws",
+   "fill": "#E7157B",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "parameter store",
+    "ssm parameter"
+   ],
+   "source": "shape:mxgraph.aws4.parameter_store",
+   "shape_style": "shape=mxgraph.aws4.parameter_store;"
+  },
+  "aws:cloudwatch": {
+   "family": "aws",
+   "fill": "#E7157B",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "cloudwatch"
+   ],
+   "source": "resIcon:mxgraph.aws4.cloudwatch_2",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.cloudwatch_2;"
+  },
+  "aws:sagemaker": {
+   "family": "aws",
+   "fill": "#01A88D",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "sagemaker"
+   ],
+   "source": "resIcon:mxgraph.aws4.sagemaker",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.sagemaker;"
+  },
+  "aws:bedrock": {
+   "family": "aws",
+   "fill": "#01A88D",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "bedrock"
+   ],
+   "source": "resIcon:mxgraph.aws4.bedrock",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.bedrock;"
+  },
+  "aws:transcribe": {
+   "family": "aws",
+   "fill": "#01A88D",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "transcribe"
+   ],
+   "source": "resIcon:mxgraph.aws4.transcribe",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.transcribe;"
+  },
+  "aws:mediaconvert": {
+   "family": "aws",
+   "fill": "#ED7100",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "mediaconvert",
+    "media convert"
+   ],
+   "source": "resIcon:mxgraph.aws4.elemental_mediaconvert",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.elemental_mediaconvert;"
+  },
+  "aws:codepipeline": {
+   "family": "aws",
+   "fill": "#C925D1",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "codepipeline"
+   ],
+   "source": "resIcon:mxgraph.aws4.codepipeline",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.codepipeline;"
+  },
+  "gcp:gke": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "gke",
+    "google kubernetes engine"
+   ],
+   "source": "shape:mxgraph.gcp3.gke",
+   "shape_style": "shape=mxgraph.gcp3.gke;"
+  },
+  "gcp:cloud_run": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "cloud run"
+   ],
+   "source": "shape:mxgraph.gcp3.cloudrun",
+   "shape_style": "shape=mxgraph.gcp3.cloudrun;"
+  },
+  "gcp:compute_engine": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "compute engine",
+    "gce"
+   ],
+   "source": "shape:mxgraph.gcp3.computeengine",
+   "shape_style": "shape=mxgraph.gcp3.computeengine;"
+  },
+  "gcp:cloud_sql": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "cloud sql"
+   ],
+   "source": "shape:mxgraph.gcp3.cloudsql",
+   "shape_style": "shape=mxgraph.gcp3.cloudsql;"
+  },
+  "gcp:cloud_storage": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "cloud storage",
+    "gcs",
+    "bucket"
+   ],
+   "source": "shape:mxgraph.gcp3.cloud_storage",
+   "shape_style": "shape=mxgraph.gcp3.cloud_storage;"
+  },
+  "gcp:bigquery": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "bigquery"
+   ],
+   "source": "shape:mxgraph.gcp3.bigquery",
+   "shape_style": "shape=mxgraph.gcp3.bigquery;"
+  },
+  "gcp:spanner": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "spanner"
+   ],
+   "source": "shape:mxgraph.gcp3.cloudspanner",
+   "shape_style": "shape=mxgraph.gcp3.cloudspanner;"
+  },
+  "gcp:alloydb": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "alloydb"
+   ],
+   "source": "shape:mxgraph.gcp3.alloydb",
+   "shape_style": "shape=mxgraph.gcp3.alloydb;"
+  },
+  "gcp:vertex_ai": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "vertex ai",
+    "vertex"
+   ],
+   "source": "shape:mxgraph.gcp3.vertexai",
+   "shape_style": "shape=mxgraph.gcp3.vertexai;"
+  },
+  "gcp:apigee": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "apigee"
+   ],
+   "source": "shape:mxgraph.gcp3.apigee",
+   "shape_style": "shape=mxgraph.gcp3.apigee;"
+  },
+  "gcp:pubsub": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "pub/sub",
+    "pubsub",
+    "pub sub"
+   ],
+   "source": "image:Pub Sub",
+   "shape_style": "shape=image;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnY9Imh0dHBzOi8vdmVjdGEuaW8vbmFubyIgd2lkdGg9IjE4LjMxOTk5OTY5NDgyNDIyIiBoZWlnaHQ9IjIwLjAwMDAwMTkwNzM0ODYzMyIgdmlld0JveD0iMCAwIDE4LjMxOTk5OTY5NDgyNDIyIDIwLjAwMDAwMTkwNzM0ODYzMyI+JiN4YTsJPHN0eWxlIHR5cGU9InRleHQvY3NzIj4mI3hhOwkuc3Qwe2ZpbGw6IzY2OWRmNjt9JiN4YTsJLnN0MXtmaWxsOiM0Mjg1ZjQ7fSYjeGE7CS5zdDJ7ZmlsbDojYWVjYmZhO30mI3hhOwk8L3N0eWxlPiYjeGE7CTxkZWZzPiYjeGE7CQk8ZmlsdGVyIGlkPSJBIiB4PSI0LjY0IiB5PSI0LjE5IiB3aWR0aD0iMTQuNzMiIGhlaWdodD0iMTIuNzYiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4mI3hhOwkJCTxmZUZsb29kIGZsb29kLWNvbG9yPSIjZmZmIi8+JiN4YTsJCQk8ZmVCbGVuZCBpbj0iU291cmNlR3JhcGhpYyIvPiYjeGE7CQk8L2ZpbHRlcj4mI3hhOwkJPG1hc2sgaWQ9IkIiIHg9IjQuNjQiIHk9IjQuMTkiIHdpZHRoPSIxNC43MyIgaGVpZ2h0PSIxMi43NiIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSI+JiN4YTsJCQk8Y2lyY2xlIGN4PSIxMiIgY3k9IjEyLjIzIiByPSIzLjU4IiBmaWx0ZXI9InVybCgjQSkiLz4mI3hhOwkJPC9tYXNrPiYjeGE7CTwvZGVmcz4mI3hhOwk8ZyBjbGFzcz0ic3QwIj4mI3hhOwkJPGNpcmNsZSBjeD0iMTYuMTMiIGN5PSI2LjIxIiByPSIxLjcyIi8+JiN4YTsJCTxjaXJjbGUgY3g9IjIuMTkiIGN5PSI2LjIxIiByPSIxLjcyIi8+JiN4YTsJCTxjaXJjbGUgY3g9IjkuMTYiIGN5PSIxOC4yOCIgcj0iMS43MiIvPiYjeGE7CTwvZz4mI3hhOwk8ZyBtYXNrPSJ1cmwoI0IpIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMi44NCAtMikiPiYjeGE7CQk8cGF0aCB0cmFuc2Zvcm09Im1hdHJpeCguNSAtLjg3IC44NyAuNSAtNC41OSAyMC41MykiIGQ9Ik0xNC42OSAxMC4yMmgxLjU5djguMDRoLTEuNTl6IiBjbGFzcz0ic3QxIi8+JiN4YTsJCTxwYXRoIHRyYW5zZm9ybT0icm90YXRlKDMzMCA4LjUyMyAxNC4yNDQpIiBkPSJNNC40OSAxMy40NWg4LjA0djEuNTlINC40OXoiIGNsYXNzPSJzdDEiLz4mI3hhOwkJPHBhdGggZD0iTTExLjIgNC4xOWgxLjU5djguMDRIMTEuMnoiIGNsYXNzPSJzdDEiLz4mI3hhOwk8L2c+JiN4YTsJPGcgY2xhc3M9InN0MiI+JiN4YTsJCTxjaXJjbGUgY3g9IjkuMTYiIGN5PSIxMC4yMyIgcj0iMi43OCIvPiYjeGE7CQk8Y2lyY2xlIGN4PSIyLjE5IiBjeT0iMTQuMjUiIHI9IjIuMTkiLz4mI3hhOwkJPGNpcmNsZSBjeD0iMTYuMTMiIGN5PSIxNC4yNSIgcj0iMi4xOSIvPiYjeGE7CQk8Y2lyY2xlIGN4PSI5LjE2IiBjeT0iMi4xOSIgcj0iMi4xOSIvPiYjeGE7CTwvZz4mI3hhOzwvc3ZnPg==;",
+   "index_style": "editableCssRules=.*;html=1;shape=image;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnY9Imh0dHBzOi8vdmVjdGEuaW8vbmFubyIgd2lkdGg9IjE4LjMxOTk5OTY5NDgyNDIyIiBoZWlnaHQ9IjIwLjAwMDAwMTkwNzM0ODYzMyIgdmlld0JveD0iMCAwIDE4LjMxOTk5OTY5NDgyNDIyIDIwLjAwMDAwMTkwNzM0ODYzMyI+JiN4YTsJPHN0eWxlIHR5cGU9InRleHQvY3NzIj4mI3hhOwkuc3Qwe2ZpbGw6IzY2OWRmNjt9JiN4YTsJLnN0MXtmaWxsOiM0Mjg1ZjQ7fSYjeGE7CS5zdDJ7ZmlsbDojYWVjYmZhO30mI3hhOwk8L3N0eWxlPiYjeGE7CTxkZWZzPiYjeGE7CQk8ZmlsdGVyIGlkPSJBIiB4PSI0LjY0IiB5PSI0LjE5IiB3aWR0aD0iMTQuNzMiIGhlaWdodD0iMTIuNzYiIGZpbHRlclVuaXRzPSJ1c2VyU3BhY2VPblVzZSIgY29sb3ItaW50ZXJwb2xhdGlvbi1maWx0ZXJzPSJzUkdCIj4mI3hhOwkJCTxmZUZsb29kIGZsb29kLWNvbG9yPSIjZmZmIi8+JiN4YTsJCQk8ZmVCbGVuZCBpbj0iU291cmNlR3JhcGhpYyIvPiYjeGE7CQk8L2ZpbHRlcj4mI3hhOwkJPG1hc2sgaWQ9IkIiIHg9IjQuNjQiIHk9IjQuMTkiIHdpZHRoPSIxNC43MyIgaGVpZ2h0PSIxMi43NiIgbWFza1VuaXRzPSJ1c2VyU3BhY2VPblVzZSI+JiN4YTsJCQk8Y2lyY2xlIGN4PSIxMiIgY3k9IjEyLjIzIiByPSIzLjU4IiBmaWx0ZXI9InVybCgjQSkiLz4mI3hhOwkJPC9tYXNrPiYjeGE7CTwvZGVmcz4mI3hhOwk8ZyBjbGFzcz0ic3QwIj4mI3hhOwkJPGNpcmNsZSBjeD0iMTYuMTMiIGN5PSI2LjIxIiByPSIxLjcyIi8+JiN4YTsJCTxjaXJjbGUgY3g9IjIuMTkiIGN5PSI2LjIxIiByPSIxLjcyIi8+JiN4YTsJCTxjaXJjbGUgY3g9IjkuMTYiIGN5PSIxOC4yOCIgcj0iMS43MiIvPiYjeGE7CTwvZz4mI3hhOwk8ZyBtYXNrPSJ1cmwoI0IpIiB0cmFuc2Zvcm09InRyYW5zbGF0ZSgtMi44NCAtMikiPiYjeGE7CQk8cGF0aCB0cmFuc2Zvcm09Im1hdHJpeCguNSAtLjg3IC44NyAuNSAtNC41OSAyMC41MykiIGQ9Ik0xNC42OSAxMC4yMmgxLjU5djguMDRoLTEuNTl6IiBjbGFzcz0ic3QxIi8+JiN4YTsJCTxwYXRoIHRyYW5zZm9ybT0icm90YXRlKDMzMCA4LjUyMyAxNC4yNDQpIiBkPSJNNC40OSAxMy40NWg4LjA0djEuNTlINC40OXoiIGNsYXNzPSJzdDEiLz4mI3hhOwkJPHBhdGggZD0iTTExLjIgNC4xOWgxLjU5djguMDRIMTEuMnoiIGNsYXNzPSJzdDEiLz4mI3hhOwk8L2c+JiN4YTsJPGcgY2xhc3M9InN0MiI+JiN4YTsJCTxjaXJjbGUgY3g9IjkuMTYiIGN5PSIxMC4yMyIgcj0iMi43OCIvPiYjeGE7CQk8Y2lyY2xlIGN4PSIyLjE5IiBjeT0iMTQuMjUiIHI9IjIuMTkiLz4mI3hhOwkJPGNpcmNsZSBjeD0iMTYuMTMiIGN5PSIxNC4yNSIgcj0iMi4xOSIvPiYjeGE7CQk8Y2lyY2xlIGN4PSI5LjE2IiBjeT0iMi4xOSIgcj0iMi4xOSIvPiYjeGE7CTwvZz4mI3hhOzwvc3ZnPg==;"
+  },
+  "gcp:load_balancing": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "cloud load balancing",
+    "load balancer",
+    "load balancing"
+   ],
+   "source": "shape:mxgraph.gcp2.load_balancing",
+   "shape_style": "shape=mxgraph.gcp2.load_balancing;"
+  },
+  "gcp:iam": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "cloud iam",
+    "iam"
+   ],
+   "source": "image:Cloud IAM",
+   "shape_style": "shape=image;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnY9Imh0dHBzOi8vdmVjdGEuaW8vbmFubyIgd2lkdGg9IjE2LjQyMDAwMDA3NjI5Mzk0NSIgaGVpZ2h0PSIyMC4wNDk5OTkyMzcwNjA1NDciIGZpbGwtcnVsZT0iZXZlbm9kZCIgdmlld0JveD0iMCAwIDE2LjQyMDAwMDA3NjI5Mzk0NSAyMC4wNDk5OTkyMzcwNjA1NDciPiYjeGE7CTxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+JiN4YTsJLnN0MHtmaWxsOiM0Mjg1ZjQ7fSYjeGE7CS5zdDF7ZmlsbDojNjY5ZGY2O30mI3hhOwk8L3N0eWxlPiYjeGE7CTxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik04LjIxIDBMMCAzLjQydjUuNjNjMCA1LjA2IDMuNSA5LjggOC4yMSAxMSA0LjcxLTEuMTUgOC4yMS01Ljg5IDguMjEtMTAuOTVWMy40MnptMCAzLjc5YTIuNjMgMi42MyAwIDAgMSAxLjAwNSA1LjA2QTIuNjMgMi42MyAwIDAgMSA2LjM1IDQuNTZhMi42MyAyLjYzIDAgMCAxIDEuODYtLjc3em00LjExIDExLjE1YTguNjQgOC42NCAwIDAgMS00LjExIDIuOTMgOC42NCA4LjY0IDAgMCAxLTQuMTEtMi45M3YtMi4yNWMwLTEuNjcgMi43NC0yLjUyIDQuMTEtMi41MnM0LjExLjg1IDQuMTEgMi41MnoiLz4mI3hhOwk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNOC4yMSAwdjMuNzlhMi42MyAyLjYzIDAgMSAxIDAgNS4yNnYxLjEyYzEuMzcgMCA0LjExLjg1IDQuMTEgMi41MnYyLjI1YTguNjQgOC42NCAwIDAgMS00LjExIDIuOTNWMjBjNC43MS0xLjE1IDguMjEtNS44OSA4LjIxLTEwLjk1VjMuNDJ6Ii8+JiN4YTs8L3N2Zz4=;",
+   "index_style": "editableCssRules=.*;html=1;shape=image;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnY9Imh0dHBzOi8vdmVjdGEuaW8vbmFubyIgd2lkdGg9IjE2LjQyMDAwMDA3NjI5Mzk0NSIgaGVpZ2h0PSIyMC4wNDk5OTkyMzcwNjA1NDciIGZpbGwtcnVsZT0iZXZlbm9kZCIgdmlld0JveD0iMCAwIDE2LjQyMDAwMDA3NjI5Mzk0NSAyMC4wNDk5OTkyMzcwNjA1NDciPiYjeGE7CTxzdHlsZSB0eXBlPSJ0ZXh0L2NzcyI+JiN4YTsJLnN0MHtmaWxsOiM0Mjg1ZjQ7fSYjeGE7CS5zdDF7ZmlsbDojNjY5ZGY2O30mI3hhOwk8L3N0eWxlPiYjeGE7CTxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik04LjIxIDBMMCAzLjQydjUuNjNjMCA1LjA2IDMuNSA5LjggOC4yMSAxMSA0LjcxLTEuMTUgOC4yMS01Ljg5IDguMjEtMTAuOTVWMy40MnptMCAzLjc5YTIuNjMgMi42MyAwIDAgMSAxLjAwNSA1LjA2QTIuNjMgMi42MyAwIDAgMSA2LjM1IDQuNTZhMi42MyAyLjYzIDAgMCAxIDEuODYtLjc3em00LjExIDExLjE1YTguNjQgOC42NCAwIDAgMS00LjExIDIuOTMgOC42NCA4LjY0IDAgMCAxLTQuMTEtMi45M3YtMi4yNWMwLTEuNjcgMi43NC0yLjUyIDQuMTEtMi41MnM0LjExLjg1IDQuMTEgMi41MnoiLz4mI3hhOwk8cGF0aCBjbGFzcz0ic3QwIiBkPSJNOC4yMSAwdjMuNzlhMi42MyAyLjYzIDAgMSAxIDAgNS4yNnYxLjEyYzEuMzcgMCA0LjExLjg1IDQuMTEgMi41MnYyLjI1YTguNjQgOC42NCAwIDAgMS00LjExIDIuOTNWMjBjNC43MS0xLjE1IDguMjEtNS44OSA4LjIxLTEwLjk1VjMuNDJ6Ii8+JiN4YTs8L3N2Zz4=;"
+  },
+  "gcp:cloud_functions": {
+   "family": "gcp",
+   "fill": "#4285F4",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "cloud functions",
+    "cloud function"
+   ],
+   "source": "image:Cloud Functions",
+   "shape_style": "shape=image;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnY9Imh0dHBzOi8vdmVjdGEuaW8vbmFubyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjE5Ljk4OTk5OTc3MTExODE2NCIgdmlld0JveD0iMCAwIDIwIDE5Ljk4OTk5OTc3MTExODE2NCI+JiN4YTsJPHN0eWxlIHR5cGU9InRleHQvY3NzIj4mI3hhOwkuc3Qwe2ZpbGw6IzQyODVmNDt9JiN4YTsJLnN0MXtmaWxsOiM2NjlkZjY7fSYjeGE7CS5zdDJ7ZmlsbDojYWVjYmZhO30mI3hhOwk8L3N0eWxlPiYjeGE7CTxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0zIDMuOTlMMCA2LjQydjcuMTNsMyAyLjQ0eiIvPiYjeGE7CTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0zIDMuOTlsLTMgNCAzLTJ6bS0zIDhsMyA0di0yeiIvPiYjeGE7CTxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0wIDE1Ljk5bDQgNCAyLTItNi02em0uMDEtOEw1Ljk5IDJsLTItMkwwIDMuOTl6Ii8+JiN4YTsJPHBhdGggY2xhc3M9InN0MSIgZD0iTTE3IDE2bDMtMi40MlY2LjQ0TDE3IDR6Ii8+JiN4YTsJPHBhdGggY2xhc3M9InN0MCIgZD0iTTE3IDE2bDMtNC0zIDJ6bTMtOGwtMy00djJ6Ii8+JiN4YTsJPGcgY2xhc3M9InN0MiI+JiN4YTsJCTxwYXRoIGQ9Ik0yMCA0bC00LTQtMiAyIDYgNnptLS4wMSA4bC01Ljk4IDUuOTkgMiAyTDIwIDE2eiIvPiYjeGE7CQk8Y2lyY2xlIGN4PSI2IiBjeT0iOS45OSIgcj0iMSIvPiYjeGE7CQk8Y2lyY2xlIGN4PSIxMCIgY3k9IjkuOTkiIHI9IjEiLz4mI3hhOwkJPGNpcmNsZSBjeD0iMTMuOTkiIGN5PSI5Ljk5IiByPSIxIi8+JiN4YTsJPC9nPiYjeGE7PC9zdmc+;",
+   "index_style": "editableCssRules=.*;html=1;shape=image;verticalLabelPosition=bottom;labelBackgroundColor=#ffffff;verticalAlign=top;aspect=fixed;imageAspect=0;image=data:image/svg+xml,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnY9Imh0dHBzOi8vdmVjdGEuaW8vbmFubyIgd2lkdGg9IjIwIiBoZWlnaHQ9IjE5Ljk4OTk5OTc3MTExODE2NCIgdmlld0JveD0iMCAwIDIwIDE5Ljk4OTk5OTc3MTExODE2NCI+JiN4YTsJPHN0eWxlIHR5cGU9InRleHQvY3NzIj4mI3hhOwkuc3Qwe2ZpbGw6IzQyODVmNDt9JiN4YTsJLnN0MXtmaWxsOiM2NjlkZjY7fSYjeGE7CS5zdDJ7ZmlsbDojYWVjYmZhO30mI3hhOwk8L3N0eWxlPiYjeGE7CTxwYXRoIGNsYXNzPSJzdDEiIGQ9Ik0zIDMuOTlMMCA2LjQydjcuMTNsMyAyLjQ0eiIvPiYjeGE7CTxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0zIDMuOTlsLTMgNCAzLTJ6bS0zIDhsMyA0di0yeiIvPiYjeGE7CTxwYXRoIGNsYXNzPSJzdDIiIGQ9Ik0wIDE1Ljk5bDQgNCAyLTItNi02em0uMDEtOEw1Ljk5IDJsLTItMkwwIDMuOTl6Ii8+JiN4YTsJPHBhdGggY2xhc3M9InN0MSIgZD0iTTE3IDE2bDMtMi40MlY2LjQ0TDE3IDR6Ii8+JiN4YTsJPHBhdGggY2xhc3M9InN0MCIgZD0iTTE3IDE2bDMtNC0zIDJ6bTMtOGwtMy00djJ6Ii8+JiN4YTsJPGcgY2xhc3M9InN0MiI+JiN4YTsJCTxwYXRoIGQ9Ik0yMCA0bC00LTQtMiAyIDYgNnptLS4wMSA4bC01Ljk4IDUuOTkgMiAyTDIwIDE2eiIvPiYjeGE7CQk8Y2lyY2xlIGN4PSI2IiBjeT0iOS45OSIgcj0iMSIvPiYjeGE7CQk8Y2lyY2xlIGN4PSIxMCIgY3k9IjkuOTkiIHI9IjEiLz4mI3hhOwkJPGNpcmNsZSBjeD0iMTMuOTkiIGN5PSI5Ljk5IiByPSIxIi8+JiN4YTsJPC9nPiYjeGE7PC9zdmc+;"
+  },
+  "k8s:pod": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "pod",
+    "pods"
+   ],
+   "source": "prIcon:pod",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=pod;"
+  },
+  "k8s:deploy": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "deployment"
+   ],
+   "source": "prIcon:deploy",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=deploy;"
+  },
+  "k8s:sts": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "statefulset"
+   ],
+   "source": "prIcon:sts",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=sts;"
+  },
+  "k8s:svc": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "k8s service",
+    "clusterip"
+   ],
+   "source": "prIcon:svc",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=svc;"
+  },
+  "k8s:ing": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "ingress"
+   ],
+   "source": "prIcon:ing",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=ing;"
+  },
+  "k8s:job": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "k8s job"
+   ],
+   "source": "prIcon:job",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=job;"
+  },
+  "k8s:cronjob": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "cronjob"
+   ],
+   "source": "prIcon:cronjob",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=cronjob;"
+  },
+  "k8s:secret": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "k8s secret"
+   ],
+   "source": "prIcon:secret",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=secret;"
+  },
+  "k8s:cm": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "configmap"
+   ],
+   "source": "prIcon:cm",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=cm;"
+  },
+  "k8s:ns": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "namespace"
+   ],
+   "source": "prIcon:ns",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=ns;"
+  },
+  "k8s:node": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "k8s node",
+    "worker node"
+   ],
+   "source": "prIcon:node",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=node;"
+  },
+  "k8s:hpa": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "hpa",
+    "autoscaler"
+   ],
+   "source": "prIcon:hpa",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=hpa;"
+  },
+  "k8s:pvc": {
+   "family": "k8s",
+   "fill": "#326CE5",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "pvc",
+    "persistent volume"
+   ],
+   "source": "prIcon:pvc",
+   "shape_style": "shape=mxgraph.kubernetes.icon2;prIcon=pvc;"
+  },
+  "gh:github": {
+   "family": "gh",
+   "fill": "#F1F5F9",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "github"
+   ],
+   "source": "shape:mxgraph.weblogos.github",
+   "shape_style": "shape=mxgraph.weblogos.github;"
+  },
+  "user": {
+   "family": "generic",
+   "fill": "#CBD5E1",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "user",
+    "users",
+    "customer",
+    "end user"
+   ],
+   "source": "shape:mxgraph.aws4.user",
+   "shape_style": "shape=mxgraph.aws4.user;"
+  },
+  "users": {
+   "family": "generic",
+   "fill": "#CBD5E1",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "team",
+    "developers"
+   ],
+   "source": "shape:mxgraph.aws4.users",
+   "shape_style": "shape=mxgraph.aws4.users;"
+  },
+  "client": {
+   "family": "generic",
+   "fill": "#CBD5E1",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "client",
+    "browser",
+    "web app",
+    "frontend"
+   ],
+   "source": "shape:mxgraph.aws4.client",
+   "shape_style": "shape=mxgraph.aws4.client;"
+  },
+  "mobile": {
+   "family": "generic",
+   "fill": "#CBD5E1",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "mobile"
+   ],
+   "source": "shape:mxgraph.aws4.mobile_client",
+   "shape_style": "shape=mxgraph.aws4.mobile_client;"
+  },
+  "server": {
+   "family": "generic",
+   "fill": "#CBD5E1",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "server"
+   ],
+   "source": "shape:mxgraph.aws4.traditional_server",
+   "shape_style": "shape=mxgraph.aws4.traditional_server;"
+  },
+  "database": {
+   "family": "generic",
+   "fill": "#CBD5E1",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "database"
+   ],
+   "source": "shape:mxgraph.aws4.generic_database",
+   "shape_style": "shape=mxgraph.aws4.generic_database;"
+  },
+  "document": {
+   "family": "generic",
+   "fill": "#CBD5E1",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "document",
+    "file"
+   ],
+   "source": "shape:mxgraph.aws4.documents",
+   "shape_style": "shape=mxgraph.aws4.documents;"
+  },
+  "internet": {
+   "family": "generic",
+   "fill": "#CBD5E1",
+   "stroke": "none",
+   "tile": false,
+   "aliases": [
+    "internet"
+   ],
+   "source": "shape:mxgraph.aws4.internet_alt1",
+   "shape_style": "shape=mxgraph.aws4.internet_alt1;"
+  },
+  "llm": {
+   "family": "generic",
+   "fill": "#01A88D",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "llm",
+    "model"
+   ],
+   "source": "resIcon:mxgraph.aws4.bedrock",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.bedrock;"
+  },
+  "code": {
+   "family": "generic",
+   "fill": "#475569",
+   "stroke": "#FFFFFF",
+   "tile": true,
+   "aliases": [
+    "code",
+    "sdk"
+   ],
+   "source": "resIcon:mxgraph.aws4.corretto",
+   "shape_style": "shape=mxgraph.aws4.resourceIcon;resIcon=mxgraph.aws4.corretto;"
+  }
+ }
+}
