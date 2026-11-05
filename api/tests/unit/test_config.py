@@ -4,6 +4,14 @@ from pydantic import ValidationError
 from src.configs.config import Config
 
 
+@pytest.fixture(autouse=True)
+def isolated_env(monkeypatch):
+    """Config must only see what each test passes. `make test-integration` exports the real .env into the
+    environment, which pydantic-settings reads even with _env_file=None (real secrets leaked into assertions)."""
+    for name in Config.model_fields:
+        monkeypatch.delenv(name.upper(), raising=False)
+
+
 def make(**overrides) -> Config:
     return Config(_env_file=None, db_url="postgresql://u:p@localhost/db", **overrides)
 
