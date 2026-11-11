@@ -61,6 +61,10 @@ test-integration: dev-db ## API tests against a real Postgres (the compose db)
 diagrams-icons: ## Rebuild the draw.io icon catalogue from the pinned shape index (REFRESH=1 re-downloads)
 	$(MAKE) -C api diagrams-icons $(if $(REFRESH),REFRESH=1)
 
+## ---- Image hosting (Epic 12) ----------------------------------------------
+s3-setup: ## Make only S3_PREFIX of S3_BUCKET publicly readable (dry run; APPLY=1 applies)
+	cd api && uv run python src/modules/publishing/scripts/setup_s3_public_prefix.py $(if $(APPLY),--apply)
+
 ## ---- Evaluation & Observability (Epic 9) -----------------------------------
 eval-sync: ## Sync evals/dataset.yaml to LangSmith dataset blog-agent-eval
 	cd api && uv run python src/modules/evaluation/scripts/sync_dataset.py

@@ -102,7 +102,7 @@ blog-agent/
 | 9 | [Evaluation & Observability](epic9_evaluation_observability/epic9_evaluation_observability.md) | M5 | Datasets, evaluators, regression tracking, cost/latency visibility | 1–3 (tracing starts in Epic 1) |
 | 10 | [Diagram Quality: draw.io-Native Rendering & Visual Review](epic10_diagram_quality/epic10_diagram_quality.md) | M3.1 | Publish the draw.io render itself, validated shape names, layout rules, vision review loop, diagram evals | 7, 9 |
 | 11 | [Local Agent CLIs as LLM Providers (agy / Claude Code)](epic11_cli_llm_providers/epic11_cli_llm_providers.md) | M3.2 | Run any model role through the owner's logged-in `agy` or `claude` CLI instead of an API key | 1, 9 |
-| 12 | S3 Diagram Storage (planned) | M3.2 | Publish diagram PNGs to S3 with permanent public URLs, replacing Sanity assets | 7, 8, 10 |
+| 12 | [S3 Diagram Storage](epic12_s3_diagram_storage/epic12_s3_diagram_storage.md) | M3.2 | Diagram PNGs for Dev.to on S3 with permanent public URLs (instead of Sanity CDN SVGs); Mermaid `<b>` cleanup for Dev.to | 7, 8, 10 |
 | — | Advanced agents (subgraphs, parallel research, Deep Agents) | M6 (parked) | Only if Epic 9 metrics show a measurable need | 9 |
 
 **MVP = Epics 1–5.** In the MVP:

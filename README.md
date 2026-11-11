@@ -36,6 +36,14 @@ LLM_FAST_MODEL=claude_code:haiku                  # sonnet | opus | haiku | a fu
 - `make dev` (API on the host) uses the CLIs on your `PATH`. With Docker, run `make up CLI=1`: it mounts the host
   binaries and their logins (`~/.gemini`, `~/.claude`, `~/.claude.json`) into the api container (`docker-compose.cli.yml`).
 
+## Diagram images on S3 (Epic 12)
+
+With `S3_BUCKET`, `AWS_ACCESS_KEY` and `AWS_SECRET_KEY` set, diagrams in Dev.to articles are uploaded as **PNG** to
+`s3://$S3_BUCKET/diagrams/<sha256>.png` and linked by their plain, permanent URL. S3 presigned URLs can't last
+longer than 7 days, so the bucket instead allows public reads on `diagrams/*` only. Run `make s3-setup` to check that, and
+`make s3-setup APPLY=1` to set it up. Re-publishing reuses the same object, and an edited diagram gets a new URL.
+Sanity documents keep using Sanity assets. Set `IMAGE_HOST=sanity` to go back to the old behaviour.
+
 ## Where secrets live
 
 | Secret | File | Read by |
@@ -44,6 +52,7 @@ LLM_FAST_MODEL=claude_code:haiku                  # sonnet | opus | haiku | a fu
 | `LANGSMITH_API_KEY` | `.env` | api only |
 | `AGENT_API_KEY` | `.env` | api, plus the ui **server** (proxy) via compose |
 | Sanity / Dev.to tokens (Epics 5, 8) | `.env` | api only |
+| `AWS_ACCESS_KEY` / `AWS_SECRET_KEY` (Epic 12) | `.env` | api only |
 
 Nothing is exposed as `NEXT_PUBLIC_*`. See [SECURITY.md](SECURITY.md).
 

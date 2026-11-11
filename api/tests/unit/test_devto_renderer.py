@@ -170,3 +170,17 @@ async def test_golden_fine_tuning_posts():
     golden_dir.mkdir(parents=True, exist_ok=True)
     (golden_dir / "fine_tuning_concepts_devto.hash").write_text(res1.rendered_content_hash)
     (golden_dir / "fine_tuning_implementation_devto.hash").write_text(res2.rendered_content_hash)
+
+
+def test_strip_mermaid_bold_only_inside_mermaid_fences():
+    from src.modules.publishing.domain.devto_renderer import strip_mermaid_bold
+
+    md = (
+        "Keep <b>this</b> prose.\n\n"
+        "```mermaid\nflowchart LR\n  A[\"<b>API</b><br/>FastAPI\"] --> B[\"<B >DB</B>\"]\n"
+        "  subgraph g [\"<b>Cloud</b>\"]\n  end\n```\n\n"
+        "```html\n<b>code stays</b>\n```\n"
+    )
+    out = strip_mermaid_bold(md)
+    assert 'A["API<br/>FastAPI"]' in out and 'B["DB"]' in out and 'subgraph g ["Cloud"]' in out
+    assert "Keep <b>this</b> prose." in out and "<b>code stays</b>" in out

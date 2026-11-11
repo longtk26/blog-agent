@@ -171,6 +171,16 @@ def rewrite_toc_and_headings(markdown: str) -> str:
     return re.sub(r"\[([^\]]+)\]\(#([^)]+)\)", replace_anchor, markdown)
 
 
+_MERMAID_FENCE = re.compile(r"(^[ \t]*```mermaid[^\n]*\n)(.*?)(^[ \t]*```[ \t]*$)", re.MULTILINE | re.DOTALL)
+_BOLD_TAG = re.compile(r"</?b\s*>", re.IGNORECASE)
+
+
+def strip_mermaid_bold(markdown: str) -> str:
+    """Dev.to's Mermaid shows <b>…</b> in labels as literal text, so drop the tags (keep the words) inside
+    ```mermaid fences only. The website renders them, so the stored revision keeps them."""
+    return _MERMAID_FENCE.sub(lambda m: m.group(1) + _BOLD_TAG.sub("", m.group(2)) + m.group(3), markdown)
+
+
 async def render_for_devto(
     revision: ArticleRevisionEntity,
     sanity_render: RenderForSanityResult | None = None,
@@ -193,6 +203,7 @@ async def render_for_devto(
     # 2. Mermaid diagrams are written directly as native Mermaid code blocks
     # Dev.to (Forem) natively renders ```mermaid ... ``` code blocks with Mermaid.js.
     # Preserve them directly in markdown.
+    cleaned_md = strip_mermaid_bold(cleaned_md)
     if uploader:
         asset_img_pattern = re.compile(
             r"!\[([^\]]*)\]\((asset://[^\s)]+|/[^\s)]+\.(?:png|jpe?g|svg|webp))(?:\s+[\"']([^\"']*)[\"'])?\)"
@@ -244,7 +255,8 @@ async def render_for_devto(
 
     # Look for raster image in cleaned_md
     raster_matches = re.findall(
-        r"!\[[^\]]*\]\((https?://[^)\s]+\.(?:png|jpe?g|webp)[^)\s]*)\)",
+        # optional "title" after the URL: rewritten images are always written as ![alt](url "title")
+        r"!\[[^\]]*\]\((https?://[^)\s]+\.(?:png|jpe?g|webp)[^)\s]*)(?:\s+[\"'][^\"']*[\"'])?\)",
         cleaned_md,
         re.IGNORECASE,
     )

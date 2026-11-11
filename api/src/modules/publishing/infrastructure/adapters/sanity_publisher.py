@@ -1,7 +1,5 @@
 import asyncio
 import hashlib
-import mimetypes
-from pathlib import Path
 import re
 from typing import Any, Callable
 import uuid
@@ -13,6 +11,7 @@ from src.configs.logger import get_logger
 from src.libs.exceptions import BadRequestException, ConflictException, ErrorCode
 from src.modules.publishing.domain import render_for_sanity, sanitize_svg, validate_sanity_slug
 from src.modules.publishing.domain.sanity_renderer import IAssetUploader
+from src.modules.publishing.infrastructure.adapters.asset_resolver import resolve_asset
 from src.modules.publishing.ports.output.publisher import IPublisher, PublishError, PublishOutcome
 from src.modules.publishing.ports.output.thumbnail_generator import IThumbnailGenerator
 from src.modules.shared.domain.entities import ArticleRevisionEntity, PublicationTarget
@@ -148,53 +147,7 @@ class SanityPublisher(IPublisher, IAssetUploader):
         return await self._upload_raw_asset(raw_bytes, filename, content_type)
 
     async def _resolve_asset(self, src: str) -> tuple[bytes, str, str]:
-        # If asset:// protocol
-        if src.startswith("asset://"):
-            asset_id = src.replace("asset://", "").strip()
-            assets_dir = Path(config.data_dir) / "assets"
-            if assets_dir.exists():
-                for p in assets_dir.glob(f"**/*{asset_id}*"):
-                    if p.is_file():
-                        content = p.read_bytes()
-                        mime, _ = mimetypes.guess_type(p.name)
-                        return content, p.name, mime or "image/svg+xml"
-            try:
-                from src.libs.database import arun_in_session
-                from src.modules.diagrams.infrastructure.persistence.diagram_asset_repository import DiagramAssetRepository
-                aid = uuid.UUID(asset_id)
-                asset = await arun_in_session(lambda s: DiagramAssetRepository(s).get(aid))
-                if asset and asset.svg_path and Path(asset.svg_path).is_file():
-                    p = Path(asset.svg_path)
-                    return p.read_bytes(), p.name, "image/svg+xml"
-            except Exception:
-                pass
-
-        # If relative or local path
-        blogs_dir = Path(config.blogs_dir)
-        candidate_paths = [
-            Path(src),
-            blogs_dir / src.lstrip("/"),
-            Path(config.data_dir) / src.lstrip("/"),
-        ]
-        if src.startswith("/app/data/"):
-            candidate_paths.append(Path(config.data_dir) / src[len("/app/data/") :].lstrip("/"))
-        for p in candidate_paths:
-            if p.is_file():
-                content = p.read_bytes()
-                mime, _ = mimetypes.guess_type(p.name)
-                return content, p.name, mime or "application/octet-stream"
-
-        # If data: url
-        if src.startswith("data:"):
-            header, _, b64_data = src.partition(",")
-            import base64
-            content = base64.b64decode(b64_data)
-            mime = header.split(";")[0].replace("data:", "") if ";" in header else "image/png"
-            ext = mimetypes.guess_extension(mime) or ".png"
-            filename = f"image_{hashlib.sha256(content).hexdigest()[:8]}{ext}"
-            return content, filename, mime
-
-        raise FileNotFoundError(f"Local asset not found: {src}")
+        return await resolve_asset(src)
 
     async def publish(
         self,

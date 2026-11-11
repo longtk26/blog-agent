@@ -13,6 +13,8 @@ from src.modules.publishing.infrastructure.adapters.devto_publisher import Devto
 from src.modules.publishing.infrastructure.adapters.google_thumbnail_generator import (
     GoogleThumbnailGenerator,
 )
+from src.configs import config
+from src.modules.publishing.infrastructure.adapters.s3_asset_uploader import S3AssetUploader
 from src.modules.publishing.infrastructure.adapters.sanity_publisher import SanityPublisher
 from src.modules.publishing.ports.output.publisher import IPublisher
 from src.modules.shared.domain.entities import PublicationTarget
@@ -32,8 +34,10 @@ def get_devto_publisher(
     diagram_renderer: DiagramRendererDep,
     diagram_repo: DiagramAssetRepoDep,
 ) -> DevtoPublisher:
+    # Epic 12: diagrams/images in the Dev.to body go to S3 (permanent public URLs) when it is configured.
+    uploader = S3AssetUploader() if config.resolved_image_host == "s3" else sanity_publisher
     return DevtoPublisher(
-        asset_uploader=sanity_publisher,
+        asset_uploader=uploader,
         diagram_renderer=diagram_renderer,
         diagram_repo=diagram_repo,
     )
@@ -62,6 +66,7 @@ PublisherRegistryDep = Annotated[PublisherRegistry, Depends(PublisherRegistry)]
 
 __all__ = [
     "GoogleThumbnailGenerator",
+    "S3AssetUploader",
     "SanityPublisher",
     "get_sanity_publisher",
     "SanityPublisherDep",

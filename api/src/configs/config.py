@@ -112,6 +112,16 @@ class Config(BaseSettings):
     dev_to_api_key: SecretStr | None = None
     dev_to_base_url: str = "https://dev.to/api"
 
+    # Image hosting for published articles (Epic 12). "auto" = s3 when S3_BUCKET and AWS keys are set, else sanity.
+    # Dev.to bodies use this host for diagrams/images; Sanity documents always keep their own Sanity assets.
+    image_host: str = "auto"
+    aws_access_key: SecretStr | None = None      # .env names: AWS_ACCESS_KEY / AWS_SECRET_KEY
+    aws_secret_key: SecretStr | None = None
+    s3_bucket: str | None = None
+    s3_region: str = "ap-southeast-1"
+    s3_prefix: str = "diagrams/"                 # the only publicly readable folder of the bucket
+    s3_public_base_url: str | None = None        # e.g. a CloudFront domain; default is the bucket's S3 URL
+
     # Style & Knowledge (Epic 6)
     embedding_model: str = "google_genai:gemini-embedding-001"
     embedding_dim: int = 768
@@ -187,6 +197,8 @@ class Config(BaseSettings):
         "langsmith_api_key",
         "sanity_api_write_token",
         "dev_to_api_key",
+        "aws_access_key",
+        "aws_secret_key",
         mode="before",
     )
     @classmethod
@@ -210,6 +222,18 @@ class Config(BaseSettings):
         if not sep or not provider or not model:
             raise ValueError("must look like '<provider>:<model>', e.g. 'anthropic:claude-sonnet-5-5'")
         return value
+
+    @field_validator("image_host")
+    @classmethod
+    def validate_image_host(cls, value: str) -> str:
+        if value not in ("auto", "s3", "sanity"):
+            raise ValueError("must be one of: auto, s3, sanity")
+        return value
+
+    @field_validator("s3_bucket", "s3_public_base_url", mode="before")
+    @classmethod
+    def empty_str_is_none(cls, value):
+        return None if value in (None, "") else value
 
     @field_validator("search_provider")
     @classmethod
@@ -238,6 +262,13 @@ class Config(BaseSettings):
         if self.search_provider == "auto":
             return "tavily" if self.tavily_api_key else "duckduckgo"
         return self.search_provider
+
+    @property
+    def resolved_image_host(self) -> str:
+        if self.image_host == "auto":
+            s3_ready = bool(self.s3_bucket and self.aws_access_key and self.aws_secret_key)
+            return "s3" if s3_ready else "sanity"
+        return self.image_host
 
     @property
     def tracing_enabled(self) -> bool:
