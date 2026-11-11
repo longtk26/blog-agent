@@ -105,7 +105,7 @@ blog-agent/
 | 12 | [S3 Diagram Storage](epic12_s3_diagram_storage/epic12_s3_diagram_storage.md) | M3.2 | Diagram PNGs for Dev.to on S3 with permanent public URLs (instead of Sanity CDN SVGs); Mermaid `<b>` cleanup for Dev.to | 7, 8, 10 |
 | 13 | [Website Blog on DEV (profile-ui)](epic13_devto_blog_site/epic13_devto_blog_site.md) | M3.2 | `/blogs` and `/posts/[slug]` read DEV instead of Sanity: views, reactions, comments; redesign; legacy redirects | 8, 12 |
 | 14 | [Diagram Readability on DEV](epic14_diagram_readability_devto/epic14_diagram_readability_devto.md) | M3.2 | Keep draw.io diagrams within DEV's 800px image column (width budget feeds the regeneration loop), TB-first prompt, full-size link | 10, 12 |
-| 15 | YouTube playlists on the website (planned) | M3.2 | profile-ui page listing the channel's videos grouped by playlist | 13 |
+| 15 | [YouTube Playlists on the Website (profile-ui)](epic15_youtube_playlists/epic15_youtube_playlists.md) | M3.2 | `/videos`: the channel's public videos grouped by playlist, click-to-play, channel stats | 13 |
 | — | Advanced agents (subgraphs, parallel research, Deep Agents) | M6 (parked) | Only if Epic 9 metrics show a measurable need | 9 |
 
 **MVP = Epics 1–5.** In the MVP:
