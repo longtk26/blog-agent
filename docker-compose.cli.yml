@@ -1,0 +1,19 @@
+# Optional (Epic 11): let the api container call the agy / claude CLIs installed on the host, logged in with
+# the owner's own account. Used by `make up CLI=1`; needed only when an LLM_*_MODEL starts with agy: or
+# claude_code:. The CLIs are glibc binaries and run unchanged on the python:3.12-slim image (uid 1000 matches
+# the image's `agent` user, so the login files stay readable and writable).
+#
+# Override the host paths in .env if they differ: AGY_HOST_BIN, AGY_HOST_CONFIG, CLAUDE_HOST_BIN,
+# CLAUDE_HOST_CONFIG, CLAUDE_HOST_STATE. Instead of mounting ~/.claude, you can also set CLAUDE_CODE_OAUTH_TOKEN
+# (from `claude setup-token`) in .env and drop the two claude config mounts.
+services:
+  api:
+    environment:
+      AGY_BIN: /usr/local/bin/agy
+      CLAUDE_CODE_BIN: /usr/local/bin/claude
+    volumes:
+      - ${AGY_HOST_BIN:-${HOME}/.local/bin/agy}:/usr/local/bin/agy:ro
+      - ${AGY_HOST_CONFIG:-${HOME}/.gemini}:/home/agent/.gemini
+      - ${CLAUDE_HOST_BIN:-${HOME}/.local/bin/claude}:/usr/local/bin/claude:ro
+      - ${CLAUDE_HOST_CONFIG:-${HOME}/.claude}:/home/agent/.claude
+      - ${CLAUDE_HOST_STATE:-${HOME}/.claude.json}:/home/agent/.claude.json

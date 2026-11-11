@@ -12,6 +12,9 @@ def compute_token_cost(
     Labeled as an estimate."""
     table = pricing_table or config.model_pricing
     normalized = model.lower()
+    # Local agent CLIs run on the owner's subscription: tokens are recorded, but nothing is billed per call.
+    if normalized.split(":", 1)[0] in ("agy", "claude_code"):
+        return 0.0
     if ":" in normalized:
         normalized = normalized.split(":", 1)[1]
 

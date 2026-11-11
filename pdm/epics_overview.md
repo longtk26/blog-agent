@@ -101,6 +101,8 @@ blog-agent/
 | 8 | [DEV Community Publishing](epic8_devto_publishing/epic8_devto_publishing.md) | M4 | Publish approved revisions to Dev.to safely | 5 |
 | 9 | [Evaluation & Observability](epic9_evaluation_observability/epic9_evaluation_observability.md) | M5 | Datasets, evaluators, regression tracking, cost/latency visibility | 1–3 (tracing starts in Epic 1) |
 | 10 | [Diagram Quality: draw.io-Native Rendering & Visual Review](epic10_diagram_quality/epic10_diagram_quality.md) | M3.1 | Publish the draw.io render itself, validated shape names, layout rules, vision review loop, diagram evals | 7, 9 |
+| 11 | [Local Agent CLIs as LLM Providers (agy / Claude Code)](epic11_cli_llm_providers/epic11_cli_llm_providers.md) | M3.2 | Run any model role through the owner's logged-in `agy` or `claude` CLI instead of an API key | 1, 9 |
+| 12 | S3 Diagram Storage (planned) | M3.2 | Publish diagram PNGs to S3 with permanent public URLs, replacing Sanity assets | 7, 8, 10 |
 | — | Advanced agents (subgraphs, parallel research, Deep Agents) | M6 (parked) | Only if Epic 9 metrics show a measurable need | 9 |
 
 **MVP = Epics 1–5.** In the MVP:

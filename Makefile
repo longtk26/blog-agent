@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-COMPOSE_FILES := -f docker-compose.yml $(if $(BLOGS),-f docker-compose.blogs.yml)
+COMPOSE_FILES := -f docker-compose.yml $(if $(BLOGS),-f docker-compose.blogs.yml) $(if $(CLI),-f docker-compose.cli.yml)
 # Use the Linux docker CLI when available; otherwise fall back to Docker Desktop's docker.exe
 # (WSL without Docker Desktop's WSL integration). Override with `make up DOCKER=...`.
 DOCKER_DESKTOP_EXE := /mnt/c/Program Files/Docker/Docker/resources/bin/docker.exe
@@ -10,7 +10,7 @@ COMPOSE := $(DOCKER) compose $(COMPOSE_FILES)
 	@cp .env.example .env && echo "Created .env from .env.example — add your LLM / LangSmith keys, then re-run."
 
 ## ---- Docker (daily use) ---------------------------------------------------
-up: .env ## Build and start db, api, ui (BLOGS=1 also mounts ../blogs)
+up: .env ## Build and start db, api, ui (BLOGS=1 mounts ../blogs; CLI=1 mounts host agy/claude CLIs)
 	@mkdir -p data
 	$(COMPOSE) up -d --build
 	@echo "Dashboard: http://127.0.0.1:$${UI_PORT:-3100}   API: http://127.0.0.1:$${API_PORT:-8100}/docs"

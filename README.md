@@ -12,11 +12,29 @@ A personal AI technical writer that runs locally. You give it a topic. It resear
 1. Install Docker Desktop. On WSL, enable *Settings → Resources → WSL integration* for your distro.
 2. `make up`. The first run creates `.env` from `.env.example`.
 3. Edit `.env`:
-   - `LLM_DEFAULT_MODEL` and the matching provider key (e.g. `ANTHROPIC_API_KEY`)
+   - `LLM_DEFAULT_MODEL` and the matching provider key (e.g. `ANTHROPIC_API_KEY`), **or** a local agent CLI
+     with no key: `agy:<model>` (Antigravity) or `claude_code:<model>` (Claude Code). See *Using agy / Claude Code* below.
    - optionally `LANGSMITH_TRACING=true` and `LANGSMITH_API_KEY`
    - optionally `AGENT_API_KEY` (`openssl rand -hex 24`)
 4. Run `make up` again.
 5. Open http://127.0.0.1:3100. The top-bar badge should read **API healthy**.
+
+## Using agy / Claude Code instead of an API key (Epic 11)
+
+Any model role can run through a CLI you are already logged in to:
+
+```bash
+LLM_DEFAULT_MODEL=agy:gemini-3.8-flash-medium     # `agy models` lists the ids
+LLM_FAST_MODEL=claude_code:haiku                  # sonnet | opus | haiku | a full model id
+```
+
+- Each call runs the CLI once in print mode (prompt on stdin, `--json-schema` for structured output) in an empty temp dir.
+  Claude Code runs with all tools disabled; agy is told not to use tools and only opens attached diagram images.
+- Calls are logged with their token counts but cost **0 USD** in the task budget (subscription, not per-token billing).
+- Temperature and max-tokens are not applied. Embeddings (style KB) and cover thumbnails still need `GOOGLE_API_KEY`.
+- API keys from `.env` are **not** passed to the CLI, so Claude Code stays on your login even when `ANTHROPIC_API_KEY` is set.
+- `make dev` (API on the host) uses the CLIs on your `PATH`. With Docker, run `make up CLI=1`: it mounts the host
+  binaries and their logins (`~/.gemini`, `~/.claude`, `~/.claude.json`) into the api container (`docker-compose.cli.yml`).
 
 ## Where secrets live
 

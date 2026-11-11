@@ -53,6 +53,15 @@ class Config(BaseSettings):
     llm_timeout_seconds: float = 120.0
     llm_max_retries: int = 2
 
+    # Local agent CLIs as LLM providers (Epic 11): LLM_*_MODEL=agy:<model> or claude_code:<model>.
+    # They use the owner's CLI login, not an API key. Embeddings and thumbnails still need GOOGLE_API_KEY.
+    agy_bin: str = "agy"
+    claude_code_bin: str = "claude"
+    agy_extra_args: Annotated[list[str], NoDecode] = []
+    claude_code_extra_args: Annotated[list[str], NoDecode] = []
+    cli_llm_timeout_seconds: float = 600.0
+    cli_llm_max_concurrency: int = 2
+
     anthropic_api_key: SecretStr | None = None
     openai_api_key: SecretStr | None = None
     google_api_key: SecretStr | None = None
@@ -155,6 +164,13 @@ class Config(BaseSettings):
 
     model_config = SettingsConfigDict(env_file=("../.env", ".env"), extra="ignore")
 
+    @field_validator("agy_extra_args", "claude_code_extra_args", mode="before")
+    @classmethod
+    def split_args(cls, value):
+        if isinstance(value, str):
+            return value.split()
+        return value
+
     @field_validator("cors_origins", "research_domain_denylist", mode="before")
     @classmethod
     def split_origins(cls, value):
@@ -183,6 +199,7 @@ class Config(BaseSettings):
         "llm_writer_model",
         "llm_fast_model",
         "llm_judge_model",
+        "llm_vision_model",
         mode="before",
     )
     @classmethod
