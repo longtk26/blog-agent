@@ -145,6 +145,10 @@ class Config(BaseSettings):
     # Diagram quality (Epic 10)
     diagram_visual_review: bool = True         # vision-model review of the rendered PNG + bounded repair
     diagram_review_max_rounds: int = 2         # extra generations driven by review feedback
+    # Readability in an article column (Epic 14): DEV shows body images at 800px wide. A draw.io diagram whose
+    # 12px labels would shrink below diagram_min_text_px there is regenerated (max drawn width ~870px by default).
+    diagram_column_width_px: int = 800
+    diagram_min_text_px: float = 11.0
 
     langsmith_project: str = "blog-agent-local"
     langsmith_endpoint: str = "https://api.smith.langchain.com"

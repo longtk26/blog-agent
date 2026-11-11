@@ -171,6 +171,9 @@ def rewrite_toc_and_headings(markdown: str) -> str:
     return re.sub(r"\[([^\]]+)\]\(#([^)]+)\)", replace_anchor, markdown)
 
 
+# Epic 14. profile-ui strips this exact line (the site shows images at full size), so keep the wording in sync.
+FULL_SIZE_LINK_TEXT = "*[Open the full-size diagram]({url})*"
+
 _MERMAID_FENCE = re.compile(r"(^[ \t]*```mermaid[^\n]*\n)(.*?)(^[ \t]*```[ \t]*$)", re.MULTILINE | re.DOTALL)
 _BOLD_TAG = re.compile(r"</?b\s*>", re.IGNORECASE)
 
@@ -217,7 +220,11 @@ async def render_for_devto(
                 _, cdn_url = await uploader.upload_asset(src, alt=alt, title=title)
                 if on_asset_uploaded:
                     on_asset_uploaded(src, _, cdn_url)
-                cleaned_md = cleaned_md.replace(full_match, f'![{alt}]({cdn_url} "{title}")')
+                replacement = f'![{alt}]({cdn_url} "{title}")'
+                if src.startswith("asset://"):
+                    # DEV shows body images at 800px (re-encoded); link the original so wide diagrams stay readable.
+                    replacement += f"\n\n{FULL_SIZE_LINK_TEXT.format(url=cdn_url)}"
+                cleaned_md = cleaned_md.replace(full_match, replacement)
             except Exception as exc:
                 logger.warning(f"Failed to resolve asset image {src}: {exc}")
 

@@ -25,6 +25,7 @@ from src.modules.agent.prompts.diagram_review import review_messages
 from src.modules.diagrams.domain.diagram_builder import build_diagram
 from src.modules.diagrams.domain.drawio_validator import validate_drawio_xml
 from src.modules.diagrams.domain.layout_lint import LintFinding
+from src.modules.diagrams.domain.readability import column_width_finding
 from src.modules.diagrams.domain.mermaid_generator import choose_diagram_format, generate_mermaid
 from src.modules.diagrams.domain.schemas.diagram_review import CHECKLIST, DiagramReview
 from src.modules.diagrams.domain.schemas.diagram_spec import DiagramSpec
@@ -154,8 +155,12 @@ class GenerateDiagramUsecase:
             candidates.append(candidate)
             if candidate.major == 0:
                 break
+            checks = [f.check for f in candidate.lint] + [
+                f"review#{i.check}" for i in (candidate.review.issues if candidate.review else []) if i.severity == "major"
+            ]
             logger.info(
                 f"Diagram {slot_id} round {round_no}: {candidate.major} major / {candidate.minor} minor issues"
+                f" ({', '.join(checks)})"
                 + ("; regenerating with review feedback" if round_no < extra_rounds else "; keeping the best round")
             )
             auto_feedback = review_feedback(candidate)
@@ -185,7 +190,16 @@ class GenerateDiagramUsecase:
             logger.warning(f"draw.io XML for {spec.title!r} failed validation: {'; '.join(check.errors[:5])}")
         # draw.io itself renders what readers see (E10-S2). Renderer down -> raise; the node skips this diagram.
         out = await self.renderer.render_drawio(built.drawio_xml, embed_diagram=True)
-        return RenderedDiagram(spec, "drawio", built.drawio_xml, out.svg, out.png_bytes, out.sha256, lint=built.lint)
+        lint = list(built.lint)
+        # Epic 14: DEV shows body images at 800px; a too-wide diagram counts as a major issue and is regenerated.
+        too_wide = column_width_finding(
+            out.png_bytes,
+            getattr(self.settings, "diagram_column_width_px", 800),
+            getattr(self.settings, "diagram_min_text_px", 11.0),
+        )
+        if too_wide:
+            lint.append(too_wide)
+        return RenderedDiagram(spec, "drawio", built.drawio_xml, out.svg, out.png_bytes, out.sha256, lint=lint)
 
     async def _review(self, candidate: RenderedDiagram, slot_id: str, callbacks: list[Any] | None) -> None:
         if not candidate.png:

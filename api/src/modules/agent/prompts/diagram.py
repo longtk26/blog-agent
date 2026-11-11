@@ -1,6 +1,6 @@
 """Prompts for DiagramSpec structured generation (E7-S1). Bump PROMPT_VERSION on any wording change."""
 
-PROMPT_VERSION = "diagram-v2"
+PROMPT_VERSION = "diagram-v3"
 
 from langchain_core.messages import BaseMessage, HumanMessage, SystemMessage
 
@@ -17,9 +17,12 @@ Rules and Guidelines:
    - "flowchart": step-by-step lifecycles, pipelines, decision trees.
    - "architecture": system architectures, service topologies, multi-tier data flows.
    - "sequence": protocol interactions, API calls, client-server turn-taking.
-2. Direction:
-   - Use "LR" (left-to-right) for data pipelines and multi-stage architectures.
-   - Use "TB" (top-to-bottom) for hierarchical breakdowns and trees.
+2. Direction and size (the diagram is read in an article column about 800px wide; DEV scales wider images down,
+   which makes labels unreadable):
+   - Prefer "TB" (top-to-bottom). It grows downwards, which a reader can scroll.
+   - Use "LR" (left-to-right) only for a short chain of at most 4 steps with no side branches.
+   - Keep at most 3-4 nodes side by side on any level. If a system needs more, split it into two diagrams or
+     merge minor nodes.
 3. Groups:
    - Use groups/clusters for logical tiers (e.g. "Data Preparation", "Model Backbone", "Storage Tier").
    - For cloud architectures, use groups for real boundaries and nest them with 'parent':
